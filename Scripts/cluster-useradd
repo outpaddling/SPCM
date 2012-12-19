@@ -1,0 +1,62 @@
+#!/bin/sh -e
+
+usage()
+{
+    printf "Usage: $0 username [options]\n"
+    printf 'All arguments are passed to "pw useradd"\n'
+    exit 1
+}
+
+if [ `whoami` != root ]; then
+    printf "$0 must be run as root.\n"
+    exit 1
+fi
+
+if [ $# -lt 1 ] || [ `echo $1 | cut -c 1,1` = '-' ]; then
+    usage
+fi
+
+user_name=$1
+
+useradd_cmd='pw useradd'
+for arg in "$@"; do
+    # Quota all non-option arguments so that those containing spaces
+    # are not separated
+    if [ `echo $arg | cut -c 1,1` != '-' ]; then
+	useradd_cmd="$useradd_cmd '$arg'"
+    else
+	useradd_cmd="$useradd_cmd $arg"
+    fi
+done
+
+# Eval here to expand before running
+eval $useradd_cmd
+
+printf "Generating ssh keys for $user_name...\n"
+mkdir -m 0700 /home/$user_name/.ssh
+chown -Rh $user_name:$primary_group /home/$user_name/.ssh
+sudo -u $user_name ssh-keygen -t dsa -f /home/$user_name/.ssh/id_dsa -N ''
+
+# Directory to contain stdout and stderr for running jobs
+mkdir -m 0700 /home/$user_name/.pbs_spool
+chown -Rh $user_name:$primary_group /home/$user_name/.pbs_spool
+
+# FIXME: Ensure that userids match on all nodes
+
+# Do not assume home directories are shared!
+for node in `cluster-compute-nodes`; do
+    printf "Creating $user_name on $node...\n"
+    # Do not eval here: ssh starts a remote shell which performs expansion
+    ssh $node "$useradd_cmd" > /dev/null
+    ssh $node mkdir -p -m 0700 /home/$user_name/.ssh
+    ssh $node cp -f /home/$user_name/.ssh/id_dsa.pub \
+	    /home/$user_name/.ssh/authorized_keys2
+    # Should be handled by /etc/hosts.equiv
+    # ssh $node cp -f /head_usr/local/cluster/head_node /home/$user_name/.rhosts
+    ssh $node chown -Rh ${user_name}:${primary_group} /home/$user_name
+    # ssh $node chmod 0700 /home/$user_name/.rhosts
+done
+
+pw_entry=`awk -F : '$1 == "'$user_name'" { print $0 }' /etc/passwd`
+auto-append-line $user_name "$pw_entry" /usr/local/cluster/users.txt nocomment
+

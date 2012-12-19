@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Run only from head node
+if [ `hostname -s` != `cluster-head-node` ]; then
+    printf "$0 can only be run on the head node.\n"
+    exit 1
+fi
+
+cat << EOM
+
+This will kill all running jobs.  Are you sure you want to proceed? (y/n)
+EOM
+read resp
+if [ 0$resp != 0y ]; then
+    printf 'Shutdown aborted.\n'
+    exit 0
+fi
+
+printf "Minutes to shutdown? "
+read minutes
+if [ 0$minutes != 0 ]; then
+    for node in `cluster-compute-nodes`; do
+	ssh $node "shutdown -p +$minutes"
+    done
+    
+    printf "Shut down head? (y/n) "
+    read resp
+    if [ 0$resp = -'y' ]; then
+	shutdown -p +$minutes
+    fi
+fi
+

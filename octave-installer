@@ -1,0 +1,79 @@
+#!/bin/sh -e
+
+pause()
+{
+    printf "Press return to continue..."
+    read junk
+}
+
+
+installed()
+{
+    ls -d /var/db/pkg/${1}-[0-9]* 2> /dev/null
+    return $?
+}
+
+
+install_port()
+{
+    if [ $# != 2 ]; then
+	printf "Usage: install_port category port\n"
+	exit 1
+    fi
+    
+    category=$1
+    port=$2
+    if ! installed $port; then
+	if [ -e /head_usr/ports/packages/All ] && \
+	    ls /head_usr/ports/packages/All/${port}* ; then
+	    pkg_add /head_usr/ports/packages/All/${port}*
+	else
+	    cd /usr/ports/$category/$port
+	    make install
+	    pause
+	fi
+    fi
+}
+
+
+prefix=/usr/local
+
+# Octave is not available as a package, so install known prereqs
+# via packages to speed things up.
+# Don't install glpk package.  The Octave port doesn't accept it
+# and insists on building the port.
+for pkg in gnuplot gsed dvipsk-tetex teTeX hdf5 arpack fftw3 fftw3-float \
+    suitesparse qhull ftgl fltk gperf help2man gettext qrupdate \
+    GraphicsMagick; do
+    if ! installed $pkg; then
+	pkg_add -r $pkg
+    fi
+done
+if ! installed autoconf; then
+    pkg_add -r autoconf262
+fi
+
+# Install from /head_node/ports/packages if possible
+mkdir -p /usr/ports/packages
+
+install_port print pdflib
+
+install_port math octave
+
+# qtoctave is nice, but not ready for prime-time yet
+exit 0
+
+for qt_pkg in svg qmake moc rcc uic xml; do
+    if ! installed qt4-$qt_pkg ; then
+	pkg_add -r qt4-$qt_pkg
+    fi
+done
+for pkg in cmake; do
+    if [ ! -e $prefix/bin/$pkg ]; then
+	pkg_add -r $pkg
+    fi
+done
+
+cd /usr/ports/math/qtoctave
+# make QT4_VERSION=4.5.2 install
+
