@@ -1,0 +1,58 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]; then
+    printf "Usage: $0 [-p portsdir] category/port\n"
+    exit 1
+fi
+
+if [ `whoami` != root ]; then
+    printf "$0 must be run as root.\n"
+    exit 1
+fi
+
+if [ $1 = '-p' ]; then
+    export PORTSBASE=$2
+    shift
+    shift
+else
+    export PORTSBASE='/usr/ports'
+fi
+
+category=`dirname $1`
+port=`basename $1`
+
+pkg_name=$(awk '$1 == "PORTNAME=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
+pkg_version=$(awk '$1 == "PORTVERSION=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
+pkg_revision=$(awk '$1 == "PORTREVISION=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
+pkg_epoch=$(awk '$1 == "PORTEPOCH=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
+pkg=$pkg_name-$pkg_version
+if [ 0$pkg_revision != 0 ]; then
+    pkg=${pkg}_$pkg_revision
+fi
+if [ 0$pkg_epoch != 0 ]; then
+    pkg="${pkg},$pkg_epoch"
+fi
+#echo $pkg
+#exit
+
+# Do not set PKGDIR.  Causes port build to fail, claiming it
+# can't find pkg-descr.
+# PACKAGES is used by ports, and does not include the trailin 'All'
+# like PKGDIR.
+export PACKAGES=$(dirname $(cluster-pkgdir))
+
+printf "Installing $category/$port...\n"
+printf "PACKAGES = %s\n" $PACKAGES
+
+if ! auto-package-installed "$pkg"; then
+    if [ -e $PACKAGES/All/$pkg.tbz ]; then
+	printf "Installing $pkg.tbz from $PACKAGES/All...\n"
+	pkg_add $PACKAGES/All/$pkg.tbz
+    else
+	printf "Installing $pkg from source...\n"
+	cd ${PORTSBASE}/$category/$port && make -DBATCH package-recursive
+    fi
+else
+    printf "$pkg is already installed.\n"
+fi
+
