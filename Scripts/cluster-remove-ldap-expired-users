@@ -9,7 +9,7 @@ if [ -e /usr/local/etc/ldap.conf ]; then
 	    printf "User $user_name is not in the LDAP directory.  Remove user? (yes/no) "
 	    read resp
 	    if [ x$resp = x'yes' ]; then
-		# cluster-rmuser $user_name
+		cluster-rmuser $user_name
 	    fi
 	fi
     done
