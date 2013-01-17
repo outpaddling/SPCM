@@ -1,4 +1,6 @@
 
+tolerate category/name in cluster-pkg_add
+
 cluster-installer
     Configure hosts.equiv
     Disable pbs_mom on head?
