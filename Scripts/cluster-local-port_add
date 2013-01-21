@@ -21,19 +21,7 @@ fi
 category=`dirname $1`
 port=`basename $1`
 
-pkg_name=$(awk '$1 == "PORTNAME=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
-pkg_version=$(awk '$1 == "PORTVERSION=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
-pkg_revision=$(awk '$1 == "PORTREVISION=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
-pkg_epoch=$(awk '$1 == "PORTEPOCH=" { print $2 }' $PORTSBASE/$category/$port/Makefile)
-pkg=$pkg_name-$pkg_version
-if [ 0$pkg_revision != 0 ]; then
-    pkg=${pkg}_$pkg_revision
-fi
-if [ 0$pkg_epoch != 0 ]; then
-    pkg="${pkg},$pkg_epoch"
-fi
-#echo $pkg
-#exit
+pkg=`auto-print-make-variable $1 PKGNAME`
 
 # Do not set PKGDIR.  Causes port build to fail, claiming it
 # can't find pkg-descr.
