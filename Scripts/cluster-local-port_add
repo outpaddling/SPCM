@@ -1,27 +1,50 @@
 #!/bin/sh
 
-if [ $# -lt 1 ]; then
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-02-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
     printf "Usage: $0 [-p portsdir] category/port\n"
     exit 1
-fi
+}
+
+##########################################################################
+#   Main
+##########################################################################
 
 if [ `whoami` != root ]; then
     printf "$0 must be run as root.\n"
     exit 1
 fi
 
-if [ $1 = '-p' ]; then
-    export PORTSBASE=$2
-    shift
-    shift
-else
+case $# in
+1)
     export PORTSBASE='/usr/ports'
-fi
+    category=`dirname $1`
+    port=`basename $1`
+    ;;
+3)
+    if [ $1 = '-p' ]; then
+	export PORTSBASE=$2
+	category=`dirname $3`
+	port=`basename $3`
+    else
+	usage
+    fi
+    ;;
+esac
 
-category=`dirname $1`
-port=`basename $1`
-
-pkg=`auto-print-make-variable $1 PKGNAME`
+pkg=`auto-print-make-variable $* PKGNAME`
 
 # Do not set PKGDIR.  Causes port build to fail, claiming it
 # can't find pkg-descr.
@@ -32,7 +55,7 @@ export PACKAGES=$(dirname $(cluster-pkgdir))
 printf "Installing $category/$port...\n"
 printf "PACKAGES = %s\n" $PACKAGES
 
-if ! auto-package-installed "$pkg"; then
+if ! auto-package-installed $*; then
     if [ -e $PACKAGES/All/$pkg.tbz ]; then
 	printf "Installing $pkg.tbz from $PACKAGES/All...\n"
 	pkg_add $PACKAGES/All/$pkg.tbz
