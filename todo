@@ -1,4 +1,6 @@
 
+Fix compute nodes so pwd shows /usr/home, not /head_usr/home
+
 tolerate category/name in cluster-pkg_add
 
 cluster-installer

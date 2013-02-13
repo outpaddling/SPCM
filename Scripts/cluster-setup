@@ -464,6 +464,10 @@ nfs_config()
 	resp=`auto-ask shared-home "\nConfigure shared home directories? (y/n)" y`
 	if [ 0$resp = 0'y' ]; then
 	    if [ -e $head_usr/home ]; then
+		# Make sure that both "cd /home" and "cd /usr/home/..."
+		# go to $head_usr/home on compute nodes.
+		mv /usr/home /usr/home.local
+		ln -s $head_usr/home /usr
 		rm -f /home
 		ln -s $head_usr/home /
 	    fi
