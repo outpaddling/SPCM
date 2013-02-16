@@ -111,13 +111,15 @@ install_port()
 {
     local resp category port
     
-    if [ $# != 2 ]; then
-	printf "Usage: install_port category port\n"
+    if [ $# -lt 2 ]; then
+	printf "Usage: install_port category port [make flags]\n"
 	exit 1
     fi
     
     category=$1
     port=$2
+    shift
+    shift
     # FIXME: Use cluster-pkgdir
     if [ -e $head_usr/ports/packages/All ] && \
 	ls $head_usr/ports/packages/All/${port}* ; then
@@ -288,6 +290,7 @@ install_mpi()
 	fi
 	printf "Reinstalling openmpi from port to customize build...\n"
 	printf "Select your scheduler in the options menu.\n"
+	# FIXME: make -DWITH_TORQUE or -DWITH_SGE
 	install_port net openmpi
     fi
 }
@@ -360,11 +363,13 @@ scheduler_config()
 	    stop_pbs
 
 	    # Annihilates server_priv/nodes.  Edit nodes AFTER this!
-	    printf "Running torque.setup...\n"
-	    printf "y\n" | $PREFIX/share/examples/torque/torque.setup root > /dev/null
-	    sleep 5
-	    stop_pbs
-
+	    if [ ! -e /var/spool/torque ]; then
+		printf "Running torque.setup...\n"
+		printf "y\n" | $PREFIX/share/examples/torque/torque.setup root > /dev/null
+		sleep 5
+		stop_pbs
+	    fi
+    
 	    line
 	    nodes_file=$tspool/server_priv/nodes
 	    nodes_backup=$PREFIX/cluster/server_priv-nodes
@@ -411,6 +416,14 @@ EOM
 	    printf "\nAdd `hostname -s` to server_priv/nodes on the server\n"
 	    printf "and restart pbs_server.\n\n"
 	    pause
+	    
+	    # This would require PermitRoot on the head node, which is
+	    # a security risk
+	    #ssh $head_host auto-append-line "$(hostname -s)" \
+	    #    "$(hostname -s)" /var/spool/torque/server_priv/nodes \
+	    #cluster-admin
+	    #ssh $head_host /usr/local/etc/rc.d/pbs_server restart
+	    
 	    if fgrep -q pbs_mom /etc/rc.conf; then
 		if ! $PREFIX/etc/rc.d/pbs_mom stop; then
 		    if killall pbs_mom 2> /dev/null; then
@@ -419,6 +432,7 @@ EOM
 		fi
 	    fi
 	    auto-enable-service pbs_mom cluster-setup
+	    sleep 5
 	    $PREFIX/etc/rc.d/pbs_mom restart
 	    printf "\nTest this node by running 'pbsnodes' on head node.\n\n"
 	    pause
@@ -485,19 +499,23 @@ nfs_config()
 	fi
 	
 	# Share home directories
-	resp=`auto-ask shared-home "\nConfigure shared home directories? (y/n)" y`
-	if [ 0$resp = 0'y' ]; then
-	    if [ -e $head_usr/home ]; then
-		# Make sure that both "cd /home" and "cd /usr/home/..."
-		# go to $head_usr/home on compute nodes.
-		mv /usr/home /usr/home.local
-		ln -s $head_usr/home /usr
-		rm -f /home
-		ln -s $head_usr/home /
+	if [ `ls -l /home | awk ' { print $11 }'` != /head_usr/home ]; then
+	    resp=`auto-ask shared-home "\nConfigure shared home directories? (y/n)" y`
+	    if [ 0$resp = 0'y' ]; then
+		if [ -e $head_usr/home ]; then
+		    # Make sure that both "cd /home" and "cd /usr/home/..."
+		    # go to $head_usr/home on compute nodes.
+		    mv /usr/home /usr/home.local
+		    ln -s $head_usr/home /usr
+		    rm -f /home
+		    ln -s $head_usr/home /
+		fi
+	    else
+		printf "\nBe sure to create a shared data directory for users.\n\n"
+		pause
 	    fi
 	else
-	    printf "\nBe sure to create a shared data directory for users.\n\n"
-	    pause
+	    printf 'Shared home directories already configured.\n'
 	fi
 	;;
 	
@@ -670,18 +688,29 @@ ganglia_config()
     fi
     
     if grep -q 'name = "unspecified"' $PREFIX/etc/gmond.conf; then
+	if [ $node_type = head ]; then
+	    name=$(hostname -s)
+	else
+	    name=$head_host
+	fi
 	sed -i '.orig' \
-	    -e "s|name = \"unspecified\"|name = \"$(hostname -s)\"|g" \
+	    -e "s|name = \"unspecified\"|name = \"$name\"|g" \
 	    $PREFIX/etc/gmond.conf
     fi
     
     auto-enable-service gmond cluster-setup
+    /usr/local/etc/rc.d/gmond restart
     
     if [ $node_type = "head" ]; then
 	auto-enable-service gmetad cluster-setup
     fi
     
-    printf "\nTest this node by browsing to http://$head_host/ganglia/\n\n"
+    line
+    cat << EOM
+    Test this node by browsing to http://$head_host/ganglia/.
+    
+    Note that it may take a minute or so for new nodes to appear.
+EOM
     pause
 }
 
@@ -730,15 +759,18 @@ ssh_config()
 	fi
 	
 	# Permit root login over ssh
-	sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin yes|g' /etc/ssh/sshd_config
-	cat << EOM
+	if ! grep -iq '^PermitRootLogin yes' /etc/ssh/sshd_config; then
+	    sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin yes|g' /etc/ssh/sshd_config
+	    cat << EOM
     
-You must run 'killall -HUP sshd' before ssh will allow root logins.
-Note: Doing it now might terminate this shell.
+Running 'killall -HUP sshd'.  This will terminate this shell.
+Log back in and re-run cluster-admin $node_type.
 
 EOM
+	    pause
+	    killall -HUP sshd
+	fi
     fi
-    pause
 }
 
 
@@ -776,6 +808,8 @@ to prevent it from being overloaded by careless users.
 The scheduler should manage limits on compute nodes, but some generous hard
 limits on vmemoryuse and maxproc in login.conf can help protect nodes from
 fork() bombs and memory leaks that the scheduler does not catch (fast enough).
+Usually, something like 10 + the number of cores is a good limit for compute
+nodes.
 
 EOM
 	    printf "Max processes for the $node_type node? "
@@ -811,24 +845,22 @@ EOM
 rsh_config()
 {
     # Enable rsh
-    resp=`auto-ask enable-rshd "Enable rshd (some MPI programs use it by default)? (y/n)" y`
-    if [ 0$resp = 0'y' ]; then
-	cat << EOM
-
-Editing /etc/inetd.conf:
-
-Uncomment both rshd and rlogind.
-
-EOM
-	pause
-	$EDITOR /etc/inetd.conf
-	# Add inetd to rc.conf
-	if ! fgrep inetd_enable /etc/rc.conf; then
-	    printf 'inetd_enable="YES"\n' >> /etc/rc.conf
+    if ! grep '^shell' /etc/inetd.conf || ! grep '^login' /etc/inetd.conf; then
+	resp=`auto-ask enable-rshd "Enable rshd? (some MPI programs use it by default) (y/n)" y`
+	if [ 0$resp = 0'y' ]; then
+	    sed -i '.orig' -e 's|^#shell|shell|g' \
+			   -e 's|^#login|login|g' \
+		/etc/inetd.conf
+	    # Add inetd to rc.conf
+	    if ! fgrep inetd_enable /etc/rc.conf; then
+		printf 'inetd_enable="YES"\n' >> /etc/rc.conf
+	    fi
+	    /etc/rc.d/inetd restart
+	    # FIXME: Use auto-append-line to add to /etc/hosts.equiv
+	    printf "$head_host\n" >> ~/.rhosts
 	fi
-	/etc/rc.d/inetd restart
-	# FIXME: Use auto-append-line to add to /etc/hosts.equiv
-	printf "$head_host\n" >> ~/.rhosts
+    else
+	printf 'rsh already configured.\n'
     fi
 }
 
@@ -871,6 +903,15 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
+node_type=$1
+case $node_type in
+"head"|"compute")
+    ;;
+*)
+    printf "Invalid installation type: $node_type\n"
+    usage $0
+esac
+
 update_system_clock
 
 line
@@ -907,14 +948,6 @@ DATADIR=$PREFIX/share/cluster-admin
 MAX_NODES=100
 cluster_data="$PREFIX/cluster"
 mkdir -p $cluster_data
-node_type=$1
-case $node_type in
-"head"|"compute")
-    ;;
-*)
-    printf "Invalid installation type: $node_type\n"
-    usage $0
-esac
 
 edit_hosts
 install_scheduler
@@ -961,11 +994,23 @@ esac
 cat << EOM
 
 =======================================================================
-			**** IMPORTANT ****
-			
-Be sure to run cluster-update-ssh_config on the head node and all
-compute nodes AFTER all compute nodes are configured.
+Run cluster-update-all-ssh_config on the head node.
 =======================================================================
 
 EOM
+pause
+
+line
+cat << EOM
+
+You must reboot to test the new configuration.  If this is the first time
+you completed the cluster-admin $node_type process, you should reboot now.
+
+EOM
+
+printf "Reboot? ([y]/n) "
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi
 
