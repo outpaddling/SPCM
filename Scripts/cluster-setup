@@ -619,6 +619,9 @@ ganglia_config()
 	    patch -p0 < $DATADIR/patch-httpd.conf
 	fi
 	
+	# Install a rudimentary home page
+	cp $DATADIR/WWW/* $PREFIX/www/apache22/data
+	
 	auto-enable-service apache22 cluster-setup
 	
 	# Check for php5 apache module.  It is not included in the
