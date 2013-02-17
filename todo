@@ -1,4 +1,7 @@
 
+sync local/share/doc from a compute node to WWW after cluster-pkg_add
+or cluster-port_add
+
 Fix compute nodes so pwd shows /usr/home, not /head_usr/home
 
 tolerate category/name in cluster-pkg_add
