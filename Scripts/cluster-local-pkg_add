@@ -10,9 +10,13 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
-pkg=$1
+pkg="$1"
 export PKGDIR=`cluster-pkgdir`
+auto-install-packages "$pkg"
+exit
 
+# Deprecated
+# This logic has been moved to auto-install-packages
 if ! auto-package-installed $pkg; then
     if [ -e $PKGDIR/$pkg.tbz ]; then
 	printf "Installing $pkg.tbz from $PKGDIR...\n"
