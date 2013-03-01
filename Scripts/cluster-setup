@@ -410,19 +410,16 @@ EOM
 	    # failure over getting the wrong address from DNS.
 	    printf "$head_host\n" > $tspool/server_name
     
-	    # On compute nodes, add the following line to /etc/rc.conf:
-	    # pbs_mom_enable="YES"
 	    line
-	    printf "\nAdd `hostname -s` to server_priv/nodes on the server\n"
-	    printf "and restart pbs_server.\n\n"
-	    pause
+	    #printf "\nAdd `hostname -s` to server_priv/nodes on the server\n"
+	    #printf "and restart pbs_server.\n\n"
+	    #pause
 	    
-	    # This would require PermitRoot on the head node, which is
-	    # a security risk
-	    #ssh $head_host auto-append-line "$(hostname -s)" \
-	    #    "$(hostname -s)" /var/spool/torque/server_priv/nodes \
-	    #cluster-admin
-	    #ssh $head_host /usr/local/etc/rc.d/pbs_server restart
+	    printf "Adding $(hostname -s) to server_priv/nodes on $head_host\n"
+	    ssh $head_host auto-append-line "$(hostname -s)" \
+		"$(hostname -s)" /var/spool/torque/server_priv/nodes \
+		cluster-setup
+	    ssh $head_host /usr/local/etc/rc.d/pbs_server restart
 	    
 	    if fgrep -q pbs_mom /etc/rc.conf; then
 		if ! $PREFIX/etc/rc.d/pbs_mom stop; then
@@ -431,10 +428,14 @@ EOM
 		    fi
 		fi
 	    fi
+
+	    # On compute nodes, add the following line to /etc/rc.conf:
+	    # pbs_mom_enable="YES"
 	    auto-enable-service pbs_mom cluster-setup
 	    sleep 5
 	    $PREFIX/etc/rc.d/pbs_mom restart
-	    printf "\nTest this node by running 'pbsnodes' on head node.\n\n"
+	    ssh $head_host pbsnodes
+	    # printf "\nTest this node by running 'pbsnodes' on head node.\n\n"
 	    pause
 	fi
 	
@@ -725,6 +726,51 @@ EOM
 
 ##########################################################################
 #   Function description:
+#       Add this host to authorized_hosts on remote host
+#
+#   Arguments:
+#       1) remote host
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-03-01  Charlie &   Begin
+##########################################################################
+
+ssh_authorize()
+{
+    if [ $# -lt 1 ] ; then
+       echo "usage: ssh-authorize remotehost"
+       exit 1
+    fi
+    remotehost=$1
+    
+    cd
+    
+    user=`whoami`
+    echo "Authorizing ${user}@${HOST} on $remotehost."
+    ssh $remotehost 'umask 077; mkdir -p .ssh'
+
+    # See if key already exists on remote host
+    if ssh $remotehost "grep -q ${user}@${HOST} .ssh/authorized_keys"; then
+	printf "Key already exists for this host.\n"
+	return
+    fi
+    
+    #
+    # If a key hasn't been generated then do it.
+    #
+    if [ ! -f .ssh/id_dsa.pub ] ; then
+	printf "Error: ssh_authorize must be called AFTER id_dsa is installed.\n"
+	exit 1
+    fi
+    
+    key=`cat .ssh/id_dsa.pub`
+    ssh $remotehost "echo $key >> .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+}
+
+
+##########################################################################
+#   Function description:
 #       
 #   Arguments:
 #       
@@ -740,6 +786,20 @@ ssh_config()
     # Verify that nfs_config has been run
     
     line
+    printf "Configuring ssh...\n"
+    
+    # Permit root login over ssh
+    if ! grep -iq '^PermitRootLogin yes' /etc/ssh/sshd_config; then
+	sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin yes|g' /etc/ssh/sshd_config
+	cat << EOM
+
+Running 'killall -HUP sshd'.  This will terminate this shell.
+Log back in and re-run cluster-setup $node_type.
+
+EOM
+	pause
+	killall -HUP sshd
+    fi
     
     # 
     if [ $node_type = 'head' ]; then
@@ -749,35 +809,25 @@ ssh_config()
 	if [ ! -e $id_dsa ]; then
 	    rm -rf ~/.ssh
 	    ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ''
-	    rm -f $cluster_data/id_dsa*
+	    rm -f $id_dsa*
 	    cp -p ~/.ssh/id_dsa* $cluster_data
-	    chmod 600 $cluster_data/id_dsa*
+	    chmod 600 $id_dsa*
 	fi
 	
 	# Disable prompting for new hosts, etc.
 	cluster-update-ssh_config
     else
-	printf "Configuring ssh...\n"
-	
 	# Install ssh keys from head node
 	if [ -e $head_usr/local/cluster/id_dsa.pub ]; then
 	    mkdir -p ~/.ssh
 	    chmod 0700 ~/.ssh
+	    cp $head_usr/local/cluster/id_dsa* ~/.ssh
 	    cp $head_usr/local/cluster/id_dsa.pub ~/.ssh/authorized_keys2
+	    chmod 0600 ~/.ssh/authorized_keys2 ~/.ssh/id_dsa
 	fi
 	
-	# Permit root login over ssh
-	if ! grep -iq '^PermitRootLogin yes' /etc/ssh/sshd_config; then
-	    sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin yes|g' /etc/ssh/sshd_config
-	    cat << EOM
-    
-Running 'killall -HUP sshd'.  This will terminate this shell.
-Log back in and re-run cluster-admin $node_type.
-
-EOM
-	    pause
-	    killall -HUP sshd
-	fi
+	# Add this host to authorized keys for root on head node(s)
+	ssh_authorize $head_host
     fi
 }
 
@@ -964,10 +1014,10 @@ install_scheduler
 if [ $node_type = 'compute' ]; then
     install_mpi
 fi
-scheduler_config
 nfs_config
-ssh_config      # After nfs_config
-resource_limits # After nfs_config
+ssh_config          # After nfs_config
+scheduler_config    # After ssh_config
+resource_limits     # After nfs_config
 
 if auto-package-installed sysutils/sge62; then
     sge_config
@@ -995,13 +1045,7 @@ case $node_type in
 "compute")
 
     rsh_config
-    cat << EOM
-
-=======================================================================
-Run cluster-update-all-ssh_config on the head node.
-=======================================================================
-
-EOM
+    ssh $head_host cluster-update-all-ssh_config
     pause
 
     ;;
@@ -1013,7 +1057,7 @@ line
 cat << EOM
 
 You must reboot to test the new configuration.  If this is the first time
-you completed the cluster-admin $node_type process, you should reboot now.
+you completed the cluster-setup $node_type process, you should reboot now.
 
 EOM
 
