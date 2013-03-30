@@ -7,6 +7,6 @@ cluster_groups='/head_usr/local/cluster/groups.txt'
 for group in `awk -F ':' ' { print $1 }' $cluster_groups`; do
     # cluster-local-groupadd checks for non-existent and mismatching groups
     # so we don't need to do it here
-    ./cluster-local-groupadd $group
+    cluster-local-groupadd $group
 done
 

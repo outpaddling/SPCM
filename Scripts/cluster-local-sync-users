@@ -7,6 +7,6 @@ cluster_users='/head_usr/local/cluster/users.txt'
 for user in `awk -F ':' ' { print $1 }' $cluster_users`; do
     # cluster-local-useradd checks for non-existent and mismatching users
     # so we don't need to do it here
-    ./cluster-local-useradd $user
+    cluster-local-useradd $user
 done
 
