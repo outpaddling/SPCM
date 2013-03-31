@@ -5,8 +5,8 @@ cluster_users='/head_usr/local/cluster/users.txt'
 
 # Awesome example of inefficiency, but efficiency is irrelevant here
 for user in `awk -F ':' ' { print $1 }' $cluster_users`; do
-    # cluster-local-useradd checks for non-existent and mismatching users
+    # cluster-local-sync-user checks for non-existent and mismatching users
     # so we don't need to do it here
-    cluster-local-useradd $user
+    cluster-local-sync-user $user
 done
 

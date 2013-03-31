@@ -20,7 +20,7 @@ user_name=$1
 
 useradd_cmd='pw useradd'
 for arg in "$@"; do
-    # Quota all non-option arguments so that those containing spaces
+    # Quote all non-option arguments so that those containing spaces
     # are not separated
     if [ `echo $arg | cut -c 1,1` != '-' ]; then
 	useradd_cmd="$useradd_cmd '$arg'"
@@ -32,6 +32,10 @@ done
 # Eval here to expand before running
 eval $useradd_cmd
 
+# Record new account info in /usr/local/cluster
+pw_entry=`awk -F : '$1 == "'$user_name'" { print $0 }' /etc/passwd`
+auto-append-line $user_name "$pw_entry" /usr/local/cluster/users.txt nocomment
+
 printf "Generating ssh keys for $user_name...\n"
 mkdir -m 0700 /home/$user_name/.ssh
 chown -Rh $user_name:$primary_group /home/$user_name/.ssh
@@ -41,22 +45,21 @@ sudo -u $user_name ssh-keygen -t dsa -f /home/$user_name/.ssh/id_dsa -N ''
 mkdir -m 0700 /home/$user_name/.pbs_spool
 chown -Rh $user_name:$primary_group /home/$user_name/.pbs_spool
 
-# FIXME: Ensure that userids match on all nodes
+# FIXME: switch to using cluster-sync-* and cluster-local-sync-*
 
 # Do not assume home directories are shared!
 for node in `cluster-compute-nodes`; do
     printf "Creating $user_name on $node...\n"
+
+    ssh $node cluster-local-sync-user $user_name
+    
+    if false; then
+    # FIXME: Create a separate cluster-local-useradd script to call here
+    # Use info in /head_user/local/cluster/users.txt?
+    # cluster-local-useradd
+    
     # Do not eval here: ssh starts a remote shell which performs expansion
     ssh $node "$useradd_cmd" > /dev/null
-    ssh $node mkdir -p -m 0700 /home/$user_name/.ssh
-    ssh $node cp -f /home/$user_name/.ssh/id_dsa.pub \
-	    /home/$user_name/.ssh/authorized_keys2
-    # Should be handled by /etc/hosts.equiv
-    # ssh $node cp -f /head_usr/local/cluster/head_node /home/$user_name/.rhosts
-    ssh $node chown -Rh ${user_name}:${primary_group} /home/$user_name
-    # ssh $node chmod 0700 /home/$user_name/.rhosts
+    fi
 done
-
-pw_entry=`awk -F : '$1 == "'$user_name'" { print $0 }' /etc/passwd`
-auto-append-line $user_name "$pw_entry" /usr/local/cluster/users.txt nocomment
 

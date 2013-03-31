@@ -5,8 +5,8 @@ cluster_groups='/head_usr/local/cluster/groups.txt'
 
 # Awesome example of inefficiency, but efficiency is irrelevant here
 for group in `awk -F ':' ' { print $1 }' $cluster_groups`; do
-    # cluster-local-groupadd checks for non-existent and mismatching groups
+    # cluster-local-sync-group checks for non-existent and mismatching groups
     # so we don't need to do it here
-    cluster-local-groupadd $group
+    cluster-local-sync-group $group
 done
 

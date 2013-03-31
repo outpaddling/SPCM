@@ -33,7 +33,7 @@ if [ 0$uid = 0 ]; then
 fi
 
 gid=`awk -F ':' -v username=$username '$1 == username { print $4 }' $cluster_dir/users.txt`
-gecos=`awk -F ':' -v username=$username '$1 == username { print $5 }' $cluster_dir/users.txt`
+comment=`awk -F ':' -v username=$username '$1 == username { print $5 }' $cluster_dir/users.txt`
 shell=`awk -F ':' -v username=$username '$1 == username { print $7 }' $cluster_dir/users.txt`
 
 if [ ! -e /etc/passwd.bak ]; then
@@ -42,18 +42,21 @@ fi
 
 current_uid=`awk -F ':' -v username=$username '$1 == username { print $3 }' /etc/passwd`
 current_gid=`awk -F ':' -v username=$username '$1 == username { print $4 }' /etc/passwd`
+current_shell=`awk -F ':' -v username=$username '$1 == username { print $7 }' /etc/passwd`
+
 if [ 0$current_uid = 0 ]; then
     printf "User $username does not exist.  Adding...\n"
     # Make sure group exists first
     ./cluster-local-sync-groups
-    cmd="pw useradd $username -u $uid -g $gid -c '$gecos' -s $shell"
+    cmd="pw useradd $username -u $uid -g $gid -c '$comment' -s $shell"
     $cmd
 elif [ $uid != $current_uid ] || [ $gid != $current_gid ]; then
-    printf "Current user (${current_uid}:$current_gid) does not match cluster user ID (${uid}:$gid).  Fixing...\n"
+    printf "Current user $username (${current_uid}:$current_gid) does not match cluster user (${uid}:$gid).  Fixing...\n"
     
-    # Correct user entry
-    cmd="pw usermod $username -u $uid -g $gid -c '$gecos' -s $shell"
-    $cmd
+    # Correct everything in user entry, since the elif does not look
+    # at comment or shell
+    cmd="pw usermod $username -u $uid -g $gid -c '$comment' -s $shell"
+    eval $cmd
 
     # Find files owned by the old uid or gid and correct them
     for dir in /home /share[0-9]*/Data; do
@@ -61,5 +64,19 @@ elif [ $uid != $current_uid ] || [ $gid != $current_gid ]; then
 	find $dir/$username -uid $current_uid -exec chown $uid '{}' \;
 	find $dir/$username -gid $current_gid -exec chown $gid '{}' \;
     done
+elif [ $shell != $current_shell ]; then
+    printf "Current user $username shell ($current_shell) does not match cluster user ($shell).  Fixing...\n"
+    
+    # Just correct comment and shell, since we know the uid and gid are correct
+    set -x
+    cmd="pw usermod $username -u $uid -g $gid -c '$comment' -s $shell"
+    eval $cmd
+fi
+
+if [ ! -e /home/$user_name/.ssh/authorized_keys2 ]; then
+    mkdir -p -m 0700 /home/$user_name/.ssh
+    cp -f /home/$user_name/.ssh/id_dsa.pub \
+	/home/$user_name/.ssh/authorized_keys2
+    chown -Rh ${user_name}:${primary_group} /home/$user_name/.ssh
 fi
 
