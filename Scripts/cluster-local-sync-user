@@ -73,10 +73,10 @@ elif [ $shell != $current_shell ]; then
     eval $cmd
 fi
 
-if [ ! -e /home/$user_name/.ssh/authorized_keys2 ]; then
-    mkdir -p -m 0700 /home/$user_name/.ssh
-    cp -f /home/$user_name/.ssh/id_dsa.pub \
-	/home/$user_name/.ssh/authorized_keys2
-    chown -Rh ${user_name}:${primary_group} /home/$user_name/.ssh
+if [ ! -e /home/$username/.ssh/authorized_keys2 ]; then
+    mkdir -p -m 0700 /home/$username/.ssh
+    cp -f /home/$username/.ssh/id_dsa.pub \
+	/home/$username/.ssh/authorized_keys2
+    chown -Rh ${username}:${primary_group} /home/$username/.ssh
 fi
 
