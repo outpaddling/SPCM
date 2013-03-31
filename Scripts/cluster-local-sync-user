@@ -74,9 +74,6 @@ elif [ $shell != $current_shell ]; then
 fi
 
 if [ ! -e /home/$username/.ssh/authorized_keys2 ]; then
-    mkdir -p -m 0700 /home/$username/.ssh
-    cp -f /home/$username/.ssh/id_dsa.pub \
-	/home/$username/.ssh/authorized_keys2
-    chown -Rh ${username}:${primary_group} /home/$username/.ssh
+    cluster-ssh-keygen $username $gid
 fi
 

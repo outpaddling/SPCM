@@ -37,9 +37,7 @@ pw_entry=`awk -F : '$1 == "'$user_name'" { print $0 }' /etc/passwd`
 auto-append-line $user_name "$pw_entry" /usr/local/cluster/users.txt nocomment
 
 printf "Generating ssh keys for $user_name...\n"
-mkdir -m 0700 /home/$user_name/.ssh
-chown -Rh $user_name:$primary_group /home/$user_name/.ssh
-sudo -u $user_name ssh-keygen -t dsa -f /home/$user_name/.ssh/id_dsa -N ''
+cluster-ssh-keygen $user_name $primary_group
 
 # Directory to contain stdout and stderr for running jobs
 mkdir -m 0700 /home/$user_name/.pbs_spool
