@@ -47,7 +47,6 @@ current_shell=`awk -F ':' -v username=$username '$1 == username { print $7 }' /e
 if [ 0$current_uid = 0 ]; then
     printf "User $username does not exist.  Adding...\n"
     # Make sure group exists first
-    ./cluster-local-sync-groups
     cmd="pw useradd $username -u $uid -g $gid -c '$comment' -s $shell"
     $cmd
 elif [ $uid != $current_uid ] || [ $gid != $current_gid ]; then

@@ -214,11 +214,11 @@ if [ $new_group = 1 ]; then
 fi
 
 # Order of pw flags matters!
-useradd_cmd="cluster-useradd $user_name -w random"
+useradd_cmd="cluster-useradd $user_name $primary_group -w random"
 if [ x$user_id != x ]; then
     useradd_cmd="$useradd_cmd -u $user_id"
 fi
-useradd_cmd="$useradd_cmd -c '$comment' -g $primary_group"
+useradd_cmd="$useradd_cmd -c '$comment'"
 if [ x$othergroups != x ]; then
     useradd_cmd="$useradd_cmd -G \"$othergroups\""
 fi

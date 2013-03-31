@@ -24,9 +24,9 @@ eval $groupadd_cmd
 
 # Do not assume home directories are shared!
 for node in `cluster-compute-nodes`; do
-    printf "Creating $group_name on $node...\n"
+    printf "Creating group $group_name on $node...\n"
     # Do not eval here: ssh starts a remote shell which performs expansion
-    ssh $node "$groupadd_cmd"
+    ssh $node "cluster-local-sync-group $group_name"
 done
 
 # FIXME: Factor this assignment out to a separate script
