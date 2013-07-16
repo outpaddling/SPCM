@@ -1,133 +1,191 @@
-#!/bin/sh
+#!/bin/sh -e
 
-if [ `whoami` != "root" ]; then
-    printf "$0 must be run by root.\n"
-    exit 1
-fi
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2011-07-28  Jason Bacon Begin
+##########################################################################
+
 
 pause()
 {
-    local junk
-    
     printf "Press return to continue..."
     read junk
 }
 
 
-while true; do
+##########################################################################
+#   Main
+##########################################################################
+
+if [ `whoami` != root ]; then
+    printf "$0 must be run as root.\n"
+    exit 1
+fi
+
+resp=' '
+while [ 0$resp != 0'q' ]; do
     clear
     cat << EOM
-
-			    **********************
-			    * Cluster Admin Menu *
-			    **********************
-
-    1.. LSF menu
-    2.. Dell OpenManage menu
-    3.. RAID menu
-    4.. Shut down cluster
-    5.. Add a user account
-    6.. Update firewall rules
-    7.. Generate DSET report on hd2 (for Dell support)
-    8.. Find stray processes
-    9.. Connect to iDrac on a compute node (Caution: runs firefox as root)
-    Q.. Quit
+    
+			    *******************************
+			    *   Cluster Admin Main Menu   *
+			    *******************************
+    
+1..  Add user
+2..  Remove user
+3..  Add group
+4..  Remove group
+5..  Install binary package on compute nodes
+6..  Install port from source on compute nodes
+7..  Install binary package on the head node
+8..  Install port from source on the head node
+9..  Edit a system file for distribution
+10.. Distribute system files
+11.. Run command on all compute nodes
+12.. Shut down cluster
+13.. Restart the job scheduler
+14.. Restart Ganglia web monitor
+Q..  Quit
+    
 EOM
-    
+
+    printf "Enter your selection: "
     read resp
-    if [ 0$resp = 0q ]; then
-	exit 0
-    fi
-    
+    printf "\n"
+
     case $resp in
     1)
-	lsf-admin
+	cluster-adduser
 	;;
     2)
-	om-admin
+	printf "This will remove the user and all their files from the cluster.\n"
+	printf "Are you sure? (yes/no) "
+	read sure
+	if [ 0$sure = 0yes ]; then
+	    printf "Username? "
+	    read username
+	    cluster-rmuser $username
+	fi
 	;;
     3)
-	raid-admin
+	printf "Group name? "
+	read groupname
+	printf "pw groupadd flags? "
+	read flags
+	cluster-groupadd $groupname $flags
 	;;
     4)
-	# /usr/sbin/cluster-shutdown
-	# Written by X-ISS
-	printf "Are you sure you want to shut down the cluster? (yes/no) "
-	read resp
-	if [ 0$resp = 0yes ]; then
-	    cluster-shutdown
-	fi
+	printf "Groupname? "
+	read groupname
+	printf "pw groupdel flags? "
+	read flags
+	cluster-groupdel $groupname $flags
 	;;
     5)
-	cluster-adduser
-	pause
+	printf "Package name? "
+	read resp
+	if [ 0$resp != 0 ]; then
+	    cluster-pkg_add $resp
+	fi
 	;;
     6)
-	printf "Editing head node iptables.\n"
-	pause
-	vi /etc/cfm/installer-rhel5.3-5-x86_64/etc/sysconfig/iptables
-	# Copy now so that the new table will be loaded on the next reboot
-	# cfmsync runs AFTER the old sysfiles are loaded
-	cp /etc/cfm/installer-rhel5.3-5-x86_64/etc/sysconfig/iptables /etc/sysconfig
-	
-	printf "Editing I/O node iptables.\n"
-	pause
-	vi /etc/cfm/IO-rhel5.3-5-x86_64/etc/sysconfig/iptables
-	# Copy now so that the new table will be loaded on the next reboot
-	# cfmsync runs AFTER the old sysfiles are loaded
-	scp /etc/cfm/IO-rhel5.3-5-x86_64/etc/sysconfig/iptables hd2:/etc/sysconfig
-
-	# Stages new tables for use after second reboot
-	cfmsync -f
-
-	printf "Restarting firewall daemons.\n"
-	printf "This may momentarily disrupt network connections.  Continue? (y/n) "
-	read resp
-	if [ 0"$resp" = 0y ]; then
-	    /etc/init.d/iptables restart
-	    ssh hd2 /etc/init.d/iptables restart
+	printf "Ports directory? [/usr/ports] "
+	read portsdir
+	if [ 0$portsdir = 0 ]; then
+	    portsdir='/usr/ports'
 	fi
-	pause
+	printf "Category? "
+	read category
+	printf "Port name? "
+	read port
+	cluster-port_add -p $portsdir $category $port
 	;;
     7)
-	#ssh -t hd2 dellsysteminfo
-	#mkdir /root/hd2
-	#scp 'hd2:/root/DSET_Report*' /root/hd2
-	#printf "DSET report saved in /root/hd2\n"
-	cat << EOM
-This option is not currently working.  For some reason,
-
-    ssh hd2 dellsysteminfo
-    
-does not produce the same results as running
-
-    dellsysteminfo
-
-from an interactive shell on hd2.
-
-Log into hd2 and run "dellsysteminfo" as root from the command line.
-The report will be in DSET_Report*.
-
-Move the report file to avi-admin/Incidents.  If this is a new failure,
-create a new folder under Incidents, following the naming scheme of
-the other folders already there.
-EOM
-	pause
+	printf "Package name? "
+	read pkg
+	if [ 0$pkg != 0 ]; then
+	    pkg_add -r -K $pkg
+	fi
 	;;
     8)
-	printf "Username? "
-	read user_name
-	find-strays $user_name
-	pause
+	printf "Ports directory? [/usr/ports] "
+	read portsdir
+	if [ 0$portsdir = 0 ]; then
+	    portsdir='/usr/ports'
+	fi
+	printf "Category? "
+	read category
+	printf "Port name? "
+	read port
+	cluster-local-port_add -p $portsdir $category $port
 	;;
     9)
-	printf "Node number? (e.g. 1-10) "
-	read node
-	idrac-node $node
-	pause
+	printf "Full pathname of file? "
+	read pathname
+	if [ 0$pathname != 0 ]; then
+	    if [ $(basename $pathname) = login.conf ]; then
+		cat << EOM
+The Torque scheduler must be restarted to affect the changes made to
+$pathname.
+EOM
+		pause
+	    fi
+	    repo='/usr/local/cluster/sync-files'
+	    if [ ! -e $repo$pathname ]; then
+		cluster-get-sync-file compute-001 $pathname
+	    fi
+	    $EDITOR $repo$pathname
+	    printf "You must run cluster-sync-files to distribute the changes.\n"
+	fi
+	;;
+    10)
+	cluster-sync-files
+	;;
+    11)
+	printf "Command? "
+	read command
+	printf "Enable terminal control (ssh -t)? (y/n) "
+	read tc
+	if [ 0$tc = 0y ]; then
+	    cluster-run -t "'"$command"'"
+	else
+	    cluster-run "'"$command"'"
+	fi
+	;;
+    12)
+	cluster-shutdown
+	;;
+    13)
+	# Torque
+	if [ -e /var/spool/torque ]; then
+	    printf "Currently running jobs:\n"
+	    qstat
+	    printf "Restarting the PBS scheduler will kill jobs.  Continue? (yes/no) "
+	    read continue
+	    if [ 0$continue = 0yes ]; then
+		cluster-pbs-restart
+	    fi
+	fi
+	# SGE
+	;;
+    14)
+	cluster-ganglia-restart
 	;;
     *)
 	;;
     esac
+    
+    if [ 0$resp != 0'q' ]; then
+	pause
+    fi
 done
+
+exit 0
 

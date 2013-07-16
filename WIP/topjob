@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Find out which node is running a job
+
+# Run topnode on that node
+
