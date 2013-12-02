@@ -212,8 +212,10 @@ install_scheduler()
     cat << EOM
 Please choose a scheduler:
 
-1.. SGE (Requires X11)
-2.. Torque PBS
+1.. HTCondor
+2.. SGE (Requires X11)
+3.. SLURM
+4.. Torque PBS
 
 EOM
 
@@ -222,6 +224,10 @@ EOM
 	resp=`auto-ask scheduler "Enter 1 or 2" unknown`
 	case $resp in
 	1)
+	    auto-install-packages sysutils/condor
+	    pause
+	    ;;
+	2)
 	    if ! auto-package-installed sysutils/sge62; then
 		install_packages sysutils/sge62
 	    
@@ -241,7 +247,11 @@ EOM
 		printf "SGE is already installed.\n"
 	    fi
 	    ;;
-	2)
+	3)
+	    auto-install-packages sysutils/slurm-hpc
+	    pause
+	    ;;
+	4)
 	    if ! auto-package-installed sysutils/torque; then
 		line
 		printf "Installing torque...\n"
