@@ -27,19 +27,6 @@ fi
 
 export AUTO_BUILD_FROM_SOURCE='yes'
 
-# Install munge
-if [ ! -e /usr/ports/security/munge ]; then
-    auto-update-port-framework -c security/munge
-fi
-auto-install-packages security/munge
-# FIXME: This should not be necessary
-# mkdir -p /var/log/munge /var/run/munge
-
-if [ ! -e /usr/ports/devel/libsysinfo ]; then
-    auto-update-port-framework -c devel/libsysinfo
-fi
-auto-install-packages devel/libsysinfo
-
 # Generate munge.key
 /usr/local/etc/rc.d/munged stop
 munge_dir='/usr/local/etc/munge'
@@ -71,54 +58,6 @@ fi
 auto-enable-service munged $0
 service munged restart
 
-# Make sure slurm UID and GID are registered
-uids='/usr/ports/UIDs'
-if ! fgrep -q slurm $uids; then
-    awk -F ':' '
-    {
-	if ( $1 == "_bbstored" )
-	{
-	    print "slurm:*:467:467::0:0:SLURM Daemon:/home/slurm:/usr/sbin/nologin";
-	    print $0;
-	}
-	else
-	{
-	    print $0;
-	}
-    }' $uids > $uids.new
-    if [ ! -e $uids.orig ]; then
-	cp $uids $uids.orig
-    fi
-    mv $uids.new $uids
-fi
-
-gids='/usr/ports/GIDs'
-if ! fgrep -q slurm $gids; then
-    awk -F ':' '
-    { 
-	if ( $1 == "_bbstored" )
-	{
-	    print "slurm:*:467:"
-	    print $0;
-	}
-	else
-	{
-	    print $0;
-	}
-    }' $gids > $gids.new
-    if [ ! -e $gids.orig ]; then
-	cp $gids $gids.orig
-    fi
-    mv $gids.new $gids
-fi
-
-# auto-install-packages sysutils/slurm-hpc
-printf "Reinstall slurm? (y/[n]) "
-read reinstall
-if [ 0$reinstall = 0y ]; then
-    reinstall-wip-port -u -r slurm-hpc
-fi
-
 if [ $node_type = 'head' ]; then
     slurm_conf='/usr/local/etc/slurm.conf'
     if [ ! -e $slurm_conf ]; then
@@ -126,6 +65,12 @@ if [ $node_type = 'head' ]; then
     fi
     vi $slurm_conf
     auto-enable-service slurmctld $0
+    cat << EOM
+
+You can generate a SLURM config file using the web wizard at
+file:///usr/local/share/doc/slurm-*/html/configurator.html
+
+EOM
 else
     default_slurm_conf='/head_usr/local/etc/slurm.conf'
     printf "slurm.conf? [$default_slurm_conf] "

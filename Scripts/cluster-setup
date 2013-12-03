@@ -302,6 +302,20 @@ install_mpi()
 scheduler_config()
 {
     line
+    if auto-package-installed sysutils/slurm-hpc; then
+	cluster-slurm-setup $NODE_TYPE
+    fi
+    
+    if auto-package-installed sysutils/condor; then
+	if [ ! -e $LOCALBASE/etc/condor_config ]; then
+	    cp $LOCALBASE/etc/condor/condor_config $LOCALBASE/etc
+	fi
+	if [ ! -e $LOCALBASE/etc/condor_config.local ]; then
+	    cp $LOCALBASE/etc/condor/condor_config.local $LOCALBASE/etc
+	fi
+	$EDITOR /usr/local/etc/condor_config*
+    fi
+    
     # SGE is reinstalled as a dependency of openmpi
     if auto-package-installed sysutils/sge62; then
 	sge_config      # Run SGE setup tools
