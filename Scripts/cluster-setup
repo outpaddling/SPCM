@@ -50,44 +50,25 @@ stop_pbs()
 {
     printf "Stopping PBS daemons...\n"
     if fgrep -q pbs_sched_enable $RC_CONF; then
-	if /usr/local/etc/rc.d/pbs_sched stop 2> /dev/null; then
+	if service pbs_sched stop > /dev/null 2>&1; then
 	    printf "Stopped pbs_sched.\n"
 	fi
 	sleep 2
     fi
     if fgrep -q pbs_server_enable $RC_CONF; then
-	if /usr/local/etc/rc.d/pbs_server stop 2> /dev/null; then
+	if service pbs_server stop > /dev/null 2>&1; then
 	    printf "Stopped pbs_server.\n"
 	fi
 	sleep 2
     fi
-    if killall pbs_sched 2> /dev/null; then
+    if killall pbs_sched > /dev/null 2>&1; then
 	printf "Rogue pbs_sched terminated.\n"
 	sleep 2
     fi
-    if killall pbs_server 2> /dev/null; then
+    if killall pbs_server > /dev/null 2>&1; then
 	printf "Rogue pbs_server terminated.\n"
 	sleep 2
     fi
-}
-
-
-##########################################################################
-#   Description:
-#       Run command given by arguments and log output.
-##########################################################################
-
-log_cmd()
-{
-    if [ $# -lt 1 ]; then
-	printf "Usage: $0 command [args]\n"
-	exit 1
-    fi
-    log_dir=$START_DIR/desktop-installer-log
-    if [ ! -e $log_dir ]; then
-	mkdir $log_dir
-    fi
-    $* 2>&1 | tee -a $log_dir/$1.log
 }
 
 
@@ -103,8 +84,19 @@ log_cmd()
 
 install_packages()
 {
+    printf "Installing:\n"
     for pkg in $*; do
-	log_cmd auto-install-packages $pkg
+    {
+	printf "\t$pkg...\n"
+	if [ ! -e $LOG_DIR ]; then
+	    mkdir $LOG_DIR
+	fi
+	log_file=$LOG_DIR/`echo $pkg | tr / -`
+	if ! auto-install-packages $pkg > $log_file 2>&1; then
+	    more $log_file
+	    exit 1
+	fi
+    }
     done
 }
 
@@ -222,11 +214,11 @@ Please choose a scheduler:
 EOM
 
     resp=' '
-    while [ 0$resp != 01 ] && [ 0$resp != 02 ]; do
-	resp=`auto-ask scheduler "Enter 1 or 2" unknown`
+    while [ 0$resp != 01 ] && [ 0$resp != 02 ] && [ 0$resp != 03 ] && [ 0$resp != 04 ]; do
+	resp=`auto-ask scheduler "Scheduler selection?" unknown`
 	case $resp in
 	1)
-	    auto-install-packages sysutils/condor
+	    install_packages sysutils/condor
 	    pause
 	    ;;
 	2)
@@ -250,19 +242,24 @@ EOM
 	    fi
 	    ;;
 	3)
-	    auto-install-packages sysutils/slurm-hpc
-	    pause
+	    # Install dependencies
+	    install_packages sysutils/slurm-hpc
+	    
+	    # Reinstall with custom options
+	    reinstall=`auto-ask reinstall-slurm "Rebuild slurm with custom options?" n`
+	    if [ $reinstall = 'y' ]; then
+		install_port sysutils slurm-hpc
+	    fi
 	    ;;
 	4)
 	    if ! auto-package-installed sysutils/torque; then
 		line
-		printf "Installing torque...\n"
 		install_packages sysutils/torque
 		# Package does not set permissions on spool directories
 		# Also, users are encouraged to update sysutils/torque
 		# to the latest version instead of using the package
 		#pkg_delete /var/db/pkg/torque*
-		#auto-install-packages lang/perl devel/libtool
+		#install_packages lang/perl devel/libtool
 		#printf "Reinstalling torque from port to ...\n"
 		#install_port sysutils torque
 	    
@@ -379,7 +376,8 @@ scheduler_config()
 	    # Annihilates server_priv/nodes.  Edit nodes AFTER this!
 	    #if [ ! -e $TSPOOL ]; then
 		printf "Running torque.setup...\n"
-		printf "y\n" | $PREFIX/share/examples/torque/torque.setup root > /dev/null
+		printf "y\n" | $PREFIX/share/examples/torque/torque.setup root \
+		    > $LOG_DIR/torque.setup
 		sleep 5
 		stop_pbs
 	    #fi
@@ -405,14 +403,16 @@ EOM
 
 	    # auto-enable-service doesn't start services that are already
 	    # configured in rc.conf
-	    auto-enable-service pbs_server cluster-setup
+	    auto-enable-service pbs_server cluster-setup \
+		> $LOG_DIR/pbs_server_enable 2>&1
 	    sleep 2
-	    $PREFIX/etc/rc.d/pbs_server restart 2> /dev/null
+	    service pbs_server restart 2> $LOG_DIR/pbs_server_start
 	    sleep 2
 
-	    auto-enable-service pbs_sched cluster-setup
+	    auto-enable-service pbs_sched cluster-setup 
+		> $LOG_DIR/pbs_sched_enable 2>&1
 	    sleep 2
-	    $PREFIX/etc/rc.d/pbs_sched restart 2> /dev/null
+	    service pbs_sched restart 2> $LOG_DIR/pbs_sched_start
 	    sleep 2
 	else
 	    # Use local address of head node on compute nodes.  If
@@ -433,11 +433,11 @@ EOM
 	    ssh $head_host auto-append-line "$(hostname -s)" \
 		"$(hostname -s)" $TSPOOL/server_priv/nodes \
 		cluster-setup
-	    ssh $head_host /usr/local/etc/rc.d/pbs_server restart
+	    ssh $head_host service pbs_server restart
 	    
 	    if fgrep -q pbs_mom $RC_CONF; then
-		if ! $PREFIX/etc/rc.d/pbs_mom stop; then
-		    if killall pbs_mom 2> /dev/null; then
+		if ! service pbs_mom stop > /dev/null 2>&1; then
+		    if killall pbs_mom > /dev/null 2>&1; then
 			printf "Old pbs_mom terminated.\n"
 		    fi
 		fi
@@ -445,9 +445,10 @@ EOM
 
 	    # On compute nodes, add the following line to $RC_CONF:
 	    # pbs_mom_enable="YES"
-	    auto-enable-service pbs_mom cluster-setup
+	    auto-enable-service pbs_mom cluster-setup \
+		> $LOG_DIR/pbs_mom_enable 2>&1
 	    sleep 5
-	    $PREFIX/etc/rc.d/pbs_mom restart
+	    service pbs_mom restart
 	    ssh $head_host pbsnodes
 	    # printf "\nTest this node by running 'pbsnodes' on head node.\n\n"
 	    pause
@@ -481,8 +482,8 @@ nfs_config()
 	    auto-append-line "$share\t-maproot=0\t-network $net.0 -mask 255.255.255.0\n" /etc/exports $0
 	    
 	    printf "Updating $RC_CONF...\n"
-	    auto-append-line "nfs_server_flags="-t -n 16" $RC_CONF $0
-	    /etc/rc.d/nfsd restart
+	    auto-append-line 'nfs_server_flags="-t -n 16"' $RC_CONF $0
+	    service nfsd restart
 	    killall -HUP mountd
 	    printf "\nYou may need to reboot before NFS clients can mount the new shared folder.\n\n"
 	    pause
@@ -621,7 +622,7 @@ ganglia_config()
     if [ $NODE_TYPE = "head" ]; then
 	# Install apache
 	line
-	printf "\nConfiguring apache...\n\n"
+	printf "Configuring apache...\n"
 	if ! auto-package-installed www/apache22; then
 	    install_packages www/apache22
 	    pause
@@ -655,7 +656,8 @@ ganglia_config()
 	fi
 
 	# Must come after php5 install, since http.conf was patched
-	auto-enable-service apache22 cluster-setup
+	auto-enable-service apache22 cluster-setup \
+	    > $LOG_DIR/apache22_enable 2>&1
 	
 	# Add date_default_timezone_set('America/Chicago'); to ganglia.php
 	# or update date.timezone in $PREFIX/etc/php.ini and restart
@@ -674,7 +676,6 @@ ganglia_config()
 	fi
 	
 	line
-	printf "Installing Ganglia web front-end...\n"
 	# Install ganglia web frontend
 	if ! auto-package-installed sysutils/ganglia-webfrontend; then
 	    install_packages sysutils/ganglia-webfrontend
@@ -695,8 +696,8 @@ ganglia_config()
 	fi
 
 	line
-	printf "Restarting apache...\n"
-	$PREFIX/etc/rc.d/apache* restart
+	service apache22 stop > /dev/null 2>&1
+	service apache22 start
     else
 	line
 	cat << EOM
@@ -708,7 +709,6 @@ EOM
     fi
     
     line
-    printf "Installing Ganglia monitor...\n"
     if ! auto-package-installed sysutils/ganglia-monitor-core; then
 	install_packages sysutils/ganglia-monitor-core
     fi
@@ -724,12 +724,16 @@ EOM
 	    $PREFIX/etc/gmond.conf
     fi
     
-    auto-enable-service gmond cluster-setup
-    /usr/local/etc/rc.d/gmond restart
+    service gmond stop > /dev/null 2>&1
+    auto-enable-service gmond cluster-setup \
+	> $LOG_DIR/gmond_enable 2>&1
+    service gmond start
     
     if [ $NODE_TYPE = "head" ]; then
-	auto-enable-service gmetad cluster-setup
-	/usr/local/etc/rc.d/gmetad restart
+	service gmetad stop > /dev/null 2>&1
+	auto-enable-service gmetad cluster-setup \
+	    > $LOG_DIR/gmetad_enable 2>&1
+	service gmetad start
     fi
     
     line
@@ -829,7 +833,7 @@ EOM
     # 
     if [ $NODE_TYPE = 'head' ]; then
 	# Generate ssh keys
-	printf "\nGenerating ssh keys for the head node...\n\n"
+	printf "Generating ssh keys for the head node...\n"
 	id_dsa="$CLUSTER_DATA/id_dsa"
 	if [ ! -e $id_dsa ]; then
 	    rm -rf ~/.ssh
@@ -874,6 +878,7 @@ resource_limits()
 {
     # Set resource limits
     line
+    printf "Configuring resource limits...\n"
     if [ ! -e /etc/login.conf.orig ]; then
 	cp /etc/login.conf /etc/login.conf.orig
     fi
@@ -939,7 +944,7 @@ rsh_config()
 	    if ! fgrep inetd_enable $RC_CONF; then
 		printf 'inetd_enable="YES"\n' >> $RC_CONF
 	    fi
-	    /etc/rc.d/inetd restart
+	    service inetd restart
 	    # FIXME: Use auto-append-line to add to /etc/hosts.equiv
 	    printf "$head_host\n" >> ~/.rhosts
 	fi
@@ -965,12 +970,19 @@ update_system_clock()
 {
     line
     printf "Updating system clock...\n"
-    if /etc/rc.d/ntpd stop 2 /dev/null 2>&1; then
-	printf "Stopped NTP.\n"
+    if ! service ntpd stop > /dev/null 2>&1; then
+	printf "NTP was not running.\n"
+    else
+	if killall -9 ntpd > /dev/null 2>&1; then
+	    printf "Killed rogue ntpd.\n"
+	fi
+	if killall -9 ntpdate > /dev/null 2>&1; then
+	    printf "Killed rogue ntpdate.\n"
+	fi
     fi
     ntpdate pool.ntp.org
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
-    /etc/rc.d/ntpd restart
+    service ntpd start
 }
 
 
@@ -990,7 +1002,6 @@ install_common_tools()
 {
     # Quick-install some common tools
     line
-    printf "Installing common tools...\n"
     install_packages devel/gmake net/rsync converters/libiconv security/sudo
 }
 
@@ -1010,11 +1021,11 @@ install_common_tools()
 get_port_install_method()
 {
     line
-    resp=`auto-ask use-source "Build/install ports from source? (y/n)" n`
+    resp=`auto-ask use-source "Build ports from source?" n`
     if [ 0$resp = 0'y' ]; then
-	AUTO_BUILD_FROM_SOURCE=1
+	export AUTO_BUILD_FROM_SOURCE='yes'
     else
-	AUTO_BUILD_FROM_SOURCE=0
+	export AUTO_BUILD_FROM_SOURCE='fall-back'
 	if [ x$AUTO_PACKAGEROOT = x ]; then
 	    printf "Finding fastest mirror... "
 	    export AUTO_PACKAGEROOT=`auto-fastest-mirror`
@@ -1135,9 +1146,16 @@ MAX_NODES=60000
 HEAD_USR="/head_usr"
 
 # Misc
+PREFIX="/usr/local"
 RC_CONF='/etc/rc.conf'
 START_DIR=`pwd`
-PREFIX="/usr/local"
+
+# Used by child scripts, so export it
+export LOG_DIR=$START_DIR/desktop-installer-log
+line
+printf "Command output will be stored in $LOG_DIR.\n"
+line
+pause
 
 # Config files used by cluster-admin
 CLUSTER_DATA="$PREFIX/cluster"

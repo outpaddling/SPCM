@@ -7,6 +7,12 @@ usage()
 }
 
 
+line()
+{
+    printf "==============================================================================\n"
+}
+
+
 pause()
 {
     local junk
@@ -55,7 +61,7 @@ else
 fi
 
 # Enable munge
-auto-enable-service munged $0
+auto-enable-service munged $0 > $LOG_DIR/munged_enable 2>&1
 service munged restart
 
 if [ $node_type = 'head' ]; then
@@ -63,14 +69,18 @@ if [ $node_type = 'head' ]; then
     if [ ! -e $slurm_conf ]; then
 	cp /usr/local/share/examples/slurm/slurm.conf $slurm_conf
     fi
-    vi $slurm_conf
-    auto-enable-service slurmctld $0
+    line
     cat << EOM
+In another terminal, edit slurm.conf to taste, or you can generate a SLURM
+config file using the web wizard at:
 
-You can generate a SLURM config file using the web wizard at
-file:///usr/local/share/doc/slurm-*/html/configurator.html
+    /usr/local/share/doc/slurm-*/html/configurator.html
 
+The slurmctld daemon will be started after you press return.
 EOM
+    line
+    pause
+    auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
 else
     default_slurm_conf='/head_usr/local/etc/slurm.conf'
     printf "slurm.conf? [$default_slurm_conf] "
@@ -80,7 +90,7 @@ else
     fi
     auto-append-line slurmd_flags "slurmd_flags=\"-f $slurm_conf\"" \
 	/etc/rc.conf $0
-    auto-enable-service slurmd $0
+    auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
     printf "Make sure $slurm_conf is accessible from this node.\n"
     pause
 fi
