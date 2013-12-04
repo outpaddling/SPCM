@@ -315,11 +315,81 @@ install_mpi()
 }
 
 
+slurm_config()
+{
+    # Generate munge.key
+    $LOCALBASE/etc/rc.d/munged stop > /dev/null 2>&1 || true
+    munge_dir="$LOCALBASE/etc/munge"
+    if [ $NODE_TYPE == 'head' ]; then
+	if [ ! -e $munge_dir/munge.key ]; then
+	    mkdir -p -m 0700 $munge_dir
+	    touch $munge_dir/munge.key
+	    chmod 400 $munge_dir/munge.key
+	    printf "Generating munge key...\n"
+	    dd if=/dev/random bs=1 count=1024 > $munge_dir/munge.key
+	fi
+    else
+	# Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
+	head_munge=$HEAD_USR/local/etc/munge/munge.key
+	if [ -e $head_munge ]; then
+	    # munge_keyfile not working with rc script
+	    # auto-append-line munged_flags \
+	    #    "munged_keyfile="$HEAD_USR/local/etc/munge/munge.key"" \
+	    #    /etc/rc.conf $0
+	    mkdir -p -m 0700 $munge_dir
+	    cp $head_munge $munge_dir
+	elif [ ! -e $munge_dir/munge.key ]; then
+	    scp -p ${head_node}:$munge_dir $munge_dir
+	    pause
+	fi
+    fi
+    
+    # Enable munge
+    auto-enable-service munged $0 > $LOG_DIR/munged_enable 2>&1
+    service munged restart
+    
+    if [ $NODE_TYPE = 'head' ]; then
+	slurm_conf="$LOCALBASE/etc/slurm.conf"
+	if [ ! -e $slurm_conf ]; then
+	    cp $LOCALBASE/share/examples/slurm/slurm.conf $slurm_conf
+	fi
+	line
+	cat << EOM
+    In another terminal, edit slurm.conf to taste, or you can generate a SLURM
+    config file using the web wizard at:
+    
+	$LOCALBASE/share/doc/slurm-*/html/configurator.html
+    
+    The slurmctld daemon will be started after you press return.
+EOM
+	line
+	pause
+	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
+    else
+	default_slurm_conf="$HEAD_USR/local/etc/slurm.conf"
+	printf "slurm.conf? [$default_slurm_conf] "
+	read slurm_conf
+	if [ 0$slurm_conf = 0 ]; then
+	    slurm_conf=$default_slurm_conf
+	fi
+	# -f doesn't seem to work
+	# auto-append-line slurmd_flags "slurmd_flags=\"-f $slurm_conf\"" \
+	#    /etc/rc.conf $0
+	ln -sf $slurm_conf $LOCALBASE/etc/slurm.conf
+	service slurmd stop > /dev/null 2>&1 || true
+	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
+	service slurmd restart
+	printf "Make sure $slurm_conf is accessible from this node.\n"
+	pause
+    fi
+}
+
+
 scheduler_config()
 {
     line
     if auto-package-installed sysutils/slurm-hpc; then
-	cluster-slurm-setup $NODE_TYPE
+	slurm_config
     fi
     
     if auto-package-installed sysutils/condor; then
@@ -1165,7 +1235,7 @@ RC_CONF='/etc/rc.conf'
 START_DIR=`pwd`
 
 # Used by child scripts, so export it
-export LOG_DIR=$START_DIR/desktop-installer-log
+LOG_DIR=$START_DIR/desktop-installer-log
 line
 printf "Command output will be stored in $LOG_DIR.\n"
 line
