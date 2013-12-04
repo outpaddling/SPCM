@@ -34,7 +34,7 @@ fi
 export AUTO_BUILD_FROM_SOURCE='yes'
 
 # Generate munge.key
-/usr/local/etc/rc.d/munged stop
+/usr/local/etc/rc.d/munged stop > /dev/null 2>&1 || true
 munge_dir='/usr/local/etc/munge'
 if [ $node_type == 'head' ]; then
     if [ ! -e $munge_dir/munge.key ]; then
@@ -90,6 +90,7 @@ else
     fi
     auto-append-line slurmd_flags "slurmd_flags=\"-f $slurm_conf\"" \
 	/etc/rc.conf $0
+    service slurmd stop > /dev/null 2>&1 || true
     auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
     printf "Make sure $slurm_conf is accessible from this node.\n"
     pause

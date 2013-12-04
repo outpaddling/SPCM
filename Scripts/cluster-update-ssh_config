@@ -3,6 +3,11 @@
 ssh_config='/etc/ssh/ssh_config'
 if [ ! -e $ssh_config.orig ]; then
     cp $ssh_config $ssh_config.orig
+    cp $ssh_config $ssh_config.tail
+else
+    # Strip out the old rules and keep the rest
+    fgrep -A 1000000 '# Original ssh_config' $ssh_config \
+	fgrep -v '# Original ssh_config' > $ssh_config.tail
 fi
 
 cat << EOM > $ssh_config
@@ -35,5 +40,5 @@ done
 
 # Uncomment "Host *" header in original and append to new
 printf "# Original ssh_config:\n" >> $ssh_config
-sed 's/\# Host \*/Host \*/g' $ssh_config.orig >> $ssh_config
+sed 's/\# Host \*/Host \*/g' $ssh_config.tail >> $ssh_config
 

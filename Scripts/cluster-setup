@@ -46,6 +46,7 @@ pause()
 }
 
 
+# FIXME: Base this on stop_service
 stop_pbs()
 {
     printf "Stopping PBS daemons...\n"
@@ -65,6 +66,28 @@ stop_pbs()
 	printf "Rogue pbs_server terminated.\n"
 	sleep 2
     fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-03  Charlie &   Begin
+##########################################################################
+
+stop_service()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: stop_service service\n"
+    fi
+    service $1 stop > /dev/null 2>&1 || true
+    killall $1 > /dev/null 2>&1 || true
 }
 
 
@@ -162,7 +185,7 @@ edit_hosts()
 	fi
     else
 	head_host=`hostname -s`
-	hostname -s > $PREFIX/cluster/head_node
+	hostname -s > $LOCALBASE/cluster/head_node
     fi
 
     # Add head node to local /etc/hosts
@@ -226,12 +249,12 @@ EOM
 		printf "The services will be configured automatically.\n"
 		pause
 		
-		# Source $PREFIX/sge/default/common/settings.csh
+		# Source $LOCALBASE/sge/default/common/settings.csh
 		# All execution hosts must be administrative hosts during the installation.
 		# All hosts which you added to the list of administrative hosts during this
 		# installation procedure can now be installed.
 		line
-		printf "\nAll users should source $PREFIX/sge/<cell>/common/settings.[c]sh\n\n"
+		printf "\nAll users should source $LOCALBASE/sge/<cell>/common/settings.[c]sh\n\n"
 		pause
 	    else
 		printf "SGE is already installed.\n"
@@ -329,7 +352,7 @@ scheduler_config()
 	#printf "Install SGE PVM utils? (y/n) "
 	#read resp
 	#if [ 0$resp = 0'y' ]; then
-	#    cd $PREFIX/sge/pvm/src
+	#    cd $LOCALBASE/sge/pvm/src
 	#    ./aimk
 	#    ./install.sh
 	#    cd $start_dir
@@ -338,7 +361,7 @@ scheduler_config()
     
     if auto-package-installed sysutils/torque; then
 	if [ ! -e $TSPOOL ]; then
-	    cp -Rp $PREFIX/share/examples/torque$TSPOOL $TSPOOL
+	    cp -Rp $LOCALBASE/share/examples/torque$TSPOOL $TSPOOL
 	    chmod 1777 $TSPOOL/checkpoint $TSPOOL/spool $TSPOOL/undelivered
 	fi
 	
@@ -366,13 +389,13 @@ scheduler_config()
 	    #$EDITOR $TSPOOL/torque.cfg
     
 	    # To configure queues on server, execute
-	    # $PREFIX/share/examples/torque/torque.setup <admin>
+	    # $LOCALBASE/share/examples/torque/torque.setup <admin>
 	    stop_pbs
 
 	    # Annihilates server_priv/nodes.  Edit nodes AFTER this!
 	    #if [ ! -e $TSPOOL ]; then
 		printf "Running torque.setup...\n"
-		printf "y\n" | $PREFIX/share/examples/torque/torque.setup root \
+		printf "y\n" | $LOCALBASE/share/examples/torque/torque.setup root \
 		    > $LOG_DIR/torque.setup
 		sleep 5
 		stop_pbs
@@ -380,7 +403,7 @@ scheduler_config()
     
 	    line
 	    nodes_file=$TSPOOL/server_priv/nodes
-	    nodes_backup=$PREFIX/cluster/server_priv-nodes
+	    nodes_backup=$LOCALBASE/cluster/server_priv-nodes
 	    if [ -e $nodes_backup ]; then
 		cp $nodes_backup $nodes_file
 	    fi
@@ -541,7 +564,7 @@ sge_config()
     "head")
 	# Configure SGE master
 	if auto-package-installed sysutils/sge62; then
-	    #cd $PREFIX/sge
+	    #cd $LOCALBASE/sge
 	    # -csp is for added security
 	    #./install_qmaster -csp
 	    #cd $start_dir
@@ -557,11 +580,11 @@ sge_config()
 		printf "sge_qmaster_enable=\"YES\"\n" >> $RC_CONF
 	    fi
 	    
-	    if [ ! -e $PREFIX/sge/$cell ]; then
-		printf "\nRunning $PREFIX/sge/install_qmaster...\n\n"
+	    if [ ! -e $LOCALBASE/sge/$cell ]; then
+		printf "\nRunning $LOCALBASE/sge/install_qmaster...\n\n"
 		pause
 		save_cwd=`pwd`
-		cd $PREFIX/sge
+		cd $LOCALBASE/sge
 		./install_qmaster
 		cd $save_cwd
 	    fi
@@ -570,7 +593,7 @@ sge_config()
     compute)
 	# Configure SGE node
 	if auto-package-installed sysutils/sge62; then
-	    #cd $PREFIX/sge
+	    #cd $LOCALBASE/sge
 	    #./install_execd
 	    #cd $start_dir
 	    
@@ -586,8 +609,8 @@ sge_config()
 	    fi
 	    
 	    # Link cell directory or whole SGE directory from head to
-	    # $PREFIX/sge
-	    ln -sf $HEAD_USR/local/sge/$cell $PREFIX/sge
+	    # $LOCALBASE/sge
+	    ln -sf $HEAD_USR/local/sge/$cell $LOCALBASE/sge
 	    
 	    # 
 	    cat << EOM
@@ -599,11 +622,11 @@ On head node: Run qconf -sh to check and qconf -ah to add.
 EOM
 	    pause
     
-	    #if [ ! -e $PREFIX/sge/$cell ]; then
-		printf "\nRunning $PREFIX/sge/install_execd...\n\n"
+	    #if [ ! -e $LOCALBASE/sge/$cell ]; then
+		printf "\nRunning $LOCALBASE/sge/install_execd...\n\n"
 		pause
 		save_cwd=`pwd`
-		cd $PREFIX/sge
+		cd $LOCALBASE/sge
 		./install_execd
 		cd $save_cwd
 	    #fi
@@ -624,25 +647,25 @@ ganglia_config()
 	    pause
 	fi
 
-	if [ ! -e $PREFIX/etc/apache22/httpd.conf.orig ]; then
+	if [ ! -e $LOCALBASE/etc/apache22/httpd.conf.orig ]; then
 	    printf "Patching httpd.conf...\n"
 	    patch -p0 < $DATADIR/patch-httpd.conf
 	fi
 	
 	# Install a rudimentary home page
-	if [ ! -e $PREFIX/www/apache22/data/global_styles.css ]; then
-	    cp $DATADIR/WWW/* $PREFIX/www/apache22/data
-	    ln -s /usr/local/share/doc $PREFIX/www/apache22/data/Head-node-docs
+	if [ ! -e $LOCALBASE/www/apache22/data/global_styles.css ]; then
+	    cp $DATADIR/WWW/* $LOCALBASE/www/apache22/data
+	    ln -s /usr/local/share/doc $LOCALBASE/www/apache22/data/Head-node-docs
 	fi
 	sed -i '' -e "s|%%SHORT_HOSTNAME%%|$(hostname -s)|g" \
-	    $PREFIX/www/apache22/data/index.php
+	    $LOCALBASE/www/apache22/data/index.php
 	
 	# Check for php5 apache module.  It is not included in the
 	# standard php5 build. Need WITH_APACHE.
 	if ! auto-package-installed lang/php5 || \
-	    [ ! -e $PREFIX/libexec/apache22/libphp5.so ]; then
+	    [ ! -e $LOCALBASE/libexec/apache22/libphp5.so ]; then
 	    install_packages lang/php5
-	    #if [ ! -e $PREFIX/bin/gm4 ]; then
+	    #if [ ! -e $LOCALBASE/bin/gm4 ]; then
 	    #    install_packages devel/m4
 	    #fi
 	    cd /usr/ports/lang/php5
@@ -656,19 +679,19 @@ ganglia_config()
 	    > $LOG_DIR/apache22_enable 2>&1
 	
 	# Add date_default_timezone_set('America/Chicago'); to ganglia.php
-	# or update date.timezone in $PREFIX/etc/php.ini and restart
+	# or update date.timezone in $LOCALBASE/etc/php.ini and restart
 	# Apache
-	if [ ! -e $PREFIX/etc/php.ini ]; then
-	    cp $PREFIX/etc/php.ini-production $PREFIX/etc/php.ini
+	if [ ! -e $LOCALBASE/etc/php.ini ]; then
+	    cp $LOCALBASE/etc/php.ini-production $LOCALBASE/etc/php.ini
 	fi
 	
 	# Set timezone if not already set
-	if ! grep -q '^date.timezone' $PREFIX/etc/php.ini; then
+	if ! grep -q '^date.timezone' $LOCALBASE/etc/php.ini; then
 	    printf "Time zone? (Example: America/Chicago) "
 	    # FIXME: Find a way to validate input
 	    read zone
 	    sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
-		$PREFIX/etc/php.ini
+		$LOCALBASE/etc/php.ini
 	fi
 	
 	line
@@ -678,21 +701,21 @@ ganglia_config()
 	fi
 
 	# patch creates gmetad.orig
-	if ! grep -q CLUSTER-ADMIN-PATCH-DONE $PREFIX/etc/gmetad.conf; then
+	if ! grep -q CLUSTER-ADMIN-PATCH-DONE $LOCALBASE/etc/gmetad.conf; then
 	    patch -p0 < $DATADIR/patch-gmetad.conf
 	fi
 
 	# Configure ganglia
-	if grep -q '%%SHORT_HOSTNAME%%' $PREFIX/etc/gmetad.conf; then
+	if grep -q '%%SHORT_HOSTNAME%%' $LOCALBASE/etc/gmetad.conf; then
 	    # FIXME: gmetad crashes if COMPUTE_NODE_LIST is too long
 	    sed -i '' -e "s|%%SHORT_HOSTNAME%%|$(hostname -s)|g" \
 		      -e "s|%%LONG_HOSTNAME%%|$(hostname)|g" \
 		      -e "s|%%LOCAL_IP%%|$HEAD_IP|g" \
-		$PREFIX/etc/gmetad.conf
+		$LOCALBASE/etc/gmetad.conf
 	fi
 
 	line
-	service apache22 stop > /dev/null 2>&1 || true
+	stop_service apache22
 	service apache22 start
     else
 	line
@@ -709,7 +732,7 @@ EOM
 	install_packages sysutils/ganglia-monitor-core
     fi
     
-    if grep -q 'name = "unspecified"' $PREFIX/etc/gmond.conf; then
+    if grep -q 'name = "unspecified"' $LOCALBASE/etc/gmond.conf; then
 	if [ $NODE_TYPE = head ]; then
 	    name=$(hostname -s)
 	else
@@ -717,16 +740,17 @@ EOM
 	fi
 	sed -i '.orig' \
 	    -e "s|name = \"unspecified\"|name = \"$name\"|g" \
-	    $PREFIX/etc/gmond.conf
+	    $LOCALBASE/etc/gmond.conf
     fi
     
-    service gmond stop > /dev/null 2>&1 || true
+    
+    stop_service gmond
     auto-enable-service gmond cluster-setup \
 	> $LOG_DIR/gmond_enable 2>&1
     service gmond start
     
     if [ $NODE_TYPE = "head" ]; then
-	service gmetad stop > /dev/null 2>&1 || true
+	stop_service gmetad
 	auto-enable-service gmetad cluster-setup \
 	    > $LOG_DIR/gmetad_enable 2>&1
 	service gmetad start
@@ -802,7 +826,7 @@ ssh_authorize()
 ssh_config()
 {
     # Verify that nfs_config has been run
-    
+
     line
     printf "Configuring ssh...\n"
     
@@ -966,15 +990,9 @@ update_system_clock()
 {
     line
     printf "Updating system clock...\n"
-    if ! service ntpd stop > /dev/null 2>&1; then
-	printf "NTP was not running.\n"
-    else
-	if killall -9 ntpd > /dev/null 2>&1; then
-	    printf "Killed rogue ntpd.\n"
-	fi
-	if killall -9 ntpdate > /dev/null 2>&1; then
-	    printf "Killed rogue ntpdate.\n"
-	fi
+    stop_service ntpd
+    if killall -9 ntpdate > /dev/null 2>&1; then
+	printf "Killed rogue ntpdate.\n"
     fi
     ntpdate pool.ntp.org
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
@@ -1048,14 +1066,14 @@ startup_scripts()
     # Install extra login logic
     line
     printf "Installing startup scripts...\n"
-    if [ ! -e $PREFIX/cluster/profile ]; then
-	cp $DATADIR/profile $PREFIX/cluster
+    if [ ! -e $LOCALBASE/cluster/profile ]; then
+	cp $DATADIR/profile $LOCALBASE/cluster
     fi
-    if [ ! -e $PREFIX/cluster/csh.login ]; then
-	cp $DATADIR/csh.login $PREFIX/cluster
+    if [ ! -e $LOCALBASE/cluster/csh.login ]; then
+	cp $DATADIR/csh.login $LOCALBASE/cluster
     fi
-    auto-append-line cluster/profile ". $PREFIX/cluster/profile" /etc/profile cluster-setup
-    auto-append-line cluster/csh.login "source $PREFIX/cluster/csh.login" /etc/csh.login cluster-setup
+    auto-append-line cluster/profile ". $LOCALBASE/cluster/profile" /etc/profile cluster-setup
+    auto-append-line cluster/csh.login "source $LOCALBASE/cluster/csh.login" /etc/csh.login cluster-setup
 }
 
 
@@ -1142,7 +1160,7 @@ MAX_NODES=60000
 HEAD_USR="/head_usr"
 
 # Misc
-PREFIX="/usr/local"
+LOCALBASE="/usr/local"
 RC_CONF='/etc/rc.conf'
 START_DIR=`pwd`
 
@@ -1154,11 +1172,11 @@ line
 pause
 
 # Config files used by cluster-admin
-CLUSTER_DATA="$PREFIX/cluster"
+CLUSTER_DATA="$LOCALBASE/cluster"
 mkdir -p $CLUSTER_DATA
 
 # Source for default files
-DATADIR=$PREFIX/share/cluster-admin
+DATADIR=$LOCALBASE/share/cluster-admin
 
 TSPOOL="/var/spool/torque"
 
