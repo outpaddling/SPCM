@@ -364,7 +364,9 @@ slurm_config()
 EOM
 	line
 	pause
+	stop_service slurmctld
 	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
+	service slurmctld restart
     else
 	default_slurm_conf="$HEAD_USR/local/etc/slurm.conf"
 	printf "slurm.conf? [$default_slurm_conf] "
@@ -786,7 +788,7 @@ ganglia_config()
 
 	line
 	stop_service apache22
-	service apache22 start
+	service apache22 restart
     else
 	line
 	cat << EOM
@@ -817,13 +819,13 @@ EOM
     stop_service gmond
     auto-enable-service gmond cluster-setup \
 	> $LOG_DIR/gmond_enable 2>&1
-    service gmond start
+    service gmond restart
     
     if [ $NODE_TYPE = "head" ]; then
 	stop_service gmetad
 	auto-enable-service gmetad cluster-setup \
 	    > $LOG_DIR/gmetad_enable 2>&1
-	service gmetad start
+	service gmetad restart
     fi
     
     line
@@ -1066,7 +1068,7 @@ update_system_clock()
     fi
     ntpdate pool.ntp.org
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
-    service ntpd start
+    service ntpd restart
 }
 
 
