@@ -6,8 +6,9 @@ if [ ! -e $ssh_config.orig ]; then
     cp $ssh_config $ssh_config.tail
 else
     # Strip out the old rules and keep the rest
-    fgrep -A 1000000 '# Original ssh_config' $ssh_config \
-	fgrep -v '# Original ssh_config' > $ssh_config.tail
+    marker='# Original ssh_config'
+    fgrep -A 1000000 "$marker" $ssh_config | \
+	fgrep -v "$marker" > $ssh_config.tail
 fi
 
 cat << EOM > $ssh_config
