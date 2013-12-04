@@ -1,0 +1,5 @@
+#!/bin/sh
+
+service slurmctld restart
+cluster-run 'service slurmd restart'
+
