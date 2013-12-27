@@ -302,11 +302,13 @@ install_mpi()
     line
     # Install OpenMPI from source so we can choose build options
     if ! auto-package-installed net/openmpi; then
-	if [ $AUTO_BUILD_FROM_SOURCE = 0 ]; then
+	#if [ $AUTO_BUILD_FROM_SOURCE = 0 ]; then
 	    printf "\nInstalling openmpi dependencies from packages...\n"
 	    install_packages net/openmpi
-	    pkg_delete /var/db/pkg/openmpi*
-	fi
+	    # FIXME: use auto-delete-packages
+	    # pkg_delete /var/db/pkg/openmpi*
+	    pkg delete openmpi
+	#fi
 	printf "Reinstalling openmpi from port to customize build...\n"
 	printf "Select your scheduler in the options menu.\n"
 	# FIXME: make -DWITH_TORQUE or -DWITH_SGE
