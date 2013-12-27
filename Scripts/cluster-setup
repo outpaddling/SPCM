@@ -614,7 +614,7 @@ nfs_config()
 	fi
 	
 	# Share home directories
-	if [ `ls -l /home | awk ' { print $11 }'` != /HEAD_USR/home ]; then
+	if [ `ls -l /home | awk ' { print $11 }'` != $HEAD_USR/home ]; then
 	    resp=`auto-ask shared-home "\nConfigure shared home directories? (y/n)" y`
 	    if [ 0$resp = 0'y' ]; then
 		if [ -e $HEAD_USR/home ]; then
