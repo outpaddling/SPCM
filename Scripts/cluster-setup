@@ -317,6 +317,10 @@ install_mpi()
 
 slurm_config()
 {
+    # FIXME: creating these directories should not be necessary
+    # --syslog?
+    mkdir -p /var/log/munge /var/run/munge /var/lib/munge
+    
     # Generate munge.key
     $LOCALBASE/etc/rc.d/munged stop > /dev/null 2>&1 || true
     munge_dir="$LOCALBASE/etc/munge"
@@ -567,8 +571,10 @@ nfs_config()
 	    # FIXME: Make sure NFS server is enabled in rc.conf first
 	    # Does not work for multi-homed host
 	    # ip=`fgrep $head_host /etc/hosts | awk ' { print $1 }' | uniq`
-	    net=${$HEAD_IP%.[0-9]*}
-
+	    net=${HEAD_IP%.[0-9]*}
+	    echo $net
+	    pause
+	    
 	    printf "Updating /etc/exports...\n"
 	    auto-append-line "$share\t-maproot=0\t-network $net.0 -mask 255.255.255.0\n" /etc/exports $0
 	    
@@ -734,15 +740,15 @@ ganglia_config()
 	
 	# Check for php5 apache module.  It is not included in the
 	# standard php5 build. Need WITH_APACHE.
-	if ! auto-package-installed lang/php5 || \
-	    [ ! -e $LOCALBASE/libexec/apache22/libphp5.so ]; then
-	    install_packages lang/php5
-	    #if [ ! -e $LOCALBASE/bin/gm4 ]; then
-	    #    install_packages devel/m4
-	    #fi
+	install_packages lang/php5
+	
+	# Reinstall frm source if apache module is missing
+	if [ ! -e $LOCALBASE/libexec/apache22/libphp5.so ]; then
 	    cd /usr/ports/lang/php5
 	    printf "\nInstalling PHP5 for Ganglia...\n"
-	    make -DBATCH -DWITH_APACHE deinstall clean reinstall
+	    printf "Enable Apache module.\n"
+	    pause
+	    make deinstall clean reinstall
 	    pause
 	fi
 
@@ -773,10 +779,12 @@ ganglia_config()
 	fi
 
 	# patch creates gmetad.orig
-	if ! grep -q CLUSTER-ADMIN-PATCH-DONE $LOCALBASE/etc/gmetad.conf; then
-	    patch -p0 < $DATADIR/patch-gmetad.conf
-	fi
-
+	sed -i '' \
+	    -e 's|my cluster|all nodes|g' \
+	    -e 's|# gridname "MyGrid"|gridname "%%SHORT_HOSTNAME%%"|g' \
+	    -e 's|# trusted_hosts 127.0.0.1 169.229.50.165 my.gmetad.org|trusted_hosts 127.0.0.1 %%LOCAL_IP%% %%LONG_HOSTNAME%%|g' \
+	    $LOCALBASE/etc/gmetad.conf
+	
 	# Configure ganglia
 	if grep -q '%%SHORT_HOSTNAME%%' $LOCALBASE/etc/gmetad.conf; then
 	    # FIXME: gmetad crashes if COMPUTE_NODE_LIST is too long
