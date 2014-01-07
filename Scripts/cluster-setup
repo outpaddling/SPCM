@@ -95,7 +95,7 @@ stop_service()
 #   Description:
 #       Install ports or packages specified by arguments if they are not
 #       already installed.  If $AUTO_BUILD_FROM_SOURCE is true, installs from source,
-#       otherwise attempts to install using pkg_add.
+#       otherwise attempts to install using pkg add.
 #
 #   Arguments:
 #       List of ports in the for "category/name"
@@ -136,7 +136,7 @@ install_port()
     # FIXME: Use cluster-pkgdir
     if [ -e $HEAD_USR/ports/packages/All ] && \
 	ls $HEAD_USR/ports/packages/All/${port}* ; then
-	pkg_add $HEAD_USR/ports/packages/All/${port}*
+	pkg add $HEAD_USR/ports/packages/All/${port}*
     else
 	cd /usr/ports/$category/$port
 	make deinstall

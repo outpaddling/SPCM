@@ -20,16 +20,16 @@ exit
 if ! auto-package-installed $pkg; then
     if [ -e $PKGDIR/$pkg.txz ]; then
 	printf "Installing $pkg.txz from $PKGDIR...\n"
-	pkg_add $PKGDIR/$pkg.txz
+	pkg add $PKGDIR/$pkg.txz
     elif [ -e $PKGDIR/$pkg-[0-9]*.txz ]; then
 	printf "Installing $pkg-[0-9]*.txz from $PKGDIR...\n"
-	pkg_add $PKGDIR/$pkg-[0-9]*.txz
+	pkg add $PKGDIR/$pkg-[0-9]*.txz
     else
 	printf "Downloading $pkg...\n"
-	if ! pkg_add -r -K $pkg; then
+	if ! pkg install $pkg; then
 	    # pkg_add leaves an empty file in $PKGDIR if the pkg does not exist
-	    printf "Failed: Removing $PKGDIR/$pkg.txz\n"
-	    rm $PKGDIR/$pkg.txz
+	    #printf "Failed: Removing $PKGDIR/$pkg.txz\n"
+	    #rm $PKGDIR/$pkg.txz
 	    exit 1
 	fi
     fi

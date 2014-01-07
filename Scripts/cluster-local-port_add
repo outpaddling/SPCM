@@ -58,7 +58,7 @@ export PACKAGES=$(dirname $(cluster-pkgdir))
 if ! auto-package-installed $*; then
     if [ -e $PACKAGES/All/$pkg.txz ]; then
 	printf "Installing $pkg.txz from $PACKAGES/All...\n"
-	pkg_add $PACKAGES/All/$pkg.txz
+	pkg add $PACKAGES/All/$pkg.txz
     else
 	printf "Installing $pkg from source...\n"
 	cd ${PORTSBASE}/$category/$port && make -DBATCH package-recursive

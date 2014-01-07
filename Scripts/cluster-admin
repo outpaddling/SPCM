@@ -108,10 +108,10 @@ EOM
 	cluster-port_add -p $portsdir $category $port
 	;;
     7)
-	printf "Package name? "
+	printf "Port category/name? "
 	read pkg
 	if [ 0$pkg != 0 ]; then
-	    pkg_add -r -K $pkg
+	    auto-install-packages $pkg
 	fi
 	;;
     8)
