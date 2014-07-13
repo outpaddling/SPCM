@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+squeue -o '%5A %10u %12B %4C %5D %6h %10j %10M %2t'
+
+printf '\n'
+sinfo -o '%C'
+
+allocated=`sinfo -h -o '%C' | awk -F '/' ' { print $1 }'`
+total=`sinfo -h -o '%C' | awk -F '/' ' { print $4 }'`
+load=$((allocated * 100 / total))
+printf "\nLoad: %s%%\n" $load
+

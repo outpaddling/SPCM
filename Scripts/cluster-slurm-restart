@@ -1,5 +1,6 @@
 #!/bin/sh
 
+cluster-cp /usr/local/etc/slurm.conf /usr/local/etc
 service slurmctld restart
 cluster-run 'service slurmd restart'
 

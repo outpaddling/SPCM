@@ -96,7 +96,7 @@ esac
 
 if [ -e /usr/local/etc/ldap.conf ]; then
     # Flag usernames not in LDAP
-    ldap_verified_uid=`ldapsearch uid=$user_name | awk '$1 == "uid:" { print $2 }`
+    ldap_verified_uid=`ldapsearch uid=$user_name | awk '$1 == "uid:" { print $2 }'`
     if [ x$ldap_verified_uid != x$user_name ]; then
 	printf "User $user_name is not in the LDAP directory.  Continue? (y/n) "
 	read resp
@@ -117,7 +117,7 @@ read othergroups
 
 # Extract gecos info from ldap server
 if [ -e /usr/local/etc/ldap.conf ]; then
-    default_comment=`ldapsearch uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }`
+    default_comment=`ldapsearch uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
 else
     default_comment=''
 fi

@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+portsnap fetch && portsnap update
+for node in `cluster-compute-nodes`; do
+    rsync -av --delete /usr/ports ${node}:/usr
+done
+

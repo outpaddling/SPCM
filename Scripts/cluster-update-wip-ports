@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+update-wip-ports
+cd /usr/wip
+./clean-all
+for node in `cluster-compute-nodes`; do
+    echo $node
+    rsync -av --delete /usr/wip ${node}:/usr
+done
+
