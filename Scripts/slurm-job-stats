@@ -1,0 +1,33 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-02-06  Jason Bacon - UITS/CEAS - Facilitator,EMS 942Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 job-id\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+job_id=$1
+
+sacct -o alloccpus,nodelist,elapsed,cputime -j $job_id
+
