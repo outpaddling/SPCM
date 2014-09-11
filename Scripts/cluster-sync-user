@@ -1,0 +1,36 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-09-09  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+user_name=$1
+
+for node in `cluster-compute-nodes`; do
+    echo $node
+    node-sync-user $node $user_name
+done
+

@@ -309,7 +309,7 @@ install_mpi()
 	    install_packages net/openmpi
 	    # FIXME: use auto-delete-packages
 	    # pkg_delete /var/db/pkg/openmpi*
-	    pkg delete openmpi
+	    pkg delete -y openmpi
 	#fi
 	printf "Reinstalling openmpi from port to customize build...\n"
 	printf "Select your scheduler in the options menu.\n"
@@ -362,16 +362,11 @@ slurm_config()
 	    cp $LOCALBASE/share/examples/slurm/slurm.conf $slurm_conf
 	fi
 	line
-	cat << EOM
-    In another terminal, edit slurm.conf to taste, or you can generate a SLURM
-    config file using the web wizard at:
-    
-	$LOCALBASE/share/doc/slurm-*/html/configurator.html
-    
-    The slurmctld daemon will be started after you press return.
-EOM
+	edit_slurm_conf=`auto-ask edit-slurm 'Edit slurm.conf manually?' y`
+	if [ $edit_slurm_conf = 'y' ]; then
+	    $EDITOR /usr/local/etc/slurm.conf
+	fi
 	line
-	pause
 	stop_service slurmctld
 	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
 	service slurmctld restart
@@ -385,12 +380,14 @@ EOM
 	# -f doesn't seem to work
 	# auto-append-line slurmd_flags "slurmd_flags=\"-f $slurm_conf\"" \
 	#    /etc/rc.conf $0
+	if [ ! -e $slurm_conf ]; then
+	    printf "Cannot access $slurm_conf.  Aborting...\n"
+	    exit 1
+	fi
 	ln -sf $slurm_conf $LOCALBASE/etc/slurm.conf
 	service slurmd stop > /dev/null 2>&1 || true
 	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
 	service slurmd restart
-	printf "Make sure $slurm_conf is accessible from this node.\n"
-	pause
     fi
 }
 
@@ -603,7 +600,9 @@ nfs_config()
 	    printf "Remote filesystem $head_host:$share already configured.\n"
 	fi
 	mkdir -p $HEAD_USR
-	mount $HEAD_USR
+	if ! mount | fgrep $HEAD_USR; then
+	    mount $HEAD_USR
+	fi
 	pause
     
 	# Add name of node to master list
@@ -613,13 +612,17 @@ nfs_config()
 	fi
 	
 	# Share home directories
-	if [ `ls -l /home | awk ' { print $11 }'` != $HEAD_USR/home ]; then
+	if [ 0`ls -l /home | awk ' { print $11 }'` != 0$HEAD_USR/home ]; then
 	    resp=`auto-ask shared-home "\nConfigure shared home directories? (y/n)" y`
 	    if [ 0$resp = 0'y' ]; then
 		if [ -e $HEAD_USR/home ]; then
 		    # Make sure that both "cd /home" and "cd /usr/home/..."
 		    # go to $HEAD_USR/home on compute nodes.
-		    mv /usr/home /usr/home.local
+		    for dir in /usr/home /home; do
+			if [ -e $dir ]; then
+			    mv $dir $dir.local
+			fi
+		    done
 		    ln -s $HEAD_USR/home /usr
 		    rm -f /home
 		    ln -s $HEAD_USR/home /
@@ -993,10 +996,14 @@ Usually, something like 10 + the number of cores is a good limit for compute
 nodes.
 
 EOM
+	    fgrep 'ACPI CPU' /var/run/dmesg.boot
 	    printf "Max processes for the $NODE_TYPE node? "
 	    read maxproc
+	    
+	    fgrep 'avail memory' /var/run/dmesg.boot
 	    printf "Max memory use for the $NODE_TYPE node? (use 'm' or 'g' suffix) "
 	    read vmem
+	    
 	    printf "umask for the $NODE_TYPE node? 027 "
 	    read umask
 	    sed -i '' -e "s/maxproc=unlimited/maxproc=$maxproc/g" \
@@ -1010,41 +1017,6 @@ EOM
 	if [ $NODE_TYPE = 'compute' ]; then
 	    cp /etc/login.conf $HEAD_USR/local/cluster
 	fi
-    fi
-}
-
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2012-07-30  Charlie &   Begin
-##########################################################################
-
-rsh_config()
-{
-    # Enable rsh
-    if ! grep '^shell' /etc/inetd.conf || ! grep '^login' /etc/inetd.conf; then
-	resp=`auto-ask enable-rshd "Enable rshd? (some MPI programs use it by default) (y/n)" y`
-	if [ 0$resp = 0'y' ]; then
-	    sed -i '.orig' -e 's|^#shell|shell|g' \
-			   -e 's|^#login|login|g' \
-		/etc/inetd.conf
-	    # Add inetd to rc.conf
-	    if ! fgrep inetd_enable $RC_CONF; then
-		printf 'inetd_enable="YES"\n' >> $RC_CONF
-	    fi
-	    service inetd restart
-	    # FIXME: Use auto-append-line to add to /etc/hosts.equiv
-	    printf "$head_host\n" >> ~/.rhosts
-	fi
-    else
-	printf 'rsh already configured.\n'
     fi
 }
 
@@ -1280,7 +1252,7 @@ RC_CONF='/etc/rc.conf'
 START_DIR=`pwd`
 
 # Used by child scripts, so export it
-LOG_DIR=$START_DIR/desktop-installer-log
+LOG_DIR=$START_DIR/cluster-setup-log
 line
 printf "Command output will be stored in $LOG_DIR.\n"
 line
@@ -1339,7 +1311,6 @@ case $NODE_TYPE in
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi
-    rsh_config
     ssh $head_host cluster-update-all-ssh_config
     ;;
 *)

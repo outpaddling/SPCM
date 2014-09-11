@@ -22,8 +22,6 @@ next_uid()
     while uid_taken $uid; do
 	uid=$((uid + 1))
     done
-    #uid=`awk -F ':' ' { print $3 }' /usr/local/cluster/users.txt | sort -n | tail -1`
-    #uid=$((uid + 1))
     printf "%s\n" $uid
 }
 

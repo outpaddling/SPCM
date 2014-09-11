@@ -1,0 +1,67 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-03-26  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 node username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+node=$1
+user_name=$2
+
+# Get user info from /etc/passwd
+# uid, gid, comment, home, shell
+user_id=`awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' /etc/passwd`
+group_id=`awk -F : -v user_name=$user_name '$1 == user_name { print $4 }' /etc/passwd`
+gecos=`awk -F : -v user_name=$user_name '$1 == user_name { print $5 }' /etc/passwd`
+home=`awk -F : -v user_name=$user_name '$1 == user_name { print $6 }' /etc/passwd`
+shell=`awk -F : -v user_name=$user_name '$1 == user_name { print $7 }' /etc/passwd`
+printf "$user_id $group_id $gecos $home $shell\n"
+
+# Create group first if necessary
+group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' /etc/group`
+printf "$group_name\n"
+printf "$node ${user_name}:$group_name...\n"
+
+case `uname` in
+Linux)
+    # -f = return success even if the group already exists
+    ssh $node groupadd -f -g $group_id $group_name
+
+    # Create user
+    ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
+	-s $shell -u $user_id $user_name
+    ;;
+FreeBSD)
+    ssh $node pw groupadd -g $group_id $group_name
+
+    # Create user
+    ssh $node pw useradd -c "\"$gecos\"" -d $home -g $group_id \
+	-s $shell -u $user_id $user_name
+    ;;
+*)
+    printf "$0: Invalid OS: `uname`
+    exit 1
+esac
+
