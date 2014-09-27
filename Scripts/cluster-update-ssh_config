@@ -7,8 +7,10 @@ if [ ! -e $ssh_config.orig ]; then
 else
     # Strip out the old rules and keep the rest
     marker='# Original ssh_config'
+    set +e
     fgrep -A 1000000 "$marker" $ssh_config | \
 	fgrep -v "$marker" > $ssh_config.tail
+    set -e
 fi
 
 cat << EOM > $ssh_config

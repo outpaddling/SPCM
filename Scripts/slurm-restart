@@ -1,6 +1,8 @@
 #!/bin/sh
 
 cluster-cp /usr/local/etc/slurm.conf /usr/local/etc
-service slurmctld restart
+service munged restart
+cluster-run 'service munged restart'
 cluster-run 'service slurmd restart'
+service slurmctld restart
 
