@@ -1,22 +1,11 @@
-#!/bin/sh
+#!/bin/sh -e
 
-##########################################################################
-#   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2012-01-08  Jason Bacon Begin
-##########################################################################
+desired=/head_usr/ports/packages/All
 
-##########################################################################
-#   Main
-##########################################################################
-
-pkgdir='/head_usr/ports/packages/All'
-mkdir -p $pkgdir
-printf "%s\n" $pkgdir
+if [ -e $desired ]; then
+    cache_dir=$desired
+else
+    cache_dir=/var/cache/pkg
+fi
+printf "$cache_dir\n"
 
