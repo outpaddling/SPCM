@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 for pkg in `cat /head_usr/local/cluster/packages.txt`; do
-    cluster-local-pkg_add $pkg
+    cluster-local-pkg-install $pkg
 done
 
 for port in `cat /head_usr/local/cluster/ports.txt`; do

@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+cache_dir=/head_usr/pkg-cache
+mkdir -p cache_dir
+cluster-run "env PKG_CACHEDIR=$cache_dir pkg upgrade -y"
+cluster-portsnap
+

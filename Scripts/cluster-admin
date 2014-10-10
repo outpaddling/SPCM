@@ -92,7 +92,7 @@ EOM
 	printf "Package name? "
 	read resp
 	if [ 0$resp != 0 ]; then
-	    cluster-pkg_add $resp
+	    cluster-pkg-install $resp
 	fi
 	;;
     6)

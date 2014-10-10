@@ -11,7 +11,7 @@ if [ `whoami` != root ]; then
 fi
 
 pkg=$1
-cluster-run "cluster-local-pkg_add $pkg"
+cluster-run "cluster-local-pkg-install $pkg"
 
 auto-append-line $pkg $pkg /usr/local/cluster/packages.txt nocomment
 
