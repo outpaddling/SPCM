@@ -815,7 +815,6 @@ EOM
 	    $LOCALBASE/etc/gmond.conf
     fi
     
-    
     stop_service gmond
     auto-enable-service gmond cluster-setup \
 	> $LOG_DIR/gmond_enable 2>&1
