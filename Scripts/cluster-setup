@@ -728,16 +728,19 @@ ganglia_config()
 
 	if [ ! -e $LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig ]; then
 	    printf "Patching httpd.conf...\n"
-	    patch -p0 < $DATADIR/patch-httpd.conf
+	    mv $LOCALBASE/etc/$APACHE_PKG/httpd.conf \
+		$LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig
+	    awk -f $DATADIR/patch-apache.awk \
+		$LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig \
+		> $LOCALBASE/etc/$APACHE_PKG/httpd.conf
 	fi
 	
 	# Install a rudimentary home page
 	if [ ! -e $LOCALBASE/www/$APACHE_PKG/data/global_styles.css ]; then
 	    cp $DATADIR/WWW/* $LOCALBASE/www/$APACHE_PKG/data
-	    ln -s /usr/local/share/doc $LOCALBASE/www/$APACHE_PKG/data/Head-node-docs
+	    sed -i '' -e "s|%%HOSTNAME%%|$(hostname)|g" \
+		$LOCALBASE/www/$APACHE_PKG/data/index.php
 	fi
-	sed -i '' -e "s|%%SHORT_HOSTNAME%%|$(hostname -s)|g" \
-	    $LOCALBASE/www/$APACHE_PKG/data/index.php
 	
 	# Check for php5 apache module.  It is not included in the
 	# standard php5 build. Need WITH_APACHE.
@@ -747,6 +750,7 @@ ganglia_config()
 	# Must come after php5 install, since http.conf was patched
 	auto-enable-service $APACHE_PKG cluster-setup \
 	    > $LOG_DIR/${APACHE_PKG}_enable 2>&1
+	service $APACHE_PKG reload
 	
 	# Add date_default_timezone_set('America/Chicago'); to ganglia.php
 	# or update date.timezone in $LOCALBASE/etc/php.ini and restart
@@ -814,6 +818,7 @@ EOM
 	    -e "s|name = \"unspecified\"|name = \"$name\"|g" \
 	    $LOCALBASE/etc/gmond.conf
     fi
+    
     
     stop_service gmond
     auto-enable-service gmond cluster-setup \
@@ -904,21 +909,18 @@ ssh_config()
     # Permit root login over ssh
     if ! grep -iq '^PermitRootLogin without-password' /etc/ssh/sshd_config; then
 	sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin without-password|g' /etc/ssh/sshd_config
+	# killall -HUP sshd
+	service sshd reload
 	line
 	cat << EOM
-WARNING: PermitRootLogin has been enabled.  This is necessary for clusters
-that use keyed SSH between nodes for system activities.  If you are concerned
-about security, you can manually reconfigure the head node.
-EOM
-	cat << EOM
 
-Running 'killall -HUP sshd'.  
-If you are logged in via ssh, this will terminate your connection.
-Log back in and re-run cluster-setup $NODE_TYPE.
+WARNING: 'PermitRootLogin without-password' has been enabled.
+
+This is necessary for clusters that use keyed SSH between nodes for system
+activities.  If you are concerned about security, you can manually
+reconfigure the head node.
 
 EOM
-	pause
-	killall -HUP sshd
     fi
     
     if [ $NODE_TYPE = 'head' ]; then
