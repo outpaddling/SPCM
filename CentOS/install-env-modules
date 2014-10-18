@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+yum install -y environment-modules
+cluster-run 'yum install -y environment-modules' compute
+

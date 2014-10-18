@@ -1,0 +1,59 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Create a CentOS bootable USB install disk from an ISO image
+#
+#   Arguments:
+#       1)  Filename of the ISO image
+#       2)  Name of the USB stick device (e.g. /dev/sdb)
+#
+#   Returns:
+#       0 on success, non-zero error codes otherwise.
+#
+#   History:
+#   Date        Name        Modification
+#   2013-08-26  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 iso-filename usb-disk-device\n"
+    exit 1
+}
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+iso=$1
+dev=$2
+
+# Not available on minimal CentOS repo!!
+#if ! which livecd-iso-to-disk; then
+#    yum install livecd-tools
+#fi
+
+# Install dependencies for kyped livecd-iso-to-disk script
+yum install syslinux syslinux-extlinux parted isomd5sum
+
+./livecd-iso-to-disk --format --reset-mbr $iso $dev
+

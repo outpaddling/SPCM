@@ -1,0 +1,73 @@
+
+Enable ping on cluster for PacBio RS Remote software
+
+Does order of creation of RAIDs in h710 matter for boot device?
+    Boot dev must be disk group 0?
+
+http://en.community.dell.com/support-forums/servers/f/906/t/19409407
+    NOTE:Interposer is not required to use this tray with a SATA hard drive
+    for PowerEdge servers. Just mount the SATA drive the same way as SAS
+    drives. However, interposers are required if you want to use SATA drives
+    in PowerVault MD1000.
+
+Separate /sharedapps partition so it can be mounted noexec on head nodes
+
+Good enough:
+    Host compute-*
+	    StrictHostKeyChecking no
+    Host login*
+	    StrictHostKeyChecking no
+    Host raid*
+	    StrictHostKeyChecking no
+
+Add java to default compute node yum installs
+
+Install dos2unix on all nodes
+
+Boot sequence:
+    Primary head
+    Data, backup head, backup data
+    Compute
+    head-mount-shares
+    cluster-mount-nfs
+    cluster-slurm-restart
+
+/sharedapps/pkg-1/openmpi unreadable by default
+
+/usr/pkg-1/lib/slurm unreadable by default
+
+ipoib failure:
+    https://www.mail-archive.com/general@lists.openfabrics.org/msg23588.html
+
+Test nfs/rdma
+
+alt+d to show cnentos boot messages
+
+cluster-setup io: chkconfig nfs on
+
+File ownerships on /home showing as nobody:nobody
+    Resolved by restarting rpcidmap
+
+Make it impossible to overload the head node or any login node
+    No file transfers
+    CPU limits in limits.conf
+
+Low soft-limit on memory use on new compute nodes
+    Strict kernel allocation policies
+
+Creating a USB stick install media
+    1)  On CentOS 6.4 minimal, livecd-tools is not in the yum repository
+	for some bizarre reason.
+    2)  centos-iso-to-usb will install the necessary prereqs to use
+	the livecd-iso-to-disk script kyped from another CentOS installation.
+
+
+
+Benchmark all filesystems locally and from compute nodes before opening!
+
+Rebuilding software RAID:
+http://billing.instantdedicated.com/knowledgebase/1/Linux-rebuild-broken-software-raid-array---CENTOS.html
+
+
+onboot=yes
+

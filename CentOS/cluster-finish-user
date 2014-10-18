@@ -1,0 +1,71 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-16  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+user_name=$1
+
+# Create .forward in home directory.
+printf "${email}\n" > /home/$user_name/.forward
+
+# FIXME: Create a separate protouser
+edquota -p bacon $user_name
+
+cluster-sync-user $user_name
+cluster-passwd $user_name
+ssh-keygen-for-user $user_name
+
+# Update mailing list
+cat << EOM
+
+============================================================================
+
+Go to
+
+    https://listserv.uwm.edu/pantherlist/index.cgi
+
+and add $user_name to uits-cluster-users alias.
+
+============================================================================
+
+EOM
+pause
+

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+cat << EOM
+==========================================================================
+Note:
+
+slurm-shell is provided solely as a convenience for typical users.
+
+If you would like an interactive shell with additional memory, more
+than 1 CPU, etc., you can use salloc and srun directly.  Run
+
+    more /usr/local/bin/slurm-shell
+
+for a basic example and
+
+    man salloc
+    man srun
+
+for full details.
+==========================================================================
+
+EOM
+
+# A simpler way
+srun --mem-per-cpu=3000 --ntasks=1 --pty --preserve-env $@ $SHELL -l
+
+# An overcomplicated way?
+# salloc -n1 srun -n1 -N1 --pty --preserve-env $SHELL -l
+

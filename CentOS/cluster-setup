@@ -1,0 +1,890 @@
+#!/usr/bin/env bash
+
+# Use bash for pushd/popd
+
+##########################################################################
+#   Script description:
+#       CentOS cluster node configurator
+#
+#   Arguments:
+#       head|compute|io
+#
+#   Returns:
+#       0 on success, non-zero error codes
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+#               Jim Wagner
+##########################################################################
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-14  bacon       Begin
+##########################################################################
+
+backup_file()
+{
+    if [ $# != 2 ] || [ ! -d $2 ]; then
+	printf "Usage: $0 file backup-dir\n"
+	exit 1
+    fi
+    
+    file=$1
+    dir=$2
+    
+    if [ ! -e $dir/$file ]; then
+	cp $file $dir
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause script until user presses return.
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Print usage message and exit.
+#
+#   Arguments:
+#       Program name ($0 from main)
+#
+#   Returns:
+#       Does not return.
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 head|compute|io\n"
+    exit 1
+}
+
+
+line()
+{
+    printf '================================================================\n'
+}
+
+
+##########################################################################
+#   Function description:
+#       Convenience pkgsrc installer
+#
+#   Arguments:
+#       1)  category
+#       2)  package
+#
+#   Returns:
+#       NA: Whole script terminates on first failed command
+#
+#   History:
+#   Date        Name        Modification
+#   2013-02-15  Jason Bacon Begin
+##########################################################################
+
+pkgsrc_install_packages()
+{
+    if [ $# -lt 2 ]; then
+	printf "Usage: pkgsrc_install_packages pkgsrc-prefix category/package [category/package ...]\n"
+	exit 1
+    fi
+
+    pkgsrc_prefix=$1
+    shift
+    for pkg in $@; do
+	line
+	printf "Installing $pkg...\n"
+	pushd $pkgsrc_prefix/pkgsrc-1/$pkg
+	bmake install
+	#bmake clean
+	#bmake clean-depends
+	popd
+    done
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+pkgsrc_setup()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: $0 prefix\n"
+	exit 1
+    fi
+    
+    line
+    pkgsrc_prefix=$1
+    printf "Installing pkgsrc in $pkgsrc_prefix...\n"
+
+    if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
+	./pkgsrc-setup $pkgsrc_prefix
+    fi
+    
+    # FIXME: restore PATH after install in case this function is
+    # executed more than once.
+    # old_path=$PATH
+    export PATH=${PATH}:$pkgsrc_prefix/pkg-1/bin:$pkgsrc_prefix/pkg-1/sbin
+    # export PATH=$old_path
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+pkgsrc_append_default_path()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: $0 prefix\n"
+	exit 1
+    fi
+    
+    # Add Pkgsrc binaries to path
+    line
+    pkgsrc_prefix=$1
+    printf "Installing startup scripts...\n"
+    shrc=/etc/profile.d/pkgsrc.sh
+    cshrc=/etc/profile.d/pkgsrc.csh
+    cp $pkgsrc_prefix/pkg-1/etc/shrc $shrc
+    cp $pkgsrc_prefix/pkg-1/etc/cshrc $cshrc
+    chmod +x $shrc
+    chmod +x $cshrc
+    . /etc/profile
+    return 0
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ib_config()
+{
+    # Can we avoid using a groupinstall and just install the essential packages?
+    # Are these necessary, or do we just need to enable rdma?
+    yum groupinstall -y "Infiniband Support"
+    yum install -y infiniband-diags
+    yum install -y perftest
+    
+    # SCSI RDMA Protocol
+    # yum install -y srptools rdma
+    
+    # Required for ib
+    chkconfig ibacm on
+    chkconfig rdma on
+    service ibacm stop
+    service rdma restart
+    service ibacm start
+    
+    # SCSI RDMA protocol
+    # Set SRP_LOAD=yes in /etc/rdma/rdma.conf
+    # sed -i'.bak' 's/SRP_LOAD=no/SRP_LOAD=yes/' /etc/rdma/rdma.conf
+    
+    # chkconfig srpd on
+    # service srpd restart
+
+    # Enable and test IB interface
+    if ip link show | fgrep -q eth0; then
+	default_if=eth0
+    else
+	default_if=em1
+    fi
+    interface=`auto-ask eth-int 'Local Ethernet interface?' $default_if`
+    current_ip=`ip addr show $interface | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
+    # FIXME: Specific to x.y.1.z networks
+    ib_ip=`printf "$current_ip" | awk -F '.' ' { printf("%d.2.%d.%d",$1,$3,$4); }'`
+    
+    # Strip down ifcfg-ib0
+    ip link set ib0 down
+    file=/etc/sysconfig/network-scripts/ifcfg
+    # FIXME: How to we generate ifcfg-ib0 with type, uuid, etc?
+    touch $file-ib0
+    if [ ! -e $file-ib0.orig ]; then
+	cp $file-ib0 $file-ib0.orig
+    fi
+    #if egrep 'DEVICE|HWADDR|TYPE|UUID' $file-ib0 > temp-ib0; then
+    #    printf "Preserving existing ib0 settings.\n"
+    #fi
+    #mv temp-ib0 $file-ib0
+    # FIXME
+    hwaddr=`ip addr show ib0 | awk '$1 == "link/infiniband" { print $2 }'`
+    # FIXME: Make this user input
+    netmask='255.255.0.0'
+    cat << EOM > $file-ib0
+DEVICE=ib0
+HWADDR=$hwaddr
+NETMASK=$netmask
+TYPE=InfiniBand
+IPADDR=$ib_ip
+BOOTPROTO=none
+ONBOOT=yes
+CONNECTED_MODE=yes
+EOM
+    # Causes network to hang if done remotely
+    # Start ib0 by other means
+    # service network restart
+    ip link set ib0 up
+    ip addr show ib0
+    
+    # Add ib interface to /etc/hosts
+    
+    # Set ipath lanes to twice the number of cores?
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ntp_config()
+{
+    line
+    printf "Running ntpdate...\n"
+    # Start with correct date
+    yum install -y ntp ntpdate
+    chkconfig ntpd on
+    service ntpd stop
+    # pool.ntp.org sometimes fails with 'no suitable server found'
+    # ntpdate pool.ntp.org
+    # Temporary workaround
+    # ntpdate pool.ntp.org
+    service ntpd start
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+boot_block_backup()
+{
+    line
+    printf "Backing up boot block...\n"
+    # Save boot block for restoring software RAID
+    if [ ! -e boot-block.$NODE_TYPE ]; then
+	line
+	printf "Backing up boot block...\n"
+	dd if=/dev/sda of=boot-block.$NODE_TYPE bs=512 count=1
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+nfs_config()
+{
+    line
+    nfs=`auto-ask nfs 'Configure NFS?' y`
+    if [ $nfs = 'n' ]; then
+	return 0
+    fi
+    
+    # Install NFS to all nodes
+    printf "Installing NFS utilities...\n"
+    yum install -y nfs-utils
+    
+    chkconfig rpcbind on
+    chkconfig nfslock on
+    chkconfig nfs on
+
+    # Configure shared directories
+    case $NODE_TYPE in
+    'head'|'io')
+	default_range='10.0.0.0/8'
+	range=`auto-ask nfs-range 'NFS export range?' $default_range`
+	
+	printf '\nCurrent exports:\n\n'
+	cat /etc/exports
+	printf '\n'
+	
+	export='prime'
+	while [ x$export != x ]; do
+	    printf 'Enter another path to export, or press return to move on: '
+	    read export
+	    
+	    # Add to NFS exports if not already there
+	    auto-append-line "$export" \
+		"$export $range(rw,no_root_squash)" \
+		/etc/exports $0
+	done
+	    
+	service rpcbind restart
+	service nfslock restart
+	service nfs restart
+    
+	# Signal NFS daemon to update exports
+	# Unnecessary after restarting daemons?
+	# exportfs -a
+	;;
+    
+    'compute')
+	# Compute nodes
+	nfs_server='prime'
+	while [ x$nfs_server != x ]; do
+	    printf 'Enter another NFS server, or press return to move on: '
+	    read nfs_server
+	    
+	    if [ 0$nfs_server != 0 ]; then
+		printf "Export to mount? (e.g. /home) "
+		read export
+		# Add to fstab if not already there
+		auto-append-line "$export$num" \
+		    "${nfs_server}:$export\t$export\tnfs\trw,intr\t0\t0" \
+		    /etc/fstab nocomment
+		mkdir -p $export
+	    fi
+	done
+	 
+	service rpcbind restart
+	service nfslock restart
+	service nfs restart
+    
+	# mount and test
+	mount -a
+	df
+    esac
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+install_core_rpms()
+{
+    line
+    printf "Installing man pages...\n"
+    yum install -y man man-pages
+    
+    printf "Installing core utilities...\n"
+    for pkg in \
+	rsync \
+	sysstat \
+	bind-utils \
+	tcsh zsh ksh \
+	finger \
+	bc \
+	mailx \
+	parted \
+	lsof \
+	emacs \
+	words 
+    do
+	    yum install -y $pkg
+    done
+    # No such package yum install -y impitool     # Remote management and LOM
+
+    # Install compilers, etc.
+    line
+    printf "Installing base development tools...\n"
+    # gcc-* and cvs required for pkgsrc
+    yum install -y gcc gcc-c++ gcc-gfortran cvs subversion
+
+    # Enable X11 apps without installing a desktop system like KDE
+    line
+    printf "Enableing X11 apps without installing desktop...\n"
+    yum install -y xauth
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ssh_config()
+{
+    # Enable incoming ssh
+    line
+    printf 'Configuring sshd...\n'
+    chkconfig sshd on
+    service sshd restart
+    
+    # Enable passwordless ssh so we can distribute hosts entries below
+    if [ ! -e /root/.ssh/id_rsa ]; then
+	printf "Setting up public key...\n"
+	ssh-keygen -f /root/.ssh/id_rsa -N ""
+	
+	# FIXME: Should be part of kickstart setup
+	# mkdir -p /var/www/html
+	# cp /root/.ssh/id_rsa.pub /var/www/html/public_key
+    else
+	printf "id_rsa already exists.\n"
+    fi
+
+    if [ $NODE_TYPE = 'head' ]; then
+	cat << EOM > /etc/profile.d/ssh-keygen.sh
+# Generated by cluster-setup
+if [ ! -f ~/.ssh/id_rsa ]; then
+    ssh-keygen -f ~/.ssh/id_rsa -N ""
+    cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+fi
+EOM
+
+	cat << EOM > /etc/profile.d/ssh-keygen.csh
+# Generated by cluster-setup
+if ( ! -f ~/.ssh/id_rsa ) then
+    ssh-keygen -f ~/.ssh/id_rsa -N ""
+    cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+endif
+EOM
+	chmod 755 /etc/profile.d/ssh-keygen.*sh
+    fi
+    
+    # FIXME: Set PermitRootLogin to without-password on nodes with a public
+    # interface.
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-11  bacon        Begin
+##########################################################################
+
+ldap_config()
+{
+    # Enable ldap authentication for ssh.  OS and dist dependent!
+    # Add to auto-admin Linux tools
+    # http://www.centos.org/docs/5/html/Deployment_Guide-en-US/s1-ldap-pam.html
+
+    # Redhat/CentOS
+    yum install -y openldap-clients.x86_64
+
+    # Edit /etc/ldap.conf, /etc/openldap/ldap.conf, etc.
+    ldap=`auto-ask ldap 'Enable LDAP authentication?' y`
+    if [ $ldap = 'y' ]; then
+	server=`auto-ask ldap-server 'LDAP server?' ldap://ldap.my.domain`
+	ou=`auto-ask ldap-ou 'Organization info?' ou=people,o=my.domain`
+	cert_file=`auto-ask cert 'Name of CERT file?' ./cacert.crt`
+	auto-ldap-client-setup $server $ou $cert_file
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-29  bacon        Begin
+##########################################################################
+
+selinux_disable()
+{
+    # Disable SELinux
+    if [ ! -f /etc/sysconfig/selinux.orig ]; then
+	cp /etc/sysconfig/selinux /etc/sysconfig/selinux.orig
+    fi
+    sed -i 's|SELINUX=enforcing|SELINUX=permissive|' /etc/sysconfig/selinux
+    echo 0 > /selinux/enforce
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  bacon        Begin
+##########################################################################
+
+cluster_startup_scripts()
+{
+    # Bourne shell
+    cat << EOM > /etc/profile.d/cluster.sh
+PS1="[\u@$(hostname|awk -F . ' { printf("%s.%s",$1,$2); }') \W]\\$ "
+alias f=finger
+alias dir='ls -als'
+EOM
+    
+    # C shell
+    cat << EOM > /etc/profile.d/cluster.csh
+set prompt="[%n@$(hostname|awk -F . ' { printf("%s.%s",$1,$2); }') %c]$ "
+alias f finger
+alias dir 'ls -als'
+EOM
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  bacon        Begin
+##########################################################################
+
+apache_install()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: $0 pkgsrc-prefix\n"
+	exit 1
+    fi
+    
+    pkgsrc_install_packages $1 www/apache24
+    
+    # FIXME: Install proper init script
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+slurm_install()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: $0 pkgsrc-prefix\n"
+	exit 1
+    fi
+    
+    if [ ! -e $pkgsrc_prefix/pkg-1/sbin/slurmd ]; then
+	case $NODE_TYPE in
+	'head'|'compute')
+	    pkgsrc_install_packages $pkgsrc_prefix wip/slurm
+	    ;;
+	'io')
+	    ;;
+	esac
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+ganglia_install()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: $0 pkgsrc-prefix\n"
+	exit 1
+    fi
+    pkgsrc_prefix=$1
+    
+    if [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmond ]; then
+	pkgsrc_install_packages $pkgsrc_prefix parallel/ganglia-monitor-core
+    fi
+    if [ $NODE_TYPE = head ] && [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmetad ]; then
+	pkgsrc_install_packages $pkgsrc_prefix www/ganglia-webfrontend
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+passwdqc_enable()
+{
+    # Enable PAM passwdqc
+    # http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-cont
+    yum install -y pam_passwdqc
+    sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
+	/etc/pam.d/system-auth
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+disable_overcommit()
+{
+    # Tighten memory allocation to prevent overcommits from crashing nodes
+    # vm.memory_overcommit
+    #   0 = Default: Heuristic, overcommit_ration, and OOM killer
+    #   1 = Unlimited overcommit (all mallocs succeed)
+    #   2 = No overcommit.  Configure enough swap to allow some slack.
+    auto-append-line 'vm.overcommit_memory = 2' /etc/sysctl.conf $0
+    sysctl vm.overcommit_memory='2'
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+# Quit on first error
+set -e
+
+if [ `whoami` != root ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+if [ $# != 1 ]; then
+    usage $0
+fi
+
+# cluster-setup expects to find certain things in CWD
+if [ $0 != './cluster-setup' ]; then
+    printf 'Error: Must be run as ./cluster-setup.\n'
+    exit 1
+fi
+
+NODE_TYPE=$1
+case $NODE_TYPE in
+'head'|'compute'|'io')
+    ;;
+*)
+    usage $0
+    ;;
+esac
+
+# Save downloaded RPMs
+sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
+
+if [ -e ~/Save/anaconda-ks.cfg ]; then
+    printf "Node already configured.  Reconfigure? [n] "
+    read reconfig
+    if [ 0$reconfig != 0y ]; then
+	exit 0
+    fi
+fi
+
+START_DIR=`pwd`
+export PATH=${PATH}:$START_DIR
+
+##########################################################################
+#   Start with an up-to-date core
+##########################################################################
+
+yum update -y
+printf "Reboot? [y]/n "
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi
+
+#########################################
+# Basic tasks that do not require pkgsrc
+
+cluster_startup_scripts
+boot_block_backup
+ntp_config
+install_core_rpms
+passwdqc_enable
+
+# Configure firewall
+iptables-config
+
+ib=`auto-ask ib-config 'Configure Infiniband?' y`
+if [ $ib = y ]; then
+    ib_config
+fi
+
+nfs_config
+ssh_config
+
+###################################################################
+# Install user software independent of RPMS so that it will not be
+# broken by yum updates.
+
+case $NODE_TYPE in
+'head'|'io')
+    pkgsrc_prefix='/usr'
+    ;;
+'compute')
+    pkgsrc_prefix=`auto-ask sharedapps-dir 'Pkgsrc prefix?' /sharedapps`
+    ;;
+esac
+
+# Pkgsrc base
+pkgsrc_setup $pkgsrc_prefix
+pkgsrc_append_default_path $pkgsrc_prefix
+
+# Common packages
+pkgsrc_install_packages $pkgsrc_prefix \
+    wip/auto-admin wip/ape net/iperf
+
+# Requires auto-admin: Do after pkgsrc_setup
+disable_overcommit
+
+slurm_install $pkgsrc_prefix
+ganglia_install $pkgsrc_prefix
+
+case $NODE_TYPE in
+'head')
+    # Allow root ssh or other remote execution only with keys
+    # On by default in CentOS
+    
+    # Set up cluster-run env to allow running a command on all nodes
+    # ( Initially for updating /etc/hosts )
+
+    # Enable authentication via outside LDAP server
+    # ldap_config
+
+    # Set per-process memory limits to a fraction of RAM
+    set-memory-limits 4194304
+    set-memory-limits 16777216
+
+    # Set up kickstart server
+    kickstart=`auto-ask kickstart 'Enable kickstart server?' y`
+    if [ $kickstart = 'y' ]; then
+	./kickstart-server-setup
+    fi
+    ;;
+
+'compute')    # Compute nodes
+    set-compute-memory-limits
+    
+    # Set default OMP threads to 1 for all jobs
+    ;;
+
+'io')
+    ;;
+
+esac
+
+# Save Kickstart file
+mkdir -p ~/Save
+backup_file ~/anaconda-ks.cfg ~/Save
+

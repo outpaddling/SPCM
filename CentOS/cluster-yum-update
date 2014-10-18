@@ -1,0 +1,25 @@
+#!/bin/sh
+
+cat << EOM
+
+Running yum updates can cause serious problems.
+
+It has been known to render systems unbootable.
+
+Before doing this, you should thoroughly test the latest updates on a
+single, non-critial machine.
+
+This script will reboot each machine after installing updates.
+
+EOM
+
+printf "Are you sure you want to proceed? (yes/[no]) "
+
+read proceed
+if [ 0$proceed == 0yes ]; then
+    cluster-run 'yum update -y && shutdown -r now' compute
+    cluster-run 'yum update -y && shutdown -r now' io
+    ssh login2 'yum update -y && shutdown -r now'
+    yum update -y && shutdown -r now
+fi
+

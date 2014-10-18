@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+# Don't use this.  Use /etc/sysconfig/SLURM instead
+
+exit
+
+auto-append-line UsePAM=1 /usr/pkg-1/etc/slurm.conf
+
+cat << EOM > /etc/pam.d/slurm
+auth     required  pam_localuser.so
+account  required  pam_unix.so
+session  required  pam_limits.so
+EOM
+
+cluster-dist-slurm.conf
+
+# cluster-slurm-restart
+

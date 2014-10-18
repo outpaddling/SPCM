@@ -1,0 +1,80 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+sinfo -o '%n %T'
+
+wc updated-nodes
+
+updated=0
+
+# First, update all currently idle nodes
+nodes=`sinfo -o %n -h`
+for node in $nodes; do
+    if ! fgrep -q $node updated-nodes; then
+	state=`sinfo -n $node -o %T -h`
+	case $state in
+	idle|drained)
+	    printf "Updating $node...\n"
+	    updated=1
+	    scontrol update State=DRAIN NodeName=$node Reason=Upgrading
+	    
+	    # Make sure a job didn't sneak in between sinfo and control
+	    ssh -t $node 'top | head -20'
+	    printf "Update? ([y]/n) "
+	    read go
+	    
+	    if [ 0$go != 0n ]; then
+		printf "Updating idle node $node...\n"
+		ssh $node yum update -y
+		printf "$node\n" >> updated-nodes
+
+		printf "Reboot? ([y]/n) "
+		read reboot
+		if [ 0$reboot != 0n ]; then
+		    # Node will automatically be switched to down
+		    # state when it stops responding.  It must be manually
+		    # switched to resume *after* it has been shut down.
+		    scontrol update State=down NodeName=$node
+		    ssh $node shutdown -r now
+		    scontrol update State=resume NodeName=$node
+		fi
+	    else
+		scontrol update State=RESUME NodeName=$node
+	    fi
+	    
+	    printf "Update another node? ([y]/n) "
+	    read continue
+	    if [ 0$continue = 0n ]; then
+		exit 0
+	    fi
+	    ;;
+	*)
+	    printf "$node is busy (state = $state)\n"
+	    scontrol update nodename=$node state=drain reason=Upgrading
+	    printf "Draining $node...\n"
+	    ;;
+	esac
+    fi
+done
+
+# SLURM will detect nodes as down while they are rebooting.
+# Wait for last node to finish rebooting and reset state to idle.
+if [ $updated = 1 ]; then
+    printf "\nWaiting 5 minutes for last node to reboot...\n"
+    sleep 300
+fi
+./resume-all-down-nodes
+wc updated-nodes
+

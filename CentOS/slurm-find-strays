@@ -1,0 +1,89 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-08-27  Jason Bacon - UITS/CEAS - Facilitator,EMS 942Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+user_name=$1
+
+cat << EOM
+
+Note:
+
+Since it is difficult to distinguish between stray processes and processes
+that are part of a legitimate job, detection of strays on nodes in use by
+the same user for active jobs is not supported at this time.
+
+Hence, it is possible, though unlikely, that some stray processes could be
+overlooked.
+
+EOM
+pause
+
+# Continue if a node is unresponsive
+set +e
+
+for node in `cluster-compute-nodes`; do
+    printf "."
+
+    processes=`ssh -o ConnectTimeout=30 $node ps --no-heading -u $user_name | \
+	awk '$4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'`
+    if [ -n "$processes" ]; then
+	
+	# Check for valid jobs AFTER spotting processes, since a job
+	# might start after the check.
+	
+	# squeue -o '%n' is not working.  Use short list and expand.
+	host_list=`squeue -hu $user_name -o '%N'`
+	if [ -n "$host_list" ]; then
+	    host_list=`hostlist --expand $host_list`
+	fi
+    
+	if echo $host_list | fgrep -q $node; then
+	    printf "\nUser $user_name has jobs running on $node.  Check for strays manually.\n"
+	else
+	    printf "\nStray processes found on $node:\n"
+	    ssh -o ConnectTimeout=30 $node ps --no-heading -u $user_name | \
+		awk '$4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'
+	fi
+    fi
+done
+printf "\n"
+

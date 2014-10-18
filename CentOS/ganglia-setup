@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+yum install httpd php
+
+# php-mysql php-devel php-gd php-pecl-memcache php-pspell php-snmp \
+#    php-xmlrpc php-xml
+
+service httpd restart
+
+mkdir -p /var/lib/ganglia/rrds
+chown nobody:nobody /var/lib/ganglia/rrds/
+
+cp global_styles.css centos-power.jpg /var/www/html
+chmod a+r /var/www/html/*
+
+if [ ! -e /var/www/html/index.php ]; then
+    printf "Cluster name? "
+    read name
+    sed -e "s|login|$name|g" index.php > /var/www/html/index.php
+fi
+
+cp /usr/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
+chkconfig --add gmond
+service gmond restart
+
+cp /usr/pkg-1/share/examples/rc.d/gmetad.init /etc/init.d/gmetad
+chkconfig --add gmetad
+service gmetad restart
+

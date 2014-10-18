@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+cluster-run "yum install -y patch libGLU lsof" compute
+

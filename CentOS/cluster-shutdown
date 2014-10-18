@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-16  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run from the head node.\n"
+    exit 1
+fi
+
+if [ `whoami` != 'root' ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+printf "Shut down compute nodes? (yes/[no]) "
+read sure
+if [ 0$sure = 0yes ]; then
+    cluster-run 'shutdown -h now' compute
+fi
+
+printf "Shut down I/O nodes? (yes/[no]) "
+read sure
+if [ 0$sure = 0yes ]; then
+    cluster-run 'shutdown -h now' io
+fi
+
+printf "Shut down login2? (yes/[no]) "
+read sure
+if [ 0$sure = 0yes ]; then
+    ssh login2 'shutdown -h now'
+fi
+
+printf "Shut down head node? (yes/[no]) "
+read sure
+if [ 0$sure = 0yes ]; then
+    shutdown -h now
+fi
+

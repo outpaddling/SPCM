@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+cluster-run 'hostname; service iptables stop && chkconfig iptables off' compute
+

@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+ssh compute-$1 netstat -i ib0 -c 1
+

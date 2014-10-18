@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cat << EOM
+
+The pending-jobs script is obsolete.
+
+Please use "slurm-pending-jobs".
+
+EOM
+
+

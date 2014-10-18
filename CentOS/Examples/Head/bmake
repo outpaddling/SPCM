@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+if [ `pwd | awk -F '/' ' { print $2 }'` != 'usr' ]; then
+    printf "pkgsrc builds should only be done in /usr on this host.\n"
+    exit 1
+fi
+
+umask 022
+bmake.bin $@
+

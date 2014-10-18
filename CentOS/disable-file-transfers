@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+vi /etc/ssh/sshd_config
+
+chmod 750 /usr/bin/scp
+chmod 750 /usr/bin/rsync
+

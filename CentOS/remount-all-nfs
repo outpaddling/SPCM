@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+ssh data exportfs -f
+
+cluster-run /sharedapps/CentOS-cluster-admin/remount-nfs compute
+

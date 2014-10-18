@@ -1,0 +1,4 @@
+#!/bin/sh
+
+awk '$2 ~ "data2?\\." || $2 ~ "raid1\\." { print $3 }' /etc/hosts
+

@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+# May be needed after adding a user or group
+
+service rpcidmapd restart
+cluster-run 'service rpcidmapd restart' all
+
+

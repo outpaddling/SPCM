@@ -1,0 +1,23 @@
+#!/bin/sh -e
+
+sync=`auto-ask sync "Sync system files first?" y`
+if [ $sync = 'y' ]; then
+    ./cluster-sync-sysfiles
+fi
+
+for node in `cluster-compute-nodes`; do
+    printf "============\n"
+    printf "$node\n"
+    printf "============\n"
+    printf "Copying CentOS-cluster-admin...\n"
+    scp -qrp ../CentOS-cluster-admin ${node}:
+    if ! ssh $node 'test -e /var/cache/yum/x86_64/6/base/packages/apr-1.3.9-5.el6_2.x86_64.rpm'; then
+	printf "Copying yum cache...\n"
+	ssh $node mkdir -p /var/cache/yum
+	scp -qrp /sharedapps/yum-cache/* ${node}:/var/cache/yum
+    fi
+    ssh $node rm -f unattended-compute-node-install
+    ssh $node 'cd CentOS-cluster-admin && ./cluster-setup compute < compute-node-responses.txt'
+    #ssh $node
+done
+

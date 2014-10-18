@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+rpm -Vv keyutils-libs-1.2-1.el5
+rpm -rV openssh-clients
+

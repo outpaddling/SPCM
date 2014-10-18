@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+. ./env.sh
+
+yum install -y parted
+
+#storcli64 help add
+storcli64 /c0 add vd type=raid6 drives=32:0-11
+storcli64 /c0 show
+
+if [ ! -e /dev/sdb1 ]; then
+    parted /dev/sdb mklabel gpt
+    parted /dev/sdb mkpart primary 0 10tb
+fi
+
+mkfs.ext4 /dev/sdb1
+

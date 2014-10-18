@@ -1,0 +1,59 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-03-20  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 connected|datagram\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if [ $1 != connected ] && [ $1 != datagram ]; then
+    usage
+fi
+
+mode=$1
+echo $mode > /sys/class/net/ib0/mode
+if [ $mode = connected ]; then
+    ifconfig ib0 mtu 65520
+    auto-append-line 'CONNECTED_MODE=yes' \
+	/etc/sysconfig/network-scripts/ifcfg-ib0 nolabel
+else
+    printf 'Remove CONNECTED_MODE=yes...\n'
+    pause
+    vi /etc/sysconfig/network-scripts/ifcfg-ib0
+fi
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Latest archived file
+files="`ls /var/log/secure-* | tail -1` /var/log/secure"
+
+egrep "Failed password | Invalid user" $files
+

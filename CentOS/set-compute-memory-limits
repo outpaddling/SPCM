@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+
+# Set per-process memory limits to match RAM
+total_mem=`awk '$1 == "MemTotal:" { print $2 }' /proc/meminfo`
+set-memory-limits $total_mem
+

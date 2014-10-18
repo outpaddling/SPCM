@@ -1,0 +1,48 @@
+#!/bin/sh -e
+
+sys_files="cluster-admin \
+    cluster-slurm-admin \
+    cluster-adduser \
+    cluster-finish-user \
+    cluster-sync-user \
+    node-sync-user* \
+    ssh-keygen-for-user \
+    cluster-shutdown \
+    cluster-slurm-restart \
+    cluster-sync-slurm.conf \
+    cluster-sync-login2 \
+    cluster-sync-data-nodes \
+    cluster-run \
+    cluster-compute-nodes \
+    cluster-io-nodes \
+    cluster-mount-nfs \
+    cluster-backup-sysfiles \
+    cluster-raid-admin \
+    cluster-net-admin \
+    cluster-user-admin \
+    cluster-add-to-group \
+    cluster-backup-login-nodes"
+
+user_files="cluster-io-nodes \
+    slurm-user-cores \
+    slurm-job-status \
+    slurm-pending-jobs \
+    cluster-passwd \
+    ppgen \
+    topnode \
+    cluster-load \
+    cluster-load-summary \
+    pending-jobs \
+    job-stats \
+    slurm-shell \
+    slurm-find-strays"
+
+cp $sys_files /usr/local/sbin
+cp $user_files /usr/local/bin
+
+cd /usr/local/sbin
+chmod 750 $sys_files
+
+cd /usr/local/bin
+chmod 755 $user_files
+

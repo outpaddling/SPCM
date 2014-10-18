@@ -1,0 +1,32 @@
+#!/bin/sh
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+if [ `whoami` != 'root' ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+cat << EOM
+
+Restarting the scheduler may kill running jobs, depending on what changes
+have been made to the configuation.
+
+EOM
+
+printf "Are you sure you want to restart the scheduler? (yes/[no]) "
+read sure
+if [ 0$sure != 0yes ]; then
+    exit 0
+fi
+
+cluster-sync-slurm.conf
+printf 'Compute and backup nodes...\n'
+cluster-run '/usr/pkg-1/etc/init.d/munge restart && /usr/pkg-1/etc/init.d/slurm restart' backup
+cluster-run '/sharedapps/pkg-1/etc/init.d/munge restart && /sharedapps/pkg-1/etc/init.d/slurm restart' compute
+printf 'Head node...\n'
+/usr/pkg-1/etc/init.d/munge restart && /usr/pkg-1/etc/init.d/slurm restart
+

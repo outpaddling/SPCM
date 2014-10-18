@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+# Needed by Abaqus
+cluster-run 'yum install -y compat-libtermcap.i686' compute
+

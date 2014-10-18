@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+. ./env.sh
+
+service nfs stop
+umount $dir
+
+storcli64 /c0/v1 del
+storcli64 /c0 show
+ls /dev/sdb*
+

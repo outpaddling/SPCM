@@ -1,0 +1,80 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-08  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    cat << EOM
+    
+			    **************************
+				Cluster Admin Menu
+			    **************************
+				
+1.. Shut down cluster
+2.. Back up system files
+3.. SLURM management
+4.. RAID management
+5.. Network management
+6.. User management
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	cluster-shutdown
+	;;
+    2)
+	cluster-backup-sysfiles
+	;;
+    3)
+	cluster-slurm-admin
+	;;
+    4)
+	cluster-raid-admin
+	;;
+    5)
+	cluster-net-admin
+	;;
+    6)
+	cluster-user-admin
+	;;
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+    pause
+done
+

@@ -1,0 +1,76 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-08  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    cat << EOM
+    
+			    **************************
+				Cluster Admin Menu
+			    **************************
+				
+1.. Add user
+2.. Change user's password
+3.. Add group
+4.. Add user to another group
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	cluster-adduser
+	;;
+    2)
+	printf "Username? "
+	read user_name
+	cluster-passwd $user_name
+	;;
+    3)
+	printf "New group name? "
+	read group
+	cluster-add-group $group
+	;;
+    4)
+	printf "Username? "
+	read user_name
+	printf "Group name? "
+	read group_name
+	cluster-add-to-group $user_name $group_name
+	;;
+    Q|q)
+	exit 0
+    esac
+    pause
+done
+

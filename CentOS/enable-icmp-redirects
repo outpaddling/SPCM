@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+sysctl net.ipv4.conf.all.accept_redirects=1
+sysctl net.ipv6.conf.all.accept_redirects=1
+
+auto-append-line net.ipv4.conf.all.accept_redirects=1 /etc/sysctl.conf $0
+auto-append-line net.ipv6.conf.all.accept_redirects=1 /etc/sysctl.conf $0
+

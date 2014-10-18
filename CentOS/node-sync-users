@@ -1,0 +1,40 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-03-26  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 node\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+node=$1
+
+for user_name in `awk -F : ' { print $1 }' /etc/passwd`; do
+    user_id=`awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' /etc/passwd`
+    printf "$user_name $user_id\n"
+    # FIXME: > 500 is not a generalized criteria for normal users
+    if [ $user_id -gt 500 ]; then
+	node-sync-user $node $user_name
+    fi
+done
+

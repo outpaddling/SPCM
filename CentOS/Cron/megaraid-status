@@ -1,0 +1,38 @@
+#!/bin/sh -e
+
+export PATH=${PATH}:/opt/MegaRAID/storcli
+
+ctrlcount=`storcli64 show ctrlcount | awk '$1 == "Controller" { print $4 }'`
+
+drives=`/opt/MegaRAID/storcli/storcli64 /call/eall/sall show all | \
+    egrep 's[0-9] State' | awk ' { print $2 }'`
+
+for drive in $drives; do
+    if ! /opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    grep 'Media Error Count' | awk '$5 != "0" { exit 1 }'; then
+	printf "\nWarning: media errors for drive $drive:\n\n"
+	/opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+    
+    if ! /opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    grep 'Predictive Failure Count' | awk '$5 != "0" { exit 1 }'; then
+	printf "\nWarning: predictive failures for drive $drive:\n\n"
+	/opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+
+    if /opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    grep 'S.M.A.R.T' | fgrep -v "No"; then
+	printf "\nWarning: S.M.A.R.T alert for drive $drive:\n\n"
+	/opt/MegaRAID/storcli/storcli64 $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+done
+
+c=0
+while [ $c -lt $ctrlcount ]; do
+    storcli64 /c$c show
+    c=$((c + 1))
+done
+

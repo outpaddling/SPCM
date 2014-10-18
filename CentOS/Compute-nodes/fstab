@@ -1,0 +1,34 @@
+
+#
+# /etc/fstab
+# Created by anaconda on Fri Dec 27 10:02:03 2013
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+
+# UUIDs replaced by device names so same fstab can be used on all
+# compute nodes.  JB 2014-02-17
+
+/dev/sda5 /                       ext4    defaults        1 1
+/dev/sda1 /boot                   ext4    defaults        1 2
+/dev/sda6 /data                   ext4    defaults,nosuid 1 2
+/dev/sda3 /var                    ext4    defaults        1 2
+/dev/sda2 swap                    swap    defaults        0 0
+tmpfs     /dev/shm                tmpfs   defaults        0 0
+devpts    /dev/pts                devpts  gid=5,mode=620  0 0
+sysfs     /sys                    sysfs   defaults        0 0
+proc      /proc                   proc    defaults        0 0
+
+login:/home             /home   nfs     rw,intr,auto  0       0
+data-ib0:/sharedapps    /sharedapps     nfs     rw,intr,auto  0       0
+data-ib0:/share1        /share1 nfs     rw,intr,auto  0       0
+data-ib0:/share2        /share2 nfs     rw,intr,auto  0       0
+data-ib0:/share3        /share3 nfs     rw,intr,auto  0       0
+data-ib0:/share4        /share4 nfs     rw,intr,auto  0       0
+data-ib0:/share5        /share5 nfs     rw,intr,auto  0       0
+data-ib0:/share6        /share6 nfs     rw,intr,auto  0       0
+data-ib0:/share7        /share7 nfs     rw,intr,auto  0       0
+data-ib0:/share8        /share8 nfs     rw,intr,auto  0       0
+data-ib0:/share9        /share9 nfs     rw,intr,auto  0       0
+raid1-ib0:/fasttemp1	/fasttemp1 nfs	rw,intr,auto  0       0

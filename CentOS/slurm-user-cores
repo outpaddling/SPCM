@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+usage()
+{
+    printf "Usage: $0 [username]\n"
+    exit 1
+}
+
+case $# in
+1)
+    user=$1
+
+    running_cores=`squeue -h -u $1 -o '%C' --states=running | awk '
+	BEGIN   { total = 0; }
+		{ total += $1; }
+	END     { print total; }'`
+
+    pending_cores=`squeue -h -u $1 -o '%C' --states=pending | awk '
+	BEGIN   { total = 0; }
+		{ total += $1; }
+	END     { print total; }'`
+    
+    if [ -r /home/$user ]; then
+	share=`ls -ld /home/$user/[Dd]ata | awk ' { print $11 }'`
+    else
+	share='Cannot read home directory.  Try running as root.'
+    fi
+    printf "%-12s%-8s%-8s%s\n" $user $running_cores $pending_cores "$share"
+    ;;
+0)
+    # Recursive call for each active user
+    running_users=`squeue -h --states=all | awk ' { print $4 }' | sort | uniq`
+    printf "%-12s%-8s%-8s%s\n" "Username" "Running" "Pending" "Share"
+    for user in $running_users; do
+	slurm-user-cores $user
+    done
+    printf "\n"
+    ssh data df | egrep '/share|/fasttemp'
+    printf "\n"
+    cluster-load-summary
+    ;;
+*)
+    usage
+    ;;
+esac
+

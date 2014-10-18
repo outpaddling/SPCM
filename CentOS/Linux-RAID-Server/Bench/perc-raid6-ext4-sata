@@ -1,0 +1,179 @@
+sh: /sbin/mount: No such file or directory
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda4       394G  3.1G  371G   1% /
+tmpfs            16G     0   16G   0% /dev/shm
+/dev/sda1      1008M   77M  881M   8% /boot
+/dev/sda2        32G  339M   30G   2% /var
+/dev/sdb1       9.0T  168M  8.5T   1% /fasttemp
+
+This test should be run on a completely idle system.
+Make sure the load average near 0, and I/O activity
+is nonexistant.  Single user mode is the best option.
+
+Press return to begin...
+File size = 67230801920
+Linux 2.6.32-431.5.1.el6.x86_64 x86_64 physmem=33615400960
+
+Mount options:
+
+
+Disk free:
+
+
+===========================================================
+Trial 1...
+===========================================================
+Testing small array, high cache hit-ratio...
+Filling a 64.00 KiB array 16384 times 1 bytes at a time...
+   64.00 KiB array         1.00 B blocks       776.00 ms      1319.59 MiB/s
+
+Filling a 64.00 KiB array 16384 times 2 bytes at a time...
+   64.00 KiB array         2.00 B blocks       255.00 ms      4015.69 MiB/s
+
+Filling a 64.00 KiB array 16384 times 4 bytes at a time...
+   64.00 KiB array         4.00 B blocks       114.00 ms      8982.46 MiB/s
+
+Filling a 64.00 KiB array 16384 times 8 bytes at a time...
+   64.00 KiB array         8.00 B blocks        60.00 ms     17066.67 MiB/s
+
+Testing large array, low cache hit-ratio...
+Filling a 512.00 MiB array 5 times 1 bytes at a time...
+  512.00 MiB array         1.00 B blocks      1261.00 ms      2030.13 MiB/s
+
+Filling a 512.00 MiB array 5 times 2 bytes at a time...
+  512.00 MiB array         2.00 B blocks       695.00 ms      3683.45 MiB/s
+
+Filling a 512.00 MiB array 5 times 4 bytes at a time...
+  512.00 MiB array         4.00 B blocks       396.00 ms      6464.65 MiB/s
+
+Filling a 512.00 MiB array 5 times 8 bytes at a time...
+  512.00 MiB array         8.00 B blocks       341.00 ms      7507.33 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     50334.00 ms      1273.82 MiB/s
+
+Performing 1024 low-level random seeks with 65536 byte reads...
+[                                                                ]****************************************************************
+        1024 seek       64.00 KiB blocks         5.24 ms        12.80 MiB/s
+
+Performing a 64116 mebibyte low-level sequential read...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB read       64.00 KiB blocks     74598.00 ms       859.49 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     47553.00 ms      1348.31 MiB/s
+
+===========================================================
+Trial 2...
+===========================================================
+Testing small array, high cache hit-ratio...
+Filling a 64.00 KiB array 16384 times 1 bytes at a time...
+   64.00 KiB array         1.00 B blocks       478.00 ms      2142.26 MiB/s
+
+Filling a 64.00 KiB array 16384 times 2 bytes at a time...
+   64.00 KiB array         2.00 B blocks       278.00 ms      3683.45 MiB/s
+
+Filling a 64.00 KiB array 16384 times 4 bytes at a time...
+   64.00 KiB array         4.00 B blocks       124.00 ms      8258.06 MiB/s
+
+Filling a 64.00 KiB array 16384 times 8 bytes at a time...
+   64.00 KiB array         8.00 B blocks        60.00 ms     17066.67 MiB/s
+
+Testing large array, low cache hit-ratio...
+Filling a 512.00 MiB array 5 times 1 bytes at a time...
+  512.00 MiB array         1.00 B blocks      1262.00 ms      2028.53 MiB/s
+
+Filling a 512.00 MiB array 5 times 2 bytes at a time...
+  512.00 MiB array         2.00 B blocks       695.00 ms      3683.45 MiB/s
+
+Filling a 512.00 MiB array 5 times 4 bytes at a time...
+  512.00 MiB array         4.00 B blocks       397.00 ms      6448.36 MiB/s
+
+Filling a 512.00 MiB array 5 times 8 bytes at a time...
+  512.00 MiB array         8.00 B blocks       344.00 ms      7441.86 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     48998.00 ms      1308.55 MiB/s
+
+Performing 1024 low-level random seeks with 65536 byte reads...
+[                                                                ]****************************************************************
+        1024 seek       64.00 KiB blocks         5.07 ms        12.80 MiB/s
+
+Performing a 64116 mebibyte low-level sequential read...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB read       64.00 KiB blocks     74774.00 ms       857.47 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     46587.00 ms      1376.27 MiB/s
+
+===========================================================
+Trial 3...
+===========================================================
+Testing small array, high cache hit-ratio...
+Filling a 64.00 KiB array 16384 times 1 bytes at a time...
+   64.00 KiB array         1.00 B blocks       470.00 ms      2178.72 MiB/s
+
+Filling a 64.00 KiB array 16384 times 2 bytes at a time...
+   64.00 KiB array         2.00 B blocks       256.00 ms      4000.00 MiB/s
+
+Filling a 64.00 KiB array 16384 times 4 bytes at a time...
+   64.00 KiB array         4.00 B blocks       114.00 ms      8982.46 MiB/s
+
+Filling a 64.00 KiB array 16384 times 8 bytes at a time...
+   64.00 KiB array         8.00 B blocks        60.00 ms     17066.67 MiB/s
+
+Testing large array, low cache hit-ratio...
+Filling a 512.00 MiB array 5 times 1 bytes at a time...
+  512.00 MiB array         1.00 B blocks      1262.00 ms      2028.53 MiB/s
+
+Filling a 512.00 MiB array 5 times 2 bytes at a time...
+  512.00 MiB array         2.00 B blocks       695.00 ms      3683.45 MiB/s
+
+Filling a 512.00 MiB array 5 times 4 bytes at a time...
+  512.00 MiB array         4.00 B blocks       396.00 ms      6464.65 MiB/s
+
+Filling a 512.00 MiB array 5 times 8 bytes at a time...
+  512.00 MiB array         8.00 B blocks       343.00 ms      7463.56 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     49527.00 ms      1294.57 MiB/s
+
+Performing 1024 low-level random seeks with 65536 byte reads...
+[                                                                ]****************************************************************
+        1024 seek       64.00 KiB blocks         5.38 ms        12.80 MiB/s
+
+Performing a 64116 mebibyte low-level sequential read...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB read       64.00 KiB blocks     73925.00 ms       867.32 MiB/s
+
+Performing a 64116 mebibyte low-level sequential write...
+Block size: 65536  Blocks: 1025860
+[                                                                ]****************************************************************
+   62.61 GiB write      64.00 KiB blocks     47814.00 ms      1340.95 MiB/s
+
+Averages of 3 trials:
+   64.00 KiB array         1.00 B blocks       574.00 ms      1783.97 MiB/s
+   64.00 KiB array         2.00 B blocks       263.00 ms      3893.54 MiB/s
+   64.00 KiB array         4.00 B blocks       117.00 ms      8752.14 MiB/s
+   64.00 KiB array         8.00 B blocks        60.00 ms     17066.67 MiB/s
+  512.00 MiB array         1.00 B blocks      1261.00 ms      2030.13 MiB/s
+  512.00 MiB array         2.00 B blocks       695.00 ms      3683.45 MiB/s
+  512.00 MiB array         4.00 B blocks       396.00 ms      6464.65 MiB/s
+  512.00 MiB array         8.00 B blocks       342.00 ms      7485.38 MiB/s
+   62.61 GiB write      64.00 KiB blocks     49619.00 ms      1292.17 MiB/s
+        1024 seek       64.00 KiB blocks         5.23 ms        12.80 MiB/s
+   62.61 GiB read       64.00 KiB blocks     74432.00 ms       861.41 MiB/s
+   62.61 GiB rewrite    64.00 KiB blocks     47318.00 ms      1355.01 MiB/s

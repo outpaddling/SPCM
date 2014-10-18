@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+# Install from pkgsrc
+cd /usr/pkgsrc-1/jb-wip/denyhosts
+bmake install
+
+# Enable init script
+chkconfig denyhosts on
+

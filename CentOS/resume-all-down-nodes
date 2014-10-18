@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+sinfo
+
+down_nodes=`sinfo | awk '$5 ~ "down" { print $6 }'`
+
+for node in $down_nodes; do
+    printf "Resuming $node...\n"
+    scontrol update state=resume nodename=$node
+done
+
+sinfo
+

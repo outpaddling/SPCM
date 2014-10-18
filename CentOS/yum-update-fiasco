@@ -1,0 +1,38 @@
+
+Kernel panic - not syncing: Attempted to kill init!
+Pid: 1, comm: init Not tainted 2.6.32-220.4.1.e16.x86_64 #1
+
+================================================================================
+ Package              Arch        Version                    Repository    Size
+================================================================================
+Installing:
+ kernel               x86_64      2.6.32-431.5.1.el6         updates       28 M
+Updating:
+ kernel-firmware      noarch      2.6.32-431.5.1.el6         updates       13 M
+ kernel-headers       x86_64      2.6.32-431.5.1.el6         updates      2.8 M
+ mysql-libs           x86_64      5.1.73-3.el6_5             updates      1.2 M
+ nss                  x86_64      3.15.3-6.el6_5             updates      822 k
+ nss-sysinit          x86_64      3.15.3-6.el6_5             updates       40 k
+ nss-tools            x86_64      3.15.3-6.el6_5             updates      358 k
+ wget                 x86_64      1.12-1.11.el6_5            updates      483 k
+ 
+Transaction Summary
+================================================================================
+
+space bar to open grub menu
+boot from previous kernel
+
+If drops to single user:
+    mount -o remount /
+    vi /etc/fstab
+    change UUIDs to device names
+	sda5 /
+	sda6 /data
+	sda3 /var
+	sda2 swap
+	sda1 /boot
+    reboot, again select previous kernel
+
+yum downgrade kernel-headers kernel-firmware
+yum remove kernel-2.6.32-431.5.1.el6
+

@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+# Silence complaints from Nexpose
+# Causes problems for LSTC license client
+
+exit
+
+sysctl net.ipv4.conf.all.forwarding=0
+sysctl net.ipv4.conf.default.forwarding=0
+
+auto-append-line net.ipv4.conf.all.forwarding=0 /etc/sysctl.conf $0
+auto-append-line net.ipv4.conf.default.forwarding=0 /etc/sysctl.conf $0
+

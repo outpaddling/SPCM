@@ -1,0 +1,204 @@
+#!/bin/sh -e
+
+pause()
+{
+    printf "Press return to continue...\n"
+    read junk
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-05-03  Jason Bacon - CEAS - Facilitator,EMS 942Begin
+##########################################################################
+
+select_from_list()
+{
+    local list=($@)
+    local n=0
+    while [ $n -lt 1 ] || [ $n -gt ${#list[@]} ]; do
+	printf "\n"
+	for ((c=0; c<${#list[@]}; ++c)); do
+	    local i=$(($c + 1))
+	    printf "%d.. %s\n" $i ${list[$c]}
+	done
+	printf '\nEnter a number from the menu: '
+	read n
+    done
+    i=$(($n - 1))
+    selection=${list[$i]}
+}
+
+if [ `whoami` != "root" ]; then
+    printf "$0 must be run by root.\n"
+    exit 1
+fi
+
+# User information
+printf "Username? "
+read user_name
+
+printf "UID? "
+read uid
+
+# Get gecos from LDAP
+printf "Full name? "
+read gecos
+
+# Email address
+printf "Email address? [$user_name@uwm.edu] "
+read email
+if [ 0$email = 0 ]; then
+    email=$user_name'@uwm.edu'
+fi
+
+# Convention
+home_dir=/home/$user_name
+
+# User's college/school
+colleges="CEAS LS LSOB SFS SPH Other"
+select_from_list $colleges
+college=$selection
+
+if [ $college = 'Other' ]; then
+    printf "College abbreviation? "
+    read college
+fi
+
+# User's department
+case $college in
+CEAS)
+    depts="CIV COMPSCI ELEC IND MAT MECH"
+    select_from_list $depts
+    ;;
+LS)
+    depts="IT BIO CHM ECN MTH PHY POL PSY"
+    select_from_list $depts
+    ;;
+LSOB)
+    selection="LSOB"
+    ;;
+SFS)
+    selection="SFS"
+    ;;
+SPH)
+    selection="SPH"
+    ;;
+Other)
+    printf "Department abbreviation? "
+    read selection
+    ;;
+esac
+dept=$selection
+
+# User's role in the organization
+titles='Facilitator Faculty Postdoc Researcher Student Other'
+select_from_list $titles
+title=$selection
+
+gecos="$gecos - $college/$dept - $title"
+
+if [ $title = 'Faculty' ]; then
+    create_group='y'
+    primary_group=$user_name
+else
+    cat << EOM
+
+A group is created for each faculty member.  Their assistants
+may be given their own group, or may be assigned the faculty's group as
+their only group.  The latter strategy ensures that all files created
+by assistants will have the PIs name attached, and that group permissions
+will allow the PI to access their assistants' files.
+
+EOM
+
+    printf "Create primary group with same name? (y/n) "
+    read create_group
+
+    if [ 0$create_group != 0y ]; then
+	# The primary group for assistants should be that of some PI
+	printf "Primary group for this user? (usually their advisor's user name) "
+	read primary_group
+    else
+	primary_group=$user_name
+	
+	printf "GID for $primary_group? "
+	read gid
+    fi
+fi
+
+# Some users may belong to multiple groups.  If so, add them here.
+group='x'
+while [ $group ]; do
+    printf "Add to additional group: [Press return to skip] "
+    read group
+    if [ $group ]; then
+	if [ $additional_groups ]; then
+	    additional_groups=$additional_groups,$group
+	else
+	    additional_groups=$group
+	fi
+    fi
+done
+
+printf "Username:       $user_name\n"
+printf "UID:            $uid\n"
+printf "Comment:        $gecos\n"
+printf "Primary group:  $primary_group\n"
+printf "\nCreate account? (y/n) "
+read resp
+if [ 0$resp != 0y ]; then
+    exit
+fi
+
+if [ 0$create_group = 0'y' ]; then
+    groupadd -g $gid $user_name
+    
+    # Add facilitator to new group
+    # Problems due to 16-group auth_sys limit for NFS and no
+    # --manage-gids flag in our old version of rcp.mountd
+    #for admin in bacon_a dsiercks_a davidc_a; do
+    #    usermod -a -G $user_name $admin
+    #done
+fi
+
+# Create user account
+if [ "0$additional_groups" != "0" ]; then
+    agroup_flags="-G $additional_groups"
+else
+    agroup_flags=""
+fi
+
+set -x
+useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
+    $agroup_flags -m $user_name
+set +x
+
+chmod 750 /home/$user_name
+
+# If a new group was created for this user, create the directory structure
+if [ 0$create_group = 0'y' ]; then
+    # Data directory
+    share=`df /share[2-9]* | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+    data_dir=$share/$college/$user_name
+    mkdir -p $data_dir
+    chown -Rh ${user_name}:$user_name $data_dir
+    chmod 770 $data_dir
+
+    # Set SGID bit on Data directory so files created there will have
+    # the PI's group by default.
+    chmod g+s $data_dir
+else
+    data_dir=`echo /share[2-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+fi
+rm -f $home_dir/Data
+ln -s $data_dir $home_dir/Data
+
+cluster-finish-user $user_name
+

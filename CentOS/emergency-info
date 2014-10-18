@@ -1,0 +1,38 @@
+
+Shut down:
+
+    1)  Login into head node
+    2)  su -
+    3)  cluster-admin
+
+Boot sequence:
+
+    1)  Head nodes
+    2)  I/O nodes
+    3)  Compute nodes
+
+    I/O nodes will try to mount /home from primary head node on boot.
+
+    Head nodes have mounts for I/O nodes in /etc/fstab, but they are set
+    to noauto so the head nodes can boot first.  Run
+    ~/CentOS-cluster-admin/head-mount-shares after I/O nodes are up.
+
+    Compute nodes will try to mount I/O nodes, so they should be booted
+    after I/O nodes are up.
+
+Power outage:
+
+    The head nodes and I/O nodes should remain up on generator power.
+
+    Some compute nodes will try to boot as soon as power is restored.
+    It is best to unplug their PDUs during a power outage until power
+    is believed to be stable.  We began changing BIOS settings to
+    prevent this, but have not gotten through all the nodes.
+
+Avi disk replacement:
+
+    Log into data.avi as root
+    cd ~/Avi-admin/Incidents
+    ./replace-disk
+    Follow instructions on screen
+

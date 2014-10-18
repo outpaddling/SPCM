@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+scontrol update state=resume nodename=$1
+

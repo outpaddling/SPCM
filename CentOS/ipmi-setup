@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# http://blog.rchapman.org/post/17480234232/configuring-bmc-drac-from-esxi-or-linux
+
+yum install -y ipmitool
+modprobe ipmi_devintf
+modprobe ipmi_msghandler
+modprobe ipmi_si
+grep ipmi /proc/devices
+lsmod | grep ipmi
+ipmitool lan print
+ipmitool -I open bmc info
+

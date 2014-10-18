@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+rsync -av --exclude slurm /root login2:/
+rsync -av --exclude slurm /home login2:/
+ssh login2 'restorecon -R -v /home/*/.ssh'
+rsync -av /etc/security/limits.d login2:/etc/security
+rsync -av /usr/local/bin login2:/usr/local
+
+# This causes updates to be installed.  Use cached RPMs instead?
+exit
+pkgs=`yum list installed | awk ' { print $1 }'`
+ssh login2 yum install $pkgs
+

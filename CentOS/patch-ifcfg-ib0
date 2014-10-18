@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# ./cluster-run 'hostname && CentOS-cluster-admin/auto-append-line ONBOOT=yes /etc/sysconfig/network-scripts/ifcfg-ib0 nocomment' all
+# ./cluster-run 'hostname && CentOS-cluster-admin/auto-append-line NETWORK=10.1.2.0 /etc/sysconfig/network-scripts/ifcfg-ib0 nocomment && CentOS-cluster-admin/auto-append-line BROADCAST=10.1.2.255 /etc/sysconfig/network-scripts/ifcfg-ib0 nocomment && ifdown ib0 && ifup ib0' all
+./cluster-run 'hostname && CentOS-cluster-admin/auto-append-line NM_CONTROLLED=no /etc/sysconfig/network-scripts/ifcfg-ib0 nocomment && ifdown ib0 && ifup ib0' all
+

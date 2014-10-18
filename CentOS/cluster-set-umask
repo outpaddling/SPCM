@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+sed -i -e "s|umask 002|umask 027|g" -e "s|umask 022|umask 027|g" \
+    /etc/profile /etc/csh.cshrc /etc/bashrc
+    
+cluster-run \
+    'sed -i -e "s|umask 002|umask 027|g" -e "s|umask 022|umask 027|g" /etc/profile /etc/csh.cshrc /etc/bashrc' \
+    all
+

@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+. ./env.sh
+
+yum install -y parted
+
+PATH=${PATH}:/opt/MegaRAID/storcli
+export PATH
+
+#storcli64 help add
+#storcli64 /c0 add vd type=raid60 drives=32:0-23 pdperarray=12
+storcli64 /c0 show
+
+if [ ! -e /dev/sdb1 ]; then
+    parted -a optimal /dev/sdb mklabel gpt
+    parted -a optimal /dev/sdb mkpart primary 0% 100%
+fi
+
+mkfs.xfs /dev/sdb1
+

@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+for node in `cluster-compute-nodes`; do
+    printf "$node\n"
+    ssh $node service irqbalance stop
+    ssh $node chkconfig irqbalance off
+    ssh $node chkconfig --list irqbalance
+done
+

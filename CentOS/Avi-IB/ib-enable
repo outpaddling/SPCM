@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#[root@compute-002 ~]# more /etc/sysconfig/network-scripts/ifcfg-em1 
+#DEVICE="em1"
+#DHCP_HOSTNAME="compute-002" 
+#BOOTPROTO="dhcp"
+#IPADDR=10.1.1.2 
+#NETWORK=10.1.1.0 
+#NETMASK=255.255.255.0 
+#HWADDR="00:26:B9:2E:1F:06"
+#IPV6INIT="no"
+#MTU="1500"
+#NM_CONTROLLED="no"
+#ONBOOT="yes"
+#TYPE="Ethernet"
+#GATEWAY=10.1.1.253
+
+eth=/etc/sysconfig/network-scripts/ifcfg-em1 
+ib=/etc/sysconfig/network-scripts/ifcfg-ib0
+
+# Backup original
+if [ ! -e $ib.orig ]; then
+    cp $ib $ib.orig
+fi
+
+eth_ip=`awk -F '=' '$1 == "IPADDR" { print $2 }' $eth`
+ib_ip=`echo $eth_ip | sed -e 's|10.1.1|10.1.2|'`
+
+sed -i'' -e 's|ONBOOT=no|ONBOOT=yes|g' \
+    -e 's|BOOTPROTO=dhcp|BOOTPROTO=none|g' $ib
+printf "IPADDR=$ib_ip\nNETMASK=255.255.255.0\nNETWORK=10.1.2.0\nIPV6INIT=no\n" >> $ib
+service network restart

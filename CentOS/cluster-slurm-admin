@@ -1,0 +1,65 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+resp=''
+while [ 0$resp != 0q ]; do
+    clear
+    cat << EOM
+
+1.. Restart scheduler daemons
+2.. Mark a node as down
+3.. Mark a node as available
+4.. Show cores per user
+5.. Show cluster load
+Q.. Quit
+EOM
+
+    read resp
+    case $resp in
+    1)
+	cluster-slurm-restart
+	;;
+    2)
+	printf "Node number? (e.g. 1-01) "
+	read node
+	scontrol update State=down NodeName=compute-$node
+	sinfo
+	printf "Update slurm.conf if this is a long-term outage.\n"
+	pause
+	;;
+    3)
+	printf "Node number? (e.g. 1-01) "
+	read node
+	scontrol update State=resume NodeName=compute-$node
+	sinfo
+	printf "Update slurm.conf if necessary.\n"
+	pause
+	;;
+    4)
+	slurm-user-cores
+	pause
+	;;
+    5)
+	cluster-load
+	pause
+	;;
+    Q|q)
+	;;
+    *)
+	printf "Invalid selection: $resp\n"
+	pause
+    esac
+done
+

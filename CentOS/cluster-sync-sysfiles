@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# DO NOT sync /etc/passwd, /etc/ssh*, or any other file that may contain
+# different information on different node types!
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+printf "limits.d...\n"
+for node in `cluster-backup-login-nodes`; do
+    rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
+done
+
+printf "root home...\n"
+for node in `cluster-backup-login-nodes` `cluster-io-nodes`; do
+    rsync /root/.bash_profile ${node}:/root
+    rsync -av /root/bin ${node}:/root
+done
+
+cluster-sync-slurm.conf
+
+# FIXME: Use cluster-dist-file
+for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
+    # /etc/hosts
+    printf "$node: hosts "
+    rsync -pog /etc/hosts ${node}:/etc
+    
+    # Do not sync sshd_config.  Public-facing servers are different than
+    # compute nodes.
+    printf "ssh_config "
+    rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+    
+    printf "system-auth"
+    rsync -pog /etc/pam.d/system-auth ${node}:/etc/pam.d
+    
+    # printf "idmapd.conf\n"
+    # rsync -p /etc/idmapd.conf ${node}:/etc
+    # FIXME: Run this if idmapd.conf has changed
+    # ssh $node 'service rpcidmapd restart'
+
+    printf '\n'
+done
+
+# service rpcidmapd restart
+

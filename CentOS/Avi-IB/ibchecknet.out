@@ -1,0 +1,579 @@
+[1;034m#warn: counter LinkErrorRecoveryCounter = 145 	(threshold 10) lid 13 port 255
+#warn: counter LinkDownedCounter = 72 	(threshold 10) lid 13 port 255
+#warn: counter PortRcvSwitchRelayErrors = 31381 	(threshold 100) lid 13 port 255
+#warn: counter PortXmitDiscards = 356 	(threshold 100) lid 13 port 255
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 1
+#warn: counter PortRcvSwitchRelayErrors = 730 	(threshold 100) lid 13 port 1
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 2
+#warn: counter PortRcvSwitchRelayErrors = 761 	(threshold 100) lid 13 port 2
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 3
+#warn: counter PortRcvSwitchRelayErrors = 747 	(threshold 100) lid 13 port 3
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 3: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 4
+#warn: counter PortRcvSwitchRelayErrors = 761 	(threshold 100) lid 13 port 4
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 4: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 5
+#warn: counter PortRcvSwitchRelayErrors = 736 	(threshold 100) lid 13 port 5
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 13 	(threshold 10) lid 13 port 6
+#warn: counter PortRcvSwitchRelayErrors = 761 	(threshold 100) lid 13 port 6
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 7
+#warn: counter PortRcvSwitchRelayErrors = 729 	(threshold 100) lid 13 port 7
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 8
+#warn: counter PortRcvSwitchRelayErrors = 735 	(threshold 100) lid 13 port 8
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 8: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 9
+#warn: counter PortRcvSwitchRelayErrors = 723 	(threshold 100) lid 13 port 9
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 10
+#warn: counter PortRcvSwitchRelayErrors = 748 	(threshold 100) lid 13 port 10
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 11
+#warn: counter PortRcvSwitchRelayErrors = 740 	(threshold 100) lid 13 port 11
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 11: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 13 port 12
+#warn: counter PortRcvSwitchRelayErrors = 753 	(threshold 100) lid 13 port 12
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 22457 	(threshold 100) lid 13 port 16
+[0;39mError check on lid 13 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 6, Chip A) port 16: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 144 	(threshold 10) lid 12 port 255
+#warn: counter LinkDownedCounter = 72 	(threshold 10) lid 12 port 255
+#warn: counter PortRcvSwitchRelayErrors = 31391 	(threshold 100) lid 12 port 255
+#warn: counter PortXmitDiscards = 179 	(threshold 100) lid 12 port 255
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 1
+#warn: counter PortRcvSwitchRelayErrors = 752 	(threshold 100) lid 12 port 1
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 2
+#warn: counter PortRcvSwitchRelayErrors = 714 	(threshold 100) lid 12 port 2
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 3
+#warn: counter PortRcvSwitchRelayErrors = 716 	(threshold 100) lid 12 port 3
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 3: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 4
+#warn: counter PortRcvSwitchRelayErrors = 759 	(threshold 100) lid 12 port 4
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 4: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 5
+#warn: counter PortRcvSwitchRelayErrors = 751 	(threshold 100) lid 12 port 5
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 6
+#warn: counter PortRcvSwitchRelayErrors = 739 	(threshold 100) lid 12 port 6
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 7
+#warn: counter PortRcvSwitchRelayErrors = 740 	(threshold 100) lid 12 port 7
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 8
+#warn: counter PortRcvSwitchRelayErrors = 717 	(threshold 100) lid 12 port 8
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 8: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 9
+#warn: counter PortRcvSwitchRelayErrors = 729 	(threshold 100) lid 12 port 9
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 10
+#warn: counter PortRcvSwitchRelayErrors = 712 	(threshold 100) lid 12 port 10
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 11
+#warn: counter PortRcvSwitchRelayErrors = 741 	(threshold 100) lid 12 port 11
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 11: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 12 port 12
+#warn: counter PortRcvSwitchRelayErrors = 716 	(threshold 100) lid 12 port 12
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 22605 	(threshold 100) lid 12 port 15
+[0;39mError check on lid 12 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 2, Chip A) port 15: [1;031m FAILED [0;39m
+ibwarn: [446] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+
+# Switch: nodeguid 0x00066a00070028a5 failed
+ibwarn: [450] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [456] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+# Checked Switch: nodeguid 0x00066a00070028a5 with failure
+ibwarn: [460] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [475] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [479] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [483] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [491] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [495] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [499] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [503] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [507] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [511] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [515] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [519] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+ibwarn: [523] mad_rpc: _do_madrpc failed; dport (Lid 9)
+lid 9 address resolution: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 144 	(threshold 10) lid 4 port 255
+#warn: counter LinkDownedCounter = 72 	(threshold 10) lid 4 port 255
+#warn: counter PortRcvSwitchRelayErrors = 31400 	(threshold 100) lid 4 port 255
+#warn: counter PortXmitDiscards = 154 	(threshold 100) lid 4 port 255
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 1
+#warn: counter PortRcvSwitchRelayErrors = 745 	(threshold 100) lid 4 port 1
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 2
+#warn: counter PortRcvSwitchRelayErrors = 768 	(threshold 100) lid 4 port 2
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 3
+#warn: counter PortRcvSwitchRelayErrors = 723 	(threshold 100) lid 4 port 3
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 3: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 4
+#warn: counter PortRcvSwitchRelayErrors = 742 	(threshold 100) lid 4 port 4
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 4: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 5
+#warn: counter PortRcvSwitchRelayErrors = 760 	(threshold 100) lid 4 port 5
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 6
+#warn: counter PortRcvSwitchRelayErrors = 753 	(threshold 100) lid 4 port 6
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 7
+#warn: counter PortRcvSwitchRelayErrors = 764 	(threshold 100) lid 4 port 7
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 8
+#warn: counter PortRcvSwitchRelayErrors = 741 	(threshold 100) lid 4 port 8
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 8: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 9
+#warn: counter PortRcvSwitchRelayErrors = 770 	(threshold 100) lid 4 port 9
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 10
+#warn: counter PortRcvSwitchRelayErrors = 734 	(threshold 100) lid 4 port 10
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 11
+#warn: counter PortRcvSwitchRelayErrors = 753 	(threshold 100) lid 4 port 11
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 11: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 4 port 12
+#warn: counter PortRcvSwitchRelayErrors = 724 	(threshold 100) lid 4 port 12
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 22423 	(threshold 100) lid 4 port 19
+[0;39mError check on lid 4 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 11, Chip A) port 19: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 48 	(threshold 10) lid 3 port 255
+#warn: counter LinkDownedCounter = 24 	(threshold 10) lid 3 port 255
+#warn: counter PortRcvSwitchRelayErrors = 865 	(threshold 100) lid 3 port 255
+[0;39mError check on lid 3 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 9, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 145 	(threshold 10) lid 7 port 255
+#warn: counter LinkDownedCounter = 72 	(threshold 10) lid 7 port 255
+#warn: counter PortRcvSwitchRelayErrors = 31726 	(threshold 100) lid 7 port 255
+#warn: counter PortXmitDiscards = 181 	(threshold 100) lid 7 port 255
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 1
+#warn: counter PortRcvSwitchRelayErrors = 762 	(threshold 100) lid 7 port 1
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 2
+#warn: counter PortRcvSwitchRelayErrors = 745 	(threshold 100) lid 7 port 2
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 3
+#warn: counter PortRcvSwitchRelayErrors = 763 	(threshold 100) lid 7 port 3
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 3: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 4
+#warn: counter PortRcvSwitchRelayErrors = 744 	(threshold 100) lid 7 port 4
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 4: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 5
+#warn: counter PortRcvSwitchRelayErrors = 751 	(threshold 100) lid 7 port 5
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 6
+#warn: counter PortRcvSwitchRelayErrors = 750 	(threshold 100) lid 7 port 6
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 7
+#warn: counter PortRcvSwitchRelayErrors = 781 	(threshold 100) lid 7 port 7
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 8
+#warn: counter PortRcvSwitchRelayErrors = 761 	(threshold 100) lid 7 port 8
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 8: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 13 	(threshold 10) lid 7 port 9
+#warn: counter PortRcvSwitchRelayErrors = 784 	(threshold 100) lid 7 port 9
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 10
+#warn: counter PortRcvSwitchRelayErrors = 784 	(threshold 100) lid 7 port 10
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 11
+#warn: counter PortRcvSwitchRelayErrors = 783 	(threshold 100) lid 7 port 11
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 11: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 7 port 12
+#warn: counter PortRcvSwitchRelayErrors = 783 	(threshold 100) lid 7 port 12
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 22496 	(threshold 100) lid 7 port 24
+[0;39mError check on lid 7 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 5, Chip A) port 24: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 30521 	(threshold 100) lid 17 port 255
+[0;39mError check on lid 17 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 3, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 30521 	(threshold 100) lid 17 port 6
+[0;39mError check on lid 17 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 3, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 65535 	(threshold 100) lid 1 port 255
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 7974 	(threshold 100) lid 1 port 1
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8103 	(threshold 100) lid 1 port 2
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8096 	(threshold 100) lid 1 port 5
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 7969 	(threshold 100) lid 1 port 7
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8839 	(threshold 100) lid 1 port 9
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8025 	(threshold 100) lid 1 port 10
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8083 	(threshold 100) lid 1 port 13
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 13: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8058 	(threshold 100) lid 1 port 15
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 15: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 6891 	(threshold 100) lid 1 port 16
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 16: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8050 	(threshold 100) lid 1 port 19
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 19: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 7916 	(threshold 100) lid 1 port 20
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 20: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 8064 	(threshold 100) lid 1 port 22
+[0;39mError check on lid 1 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip A) port 22: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 30522 	(threshold 100) lid 15 port 255
+[0;39mError check on lid 15 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip B) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 30521 	(threshold 100) lid 15 port 12
+[0;39mError check on lid 15 (SilverStorm 9120 GUID=0x00066a00020006c2 Spine 1, Chip B) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 145 	(threshold 10) lid 6 port 255
+#warn: counter LinkDownedCounter = 72 	(threshold 10) lid 6 port 255
+#warn: counter PortRcvSwitchRelayErrors = 31455 	(threshold 100) lid 6 port 255
+#warn: counter PortXmitDiscards = 149 	(threshold 100) lid 6 port 255
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port all: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 17 	(threshold 10) lid 6 port 1
+#warn: counter PortRcvSwitchRelayErrors = 1650 	(threshold 100) lid 6 port 1
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 1: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 2
+#warn: counter PortRcvSwitchRelayErrors = 742 	(threshold 100) lid 6 port 2
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 2: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 3
+#warn: counter PortRcvSwitchRelayErrors = 744 	(threshold 100) lid 6 port 3
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 3: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 4
+#warn: counter PortRcvSwitchRelayErrors = 736 	(threshold 100) lid 6 port 4
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 4: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 5
+#warn: counter PortRcvSwitchRelayErrors = 760 	(threshold 100) lid 6 port 5
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 5: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 6
+#warn: counter PortRcvSwitchRelayErrors = 729 	(threshold 100) lid 6 port 6
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 6: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 7
+#warn: counter PortRcvSwitchRelayErrors = 760 	(threshold 100) lid 6 port 7
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 7: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 8
+#warn: counter PortRcvSwitchRelayErrors = 753 	(threshold 100) lid 6 port 8
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 8: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 9
+#warn: counter PortRcvSwitchRelayErrors = 736 	(threshold 100) lid 6 port 9
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 9: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 723 	(threshold 100) lid 6 port 10
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 10: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 11
+#warn: counter PortRcvSwitchRelayErrors = 720 	(threshold 100) lid 6 port 11
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 11: [1;031m FAILED [0;39m
+[1;034m#warn: counter LinkErrorRecoveryCounter = 12 	(threshold 10) lid 6 port 12
+#warn: counter PortRcvSwitchRelayErrors = 717 	(threshold 100) lid 6 port 12
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 12: [1;031m FAILED [0;39m
+[1;034m#warn: counter PortRcvSwitchRelayErrors = 21685 	(threshold 100) lid 6 port 19
+[0;39mError check on lid 6 (SilverStorm 9120 GUID=0x00066a00020006c2 Leaf 3, Chip A) port 19: [1;031m FAILED [0;39m
+
+# Checking Ca: nodeguid 0x0011750000ff5ef4
+
+# Checking Ca: nodeguid 0x0011750000ff5e56
+
+# Checking Ca: nodeguid 0x0011750000ff5e58
+
+# Checking Ca: nodeguid 0x0011750000ff5de3
+
+# Checking Ca: nodeguid 0x0011750000ff5e81
+
+# Checking Ca: nodeguid 0x0011750000ff5e6c
+
+# Checking Ca: nodeguid 0x0011750000ff5dbe
+
+# Checking Ca: nodeguid 0x0011750000ff5de4
+
+# Checking Ca: nodeguid 0x0011750000ff5dfa
+
+# Checking Ca: nodeguid 0x0011750000ff5f47
+
+# Checking Ca: nodeguid 0x0011750000ff5ee6
+
+# Checking Ca: nodeguid 0x0011750000ff5e42
+
+# Checking Ca: nodeguid 0x0011750000ff68ba
+
+# Checking Ca: nodeguid 0x0011750000ff5f14
+
+# Checking Ca: nodeguid 0x0011750000ff5e9e
+
+# Checking Ca: nodeguid 0x0011750000ff5e3d
+
+# Checking Ca: nodeguid 0x0011750000ff5f9b
+
+# Checking Ca: nodeguid 0x0011750000ff5e91
+
+# Checking Ca: nodeguid 0x0011750000ff5d94
+
+# Checking Ca: nodeguid 0x0011750000ff5e9d
+
+# Checking Ca: nodeguid 0x0011750000ff5ea3
+
+# Checking Ca: nodeguid 0x0011750000ff5fa9
+
+# Checking Ca: nodeguid 0x0011750000ff5dd2
+
+# Checking Ca: nodeguid 0x0011750000ff5e3f
+
+# Checking Ca: nodeguid 0x0011750000ff5f15
+
+# Checking Ca: nodeguid 0x0011750000ff5e7c
+
+# Checking Ca: nodeguid 0x0011750000ff5f88
+
+# Checking Ca: nodeguid 0x0011750000ff5e31
+
+# Checking Ca: nodeguid 0x0011750000ff5d95
+
+# Checking Ca: nodeguid 0x0011750000ff5e32
+
+# Checking Ca: nodeguid 0x0011750000ff5fb7
+
+# Checking Ca: nodeguid 0x0011750000ff5df4
+
+# Checking Ca: nodeguid 0x0011750000ff5f51
+
+# Checking Ca: nodeguid 0x0011750000ff5e89
+
+# Checking Ca: nodeguid 0x0011750000ff5dfb
+
+# Checking Ca: nodeguid 0x0011750000ff5e8e
+
+# Checking Ca: nodeguid 0x0011750000ff5e06
+
+# Checking Ca: nodeguid 0x0011750000ff5dac
+
+# Checking Ca: nodeguid 0x0011750000ff5fab
+
+# Checking Ca: nodeguid 0x0011750000ff5dd0
+
+# Checking Ca: nodeguid 0x0011750000ff5e6a
+
+# Checking Ca: nodeguid 0x0011750000ff5ea2
+
+# Checking Ca: nodeguid 0x0011750000ff5ebd
+
+# Checking Ca: nodeguid 0x0011750000ff5e27
+
+# Checking Ca: nodeguid 0x0011750000ff5d9a
+
+# Checking Ca: nodeguid 0x0011750000ff5df2
+
+# Checking Ca: nodeguid 0x0011750000ff5e80
+
+# Checking Ca: nodeguid 0x0011750000ff5e2e
+
+# Checking Ca: nodeguid 0x0011750000ff5ee4
+
+# Checking Ca: nodeguid 0x0011750000ff5dcc
+
+# Checking Ca: nodeguid 0x0011750000ff5e4d
+
+# Checking Ca: nodeguid 0x0011750000ff5de6
+
+# Checking Ca: nodeguid 0x0011750000ff5dd3
+
+# Checking Ca: nodeguid 0x0011750000ff5dd1
+
+# Checking Ca: nodeguid 0x0011750000ff5db5
+
+# Checking Ca: nodeguid 0x0011750000ff5e03
+
+# Checking Ca: nodeguid 0x0011750000ff5f8d
+
+# Checking Ca: nodeguid 0x0011750000ff5e2b
+
+# Checking Ca: nodeguid 0x0011750000ff5f80
+
+# Checking Ca: nodeguid 0x0011750000ff5f89
+
+# Checking Ca: nodeguid 0x0011750000ff5e65
+
+# Checking Ca: nodeguid 0x0011750000ff5f92
+
+# Checking Ca: nodeguid 0x0011750000ff5e61
+
+# Checking Ca: nodeguid 0x0011750000ff5dae
+
+# Checking Ca: nodeguid 0x0011750000ff5f8f
+
+# Checking Ca: nodeguid 0x0011750000ff5f04
+
+# Checking Ca: nodeguid 0x0011750000ff5ef2
+
+# Checking Ca: nodeguid 0x0011750000ff5e93
+
+# Checking Ca: nodeguid 0x0011750000ff5f9a
+
+# Checking Ca: nodeguid 0x0011750000ff5fb1
+
+# Checking Ca: nodeguid 0x0011750000ff5ef1
+
+# Checking Ca: nodeguid 0x0011750000ff5e57
+
+# Checking Ca: nodeguid 0x0011750000ff5da9
+
+# Checking Ca: nodeguid 0x0011750000ff5daa
+
+# Checking Ca: nodeguid 0x0011750000ff5da1
+
+# Checking Ca: nodeguid 0x0011750000ff5ea4
+
+# Checking Ca: nodeguid 0x0011750000ff5e9f
+
+# Checking Ca: nodeguid 0x0011750000ff5d93
+
+# Checking Ca: nodeguid 0x0011750000ff5e68
+
+# Checking Ca: nodeguid 0x0011750000ff5fc6
+
+# Checking Ca: nodeguid 0x0011750000ff5f93
+
+# Checking Ca: nodeguid 0x0011750000ff5e59
+
+# Checking Ca: nodeguid 0x0011750000ff5fa0
+
+# Checking Ca: nodeguid 0x0011750000ff5fa3
+
+# Checking Ca: nodeguid 0x0011750000ff5e41
+
+# Checking Ca: nodeguid 0x0011750000ff5f7d
+
+# Checking Ca: nodeguid 0x0011750000ff5f13
+
+# Checking Ca: nodeguid 0x0011750000ff5fd8
+
+# Checking Ca: nodeguid 0x0011750000ff5ded
+
+# Checking Ca: nodeguid 0x0011750000ff5eb7
+
+# Checking Ca: nodeguid 0x0011750000ff5f18
+
+# Checking Ca: nodeguid 0x0011750000ff5dc8
+
+# Checking Ca: nodeguid 0x0011750000ff5e87
+
+# Checking Ca: nodeguid 0x0011750000ff5e38
+
+# Checking Ca: nodeguid 0x0011750000ff5e0f
+
+# Checking Ca: nodeguid 0x0011750000ff5f0d
+
+# Checking Ca: nodeguid 0x0011750000ff5df5
+
+# Checking Ca: nodeguid 0x0011750000ff5ee7
+
+# Checking Ca: nodeguid 0x0011750000ff5de7
+
+# Checking Ca: nodeguid 0x0011750000ff5e7d
+
+# Checking Ca: nodeguid 0x0011750000ff5dc9
+
+# Checking Ca: nodeguid 0x0011750000ff5f7c
+
+# Checking Ca: nodeguid 0x0011750000ff5dcf
+
+# Checking Ca: nodeguid 0x0011750000ff5eaa
+
+# Checking Ca: nodeguid 0x0011750000ff5e55
+
+# Checking Ca: nodeguid 0x0011750000ff5f1e
+
+# Checking Ca: nodeguid 0x0011750000ff5ec1
+
+# Checking Ca: nodeguid 0x0011750000ff5d96
+
+# Checking Ca: nodeguid 0x0011750000ff5f42
+
+# Checking Ca: nodeguid 0x0011750000ff5fb0
+
+# Checking Ca: nodeguid 0x0011750000ff5f1b
+
+# Checking Ca: nodeguid 0x0011750000ff5e7e
+
+# Checking Ca: nodeguid 0x0011750000ff5f3a
+
+# Checking Ca: nodeguid 0x0011750000ff5f43
+
+# Checking Ca: nodeguid 0x0011750000ff5de8
+
+# Checking Ca: nodeguid 0x0011750000ff5ebe
+
+# Checking Ca: nodeguid 0x0011750000ff5e75
+
+# Checking Ca: nodeguid 0x0011750000ff5e0c
+
+# Checking Ca: nodeguid 0x0011750000ff5df7
+
+# Checking Ca: nodeguid 0x0011750000ff5dd8
+
+# Checking Ca: nodeguid 0x0011750000ff5e54
+
+# Checking Ca: nodeguid 0x0011750000ff5e9c
+
+# Checking Ca: nodeguid 0x0011750000ff5e7f
+
+# Checking Ca: nodeguid 0x0011750000ff5f0e
+
+# Checking Ca: nodeguid 0x0011750000ff5f95
+
+# Checking Ca: nodeguid 0x0011750000ff5f82
+
+# Checking Ca: nodeguid 0x0011750000ff5efb
+
+# Checking Ca: nodeguid 0x0011750000ff5e4f
+
+# Checking Ca: nodeguid 0x0011750000ff5eec
+
+# Checking Ca: nodeguid 0x0011750000ff5e99
+
+# Checking Ca: nodeguid 0x0011750000ff5f48
+
+# Checking Ca: nodeguid 0x0011750000ff5dcd
+
+# Checking Ca: nodeguid 0x0011750000ff5edd
+
+# Checking Ca: nodeguid 0x0011750000ff5fba
+
+# Checking Ca: nodeguid 0x0011750000ff5dc4
+
+# Checking Ca: nodeguid 0x0011750000ff5e2a
+
+# Checking Ca: nodeguid 0x0011750000ff5fb8
+
+# Checking Ca: nodeguid 0x0011750000ff5eb5
+
+# Checking Ca: nodeguid 0x0011750000ff5ed2
+
+# Checking Ca: nodeguid 0x0011750000ff5ea7
+
+# Checking Ca: nodeguid 0x0011750000ff5e00
+
+# Checking Ca: nodeguid 0x0011750000ff5e88
+
+# Checking Ca: nodeguid 0x0011750000ff5e1a
+
+# Checking Ca: nodeguid 0x0011750000ff5e26
+
+## Summary: 162 nodes checked, 1 bad nodes found
+##          576 ports checked, 7 bad ports found
+##          87 ports have errors beyond threshold
