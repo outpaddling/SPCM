@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+cd Scripts
 sys_files="cluster-admin \
     cluster-slurm-admin \
     cluster-adduser \
