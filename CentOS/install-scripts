@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-cd Scripts
 sys_files="cluster-admin \
     cluster-slurm-admin \
     cluster-adduser \
@@ -13,7 +12,6 @@ sys_files="cluster-admin \
     cluster-sync-slurm.conf \
     cluster-sync-login2 \
     cluster-sync-data-nodes \
-    cluster-run \
     cluster-compute-nodes \
     cluster-io-nodes \
     cluster-mount-nfs \
@@ -38,11 +36,18 @@ user_files="cluster-io-nodes \
     slurm-shell \
     slurm-find-strays"
 
+common_sys_files="cluster-run \
+    cluster-ganglia-restart"
+
+cd Scripts
 cp $sys_files /usr/local/sbin
 cp $user_files /usr/local/bin
 
+cd ../../Common/Scripts
+cp $common_sys_files /usr/local/sbin
+
 cd /usr/local/sbin
-chmod 750 $sys_files
+chmod 750 $sys_files $common_sys_files
 
 cd /usr/local/bin
 chmod 755 $user_files
