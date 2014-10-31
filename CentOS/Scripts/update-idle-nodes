@@ -15,6 +15,7 @@ pause()
 
 sinfo -o '%n %T'
 
+touch updated-nodes
 wc updated-nodes
 
 updated=0
@@ -83,6 +84,6 @@ if [ $updated = 1 ]; then
     printf "\nWaiting 5 minutes for last node to reboot...\n"
     sleep 300
 fi
-./resume-all-down-nodes
+resume-all-down-nodes
 wc updated-nodes
 
