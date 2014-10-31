@@ -35,20 +35,28 @@ for node in $nodes; do
 	    printf "Update? ([y]/n) "
 	    read go
 	    
+	    parallel='n'
 	    if [ 0$go != 0n ]; then
-		printf "Updating idle node $node...\n"
-		ssh $node yum update -y
-		printf "$node\n" >> updated-nodes
-
-		printf "Reboot? ([y]/n) "
-		read reboot
-		if [ 0$reboot != 0n ]; then
-		    # Node will automatically be switched to down
-		    # state when it stops responding.  It must be manually
-		    # switched to resume *after* it has been shut down.
+		if [ $parallel = 'y' ]; then
 		    scontrol update State=down NodeName=$node
-		    ssh $node shutdown -r now
-		    scontrol update State=resume NodeName=$node
+		    ssh $node 'yum update -y && shutdown -r now' \
+			> update-log.$node 2>&1 &
+		    printf "$node\n" >> updated-nodes
+		else
+		    printf "Updating idle node $node...\n"
+		    ssh $node yum update -y
+		    printf "$node\n" >> updated-nodes
+    
+		    printf "Reboot? ([y]/n) "
+		    read reboot
+		    if [ 0$reboot != 0n ]; then
+			# Node will automatically be switched to down
+			# state when it stops responding.  It must be manually
+			# switched to resume *after* it has been shut down.
+			scontrol update State=down NodeName=$node
+			ssh $node shutdown -r now
+			scontrol update State=resume NodeName=$node
+		    fi
 		fi
 	    else
 		scontrol update State=RESUME NodeName=$node

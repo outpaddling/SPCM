@@ -5,9 +5,9 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
-/usr/local/etc/rc.d/gmetad restart
-/usr/local/etc/rc.d/gmond restart
+service gmetad restart
+service gmond restart
 
 # gmond doesn't restart unless -n is used here.  Why?
-cluster-run -n '/usr/local/etc/rc.d/gmond restart'
+cluster-run -n 'service gmond restart' all
 
