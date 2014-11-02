@@ -1,6 +1,0 @@
-#!/bin/sh
-
-/root/bin/megaraid-status | mail -s 'RAID Status' \
-    bacon@uwm.edu jfwagner@uwm.edu dsiercks@uwm.edu davidc@uwm.edu
-/root/bin/auth-check  | mail -s "Avi auth failures" bacon@uwm.edu
-
