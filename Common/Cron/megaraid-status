@@ -4,6 +4,16 @@ export PATH=${PATH}:/opt/MegaRAID/storcli
 
 ctrlcount=`storcli64 show ctrlcount | awk '$1 == "Controller" { print $4 }'`
 
+printf "RAID errors:\n\n"
+c=0
+while [ $c -lt $ctrlcount ]; do
+    storcli64 /c$c show | \
+	awk '($6 ~ "RAID" && $7 != "Optl") || ($6 == "DRIVE" && $7 != "Onln")'
+    c=$((c + 1))
+done
+
+printf "Drive warnings:\n\n"
+
 drives=`/opt/MegaRAID/storcli/storcli64 /call/eall/sall show all | \
     egrep 's[0-9] State' | awk ' { print $2 }'`
 
@@ -29,6 +39,8 @@ for drive in $drives; do
 	    egrep -A 8 's[0-9] State'
     fi
 done
+
+printf "Full report:\n\n"
 
 c=0
 while [ $c -lt $ctrlcount ]; do
