@@ -1,6 +1,25 @@
 #!/bin/sh -e
 
 ##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-05  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-p]\n"
+    exit 1
+}
+
+
+##########################################################################
 #   Function description:
 #       Pause until user presses return
 ##########################################################################
@@ -13,12 +32,45 @@ pause()
     read junk
 }
 
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+    0)
+	parallel='n'
+	;;
+    1)
+	if [ $1 = '-p' ]; then
+	    parallel='y'
+	else
+	    usage
+	fi
+	;;
+    *)
+	usage
+	;;
+esac
+
+if [ ! -e updated-nodes ]; then
+    cat << EOM
+
+No "updated-nodes" file present in the CWD.  Either go to the directory where
+you last ran $0 or create "updated-nodes" first.
+
+EOM
+    exit 1
+fi
+
 sinfo -o '%n %T'
-
-touch updated-nodes
 wc updated-nodes
-
 updated=0
+
+if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
+    printf "There are suspended jobs.  It is not safe to run updates.\n"
+    exit 1
+fi
 
 # First, update all currently idle nodes
 nodes=`sinfo -o %n -h`
@@ -36,7 +88,6 @@ for node in $nodes; do
 	    printf "Update? ([y]/n) "
 	    read go
 	    
-	    parallel='n'
 	    if [ 0$go != 0n ]; then
 		if [ $parallel = 'y' ]; then
 		    scontrol update State=down NodeName=$node
