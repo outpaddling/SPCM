@@ -22,15 +22,5 @@ groupadd_cmd="pw groupadd $*"
 # Eval here to expand before running
 eval $groupadd_cmd
 
-# FIXME: Factor this assignment out to a separate script
-db='/usr/local/cluster/groups.txt'
-group_entry=`awk -F : '$1 == "'$group_name'" { print $0 }' /etc/group`
-auto-append-line $group_name "$group_entry" $db nocomment
-
-# Do not assume home directories are shared!
-for node in `cluster-compute-nodes`; do
-    printf "Syncing group $group_name on $node...\n"
-    # Do not eval here: ssh starts a remote shell which performs expansion
-    ssh $node "cluster-local-sync-group $group_name"
-done
+cluster-run "$groupadd_cmd" all
 

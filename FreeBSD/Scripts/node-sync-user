@@ -57,7 +57,7 @@ FreeBSD)
     ssh $node pw groupadd $group_name -g $group_id
 
     # Create user
-    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -g $group_id \
+    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g $group_id \
 	-s $shell -u $user_id
     ;;
 *)

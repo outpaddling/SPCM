@@ -29,9 +29,3 @@ for node in `cluster-compute-nodes`; do
     ssh $node "$groupadd_cmd"
 done
 
-# Remove from cluster db
-# FIXME: Factor this assignment out to a separate script
-db='/usr/local/cluster/groups.txt'
-awk -F : '$1 != "'$group_name'" { print $0 }' $db > $db.temp
-mv -f $db.temp $db
-
