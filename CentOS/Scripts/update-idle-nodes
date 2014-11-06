@@ -53,18 +53,11 @@ case $# in
 	;;
 esac
 
-if [ ! -e updated-nodes ]; then
-    cat << EOM
+readonly updated_nodes='/root/updated-nodes'
 
-No "updated-nodes" file present in the CWD.  Either go to the directory where
-you last ran $0 or create "updated-nodes" first.
-
-EOM
-    exit 1
-fi
-
+cd /root
 sinfo -o '%n %T'
-wc updated-nodes
+wc $updated_nodes
 updated=0
 
 if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
@@ -75,7 +68,7 @@ fi
 # First, update all currently idle nodes
 nodes=`sinfo -o %n -h`
 for node in $nodes; do
-    if ! fgrep -q $node updated-nodes; then
+    if ! fgrep -q $node $updated_nodes; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
 	idle|drained)
@@ -93,11 +86,11 @@ for node in $nodes; do
 		    scontrol update State=down NodeName=$node
 		    ssh $node 'yum update -y && shutdown -r now' \
 			> update-log.$node 2>&1 &
-		    printf "$node\n" >> updated-nodes
+		    printf "$node\n" >> $updated_nodes
 		else
 		    printf "Updating idle node $node...\n"
 		    ssh $node yum update -y
-		    printf "$node\n" >> updated-nodes
+		    printf "$node\n" >> $updated_nodes
     
 		    printf "Reboot? ([y]/n) "
 		    read reboot
@@ -136,5 +129,5 @@ if [ $updated = 1 ]; then
     sleep 300
 fi
 resume-all-down-nodes
-wc updated-nodes
+wc $updated_nodes
 

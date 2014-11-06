@@ -31,15 +31,16 @@ user_files="cluster-io-nodes \
     cluster-passwd \
     ppgen \
     topnode \
-    cluster-load \
-    cluster-load-summary \
     pending-jobs \
     job-stats \
-    slurm-shell \
     slurm-find-strays"
 
 common_sys_files="cluster-run \
     cluster-ganglia-restart"
+
+common_user_files="cluster-load \
+    cluster-load-summary \
+    slurm-shell"
 
 cd Scripts
 cp $sys_files /usr/local/sbin
@@ -47,6 +48,7 @@ cp $user_files /usr/local/bin
 
 cd ../../Common/Scripts
 cp $common_sys_files /usr/local/sbin
+cp $common_user_files /usr/local/sbin
 
 cd /usr/local/sbin
 chmod 750 $sys_files $common_sys_files
