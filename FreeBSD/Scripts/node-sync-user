@@ -54,14 +54,14 @@ Linux)
 	-s $shell -u $user_id $user_name
     ;;
 FreeBSD)
-    ssh $node pw groupadd -g $group_id $group_name
+    ssh $node pw groupadd $group_name -g $group_id
 
     # Create user
-    ssh $node pw useradd -c "\"$gecos\"" -d $home -g $group_id \
-	-s $shell -u $user_id $user_name
+    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -g $group_id \
+	-s $shell -u $user_id
     ;;
 *)
-    printf "$0: Invalid OS: `uname`
+    printf "$0: Invalid OS: `uname`"
     exit 1
 esac
 
