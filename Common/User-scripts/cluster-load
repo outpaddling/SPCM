@@ -1,8 +1,4 @@
 #!/bin/sh -e
 
-squeue -o '%6A %8u %2t %4C %3D %3h %8j %11M %N'
-
-printf '\n'
-
-cluster-load-summary
+printf "$0 id deprecated.  Please use slurm-cluster-load.\n"
 
