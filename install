@@ -1,0 +1,34 @@
+#!/bin/sh -e
+
+case `uname` in
+    FreeBSD)
+	os='FreeBSD'
+	;;
+    Linux)
+	#
+	if [ -e /etc/redhat-release ]; then
+	    os='CentOS'
+	else
+	    printf "Only RHEL-based Linux is supported.\n"
+	    exit 1
+	fi
+	;;
+    *)
+	printf "Unsupported OS: `uname`\n"
+	exit 1
+esac
+
+if [ -s $PREFIX ]; then
+    PREFIX=/usr/local
+fi
+
+set -x
+rm -f ${STAGEDIR}${PREFIX}/sbin/cluster-*
+rm -f ${STAGEDIR}${PREFIX}/bin/cluster-*
+cp $os/Sys-scripts/* ${STAGEDIR}${PREFIX}/sbin
+cp $os/User-scripts/* ${STAGEDIR}${PREFIX}/bin
+cp Common/Sys-scripts/* ${STAGEDIR}${PREFIX}/sbin
+cp Common/User-scripts/* ${STAGEDIR}${PREFIX}/bin
+chmod 750 ${STAGEDIR}${PREFIX}/sbin/*
+chmod 755 ${STAGEDIR}${PREFIX}/bin/*
+
