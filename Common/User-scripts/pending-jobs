@@ -2,7 +2,7 @@
 
 cat << EOM
 
-The pending-jobs script is obsolete.
+$0 is obsolete.
 
 Please use "slurm-pending-jobs".
 

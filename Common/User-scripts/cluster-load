@@ -1,4 +1,10 @@
 #!/bin/sh -e
 
-printf "$0 id deprecated.  Please use slurm-cluster-load.\n"
+cat << EOM
+
+$0 is obsolete.
+
+Please use "slurm-cluster-load".
+
+EOM
 
