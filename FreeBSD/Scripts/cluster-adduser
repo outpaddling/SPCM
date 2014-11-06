@@ -201,7 +201,7 @@ done
 
 if [ $new_group = 1 ]; then
     # Construct command to create group
-    groupadd_cmd="cluster-groupadd $primary_group"
+    groupadd_cmd="pw groupadd $primary_group"
     if [ x$user_id != x ]; then
 	groupadd_cmd="$groupadd_cmd -g $primary_group_id"
     fi
@@ -223,8 +223,10 @@ fi
 useradd_cmd="$useradd_cmd -m -s $shell"
 
 printf "$useradd_cmd\n"
+
+# If add fails, back out successful parts
 if ! eval $useradd_cmd && [ $new_group = 1 ]; then
-    cluster-run "pw groupdel $group"
+    cluster-run "pw groupdel $group" all
     exit 1
 fi
 

@@ -11,6 +11,7 @@ if [ $# != 1 ]; then
 fi
 
 user_name=$1
+
 printf "Are you sure you want to remove user $user_name? (yes/no) "
 read resp
 if [ 0$resp = 0'yes' ]; then
@@ -35,7 +36,9 @@ if [ 0$resp = 0'yes' ]; then
 	mv /home/$user_name /home/$user_name.save
     fi
 
-    cluster-run "rmuser -y $user_name" all
     rmuser -y $user_name
+    
+    # Group should be removed by rmuser, but it isn't!
+    cluster-run "rmuser -y $user_name" all
 fi
 
