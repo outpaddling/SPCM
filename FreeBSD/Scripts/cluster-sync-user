@@ -30,7 +30,9 @@ fi
 user_name=$1
 
 for node in `cluster-compute-nodes`; do
-    echo $node
-    node-sync-user $node $user_name
+    echo $node $user_name
+    if ! node-sync-user $node $user_name; then
+	printf "Error syncing to $node.\n"
+    fi
 done
 

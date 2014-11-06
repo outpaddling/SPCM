@@ -15,9 +15,10 @@ dest=$1
 echo $dest
 
 # Localhost
-printf "localhost\n"
-cp $src $dest
+#printf "localhost\n"
+#cp $src $dest
 
+# FIXME: Take arguments like compute, io, backup
 # Nodes
 for node in `cat /usr/local/cluster/compute_nodes`; do
     printf "$node\n"
