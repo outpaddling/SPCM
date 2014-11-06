@@ -35,8 +35,6 @@ case $# in
 	slurm-user-cores $user
     done
     printf "\n"
-    ssh data df | egrep '/share|/fasttemp'
-    printf "\n"
     cluster-load-summary
     ;;
 *)
