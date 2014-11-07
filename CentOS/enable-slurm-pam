@@ -14,5 +14,5 @@ EOM
 
 cluster-dist-slurm.conf
 
-# cluster-slurm-restart
+# slurm-restart
 

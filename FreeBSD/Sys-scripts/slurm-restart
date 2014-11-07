@@ -1,8 +1,31 @@
 #!/bin/sh
 
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+if [ `whoami` != 'root' ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+cat << EOM
+
+Restarting the scheduler may kill running jobs, depending on what changes
+have been made to the configuation.
+
+EOM
+
+printf "Are you sure you want to restart the scheduler? (yes/[no]) "
+read sure
+if [ 0$sure != 0yes ]; then
+    exit 0
+fi
+
 cluster-cp /usr/local/etc/slurm.conf /usr/local/etc
 service munged restart
-cluster-run 'service munged restart'
-cluster-run 'service slurmd restart'
+cluster-run 'service munged restart' compute
+cluster-run 'service slurmd restart' compute
 service slurmctld restart
 

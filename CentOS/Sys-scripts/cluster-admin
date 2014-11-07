@@ -57,7 +57,7 @@ EOM
 	cluster-backup-sysfiles
 	;;
     3)
-	cluster-slurm-admin
+	slurm-admin
 	;;
     4)
 	cluster-raid-admin

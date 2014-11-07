@@ -29,7 +29,7 @@ EOM
     read resp
     case $resp in
     1)
-	cluster-slurm-restart
+	slurm-restart
 	;;
     2)
 	printf "Node number? (e.g. 1-01) "
