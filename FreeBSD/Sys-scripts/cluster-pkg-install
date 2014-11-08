@@ -11,10 +11,10 @@ if [ `whoami` != root ]; then
 fi
 
 cache_dir=`cluster-pkgdir`
-env PKG_CACHEDIR=$cache_dir pkg upgrade -y
+#env PKG_CACHEDIR=$cache_dir pkg upgrade -y
 
 pkg=$1
-cluster-run "env PKG_CACHEDIR=$cache_dir cluster-local-pkg-install $pkg"
+cluster-run "env PKG_CACHEDIR=$cache_dir cluster-local-pkg-install $pkg" compute
 
 auto-append-line $pkg $pkg /usr/local/cluster/packages.txt nocomment
 
