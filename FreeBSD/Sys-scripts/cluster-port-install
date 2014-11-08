@@ -26,7 +26,7 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
-cluster-run "cluster-local-port_add $*"
+cluster-run "cluster-local-port_add $*" compute
 
 if [ $1 = '-p' ]; then
     ports_dir="$2"

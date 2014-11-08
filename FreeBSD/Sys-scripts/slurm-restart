@@ -25,7 +25,6 @@ fi
 
 cluster-cp /usr/local/etc/slurm.conf /usr/local/etc
 service munged restart
-cluster-run 'service munged restart' compute
-cluster-run 'service slurmd restart' compute
+cluster-run 'service munged restart && service slurmd restart' compute
 service slurmctld restart
 
