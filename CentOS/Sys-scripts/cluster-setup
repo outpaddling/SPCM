@@ -154,7 +154,7 @@ pkgsrc_setup()
     printf "Installing pkgsrc in $pkgsrc_prefix...\n"
 
     if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
-	./pkgsrc-setup $pkgsrc_prefix
+	pkgsrc-setup $pkgsrc_prefix
     fi
     
     # FIXME: restore PATH after install in case this function is
@@ -765,10 +765,10 @@ if [ $# != 1 ]; then
 fi
 
 # cluster-setup expects to find certain things in CWD
-if [ $0 != './cluster-setup' ]; then
-    printf 'Error: Must be run as ./cluster-setup.\n'
-    exit 1
-fi
+#if [ $0 != './cluster-setup' ]; then
+    #printf 'Error: Must be run as ./cluster-setup.\n'
+    #exit 1
+#fi
 
 NODE_TYPE=$1
 case $NODE_TYPE in
