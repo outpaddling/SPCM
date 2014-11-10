@@ -333,7 +333,8 @@ boot_block_backup()
     if [ ! -e boot-block.$NODE_TYPE ]; then
 	line
 	printf "Backing up boot block...\n"
-	dd if=/dev/sda of=boot-block.$NODE_TYPE bs=512 count=1
+	mkdir -p /root/Backup
+	dd if=/dev/sda of=/root/Backup/boot-block.$NODE_TYPE bs=512 count=1
     fi
 }
 
