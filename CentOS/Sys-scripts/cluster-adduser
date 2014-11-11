@@ -44,10 +44,35 @@ fi
 printf "Username? "
 read user_name
 
-printf "UID? "
-read uid
+# Find next available UID
+# FIXME: Hack to get past the old UIDs intil they're cleaned up
+default_uid=780
+while [ 0`awk -F : -v uid=$default_uid '$3 == uid { print $3 }' /etc/passwd` = 0$default_uid ]; do
+    default_uid=$(($default_uid + 1))
+done
 
-# Get gecos from LDAP
+cat << EOM
+
+If this user has an account on another cluster, use the same UID here to
+avoid issues with ownership within tar files, NFS servers, etc.
+
+Otherwise, accept the default UID provided.
+
+EOM
+
+printf "UID? [$default_uid] "
+read uid
+if [ 0$uid = 0 ]; then
+    uid=$default_uid
+fi
+
+# Prevent collisions
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/passwd` = 0$uid ]; then
+    printf "Error: UID $uid is not available.\n"
+fi
+
+# FIXME: Get gecos from LDAP if possible
+
 printf "Full name? "
 read gecos
 
@@ -107,6 +132,7 @@ gecos="$gecos - $college/$dept - $title"
 if [ $title = 'Faculty' ]; then
     create_group='y'
     primary_group=$user_name
+    gid=$uid
 else
     cat << EOM
 
@@ -125,12 +151,20 @@ EOM
 	# The primary group for assistants should be that of some PI
 	printf "Primary group for this user? (usually their advisor's user name) "
 	read primary_group
+	gid=`awk -F : -v username=$primary_group '$1 == username { print $3 }' /etc/group`
     else
 	primary_group=$user_name
 	
-	printf "GID for $primary_group? "
+	printf "GID for $primary_group? [$uid] "
 	read gid
+	if [ 0$gid = 0 ]; then
+	    gid=$uid
+	fi
     fi
+fi
+
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/group` = 0$uid ]; then
+    printf "Error: GID $gid is not available.\n"
 fi
 
 # Some users may belong to multiple groups.  If so, add them here.
@@ -149,6 +183,7 @@ done
 
 printf "Username:       $user_name\n"
 printf "UID:            $uid\n"
+printf "GID:            $gid\n"
 printf "Comment:        $gecos\n"
 printf "Primary group:  $primary_group\n"
 printf "\nCreate account? (y/n) "
