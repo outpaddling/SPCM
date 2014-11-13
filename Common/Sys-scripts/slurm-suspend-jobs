@@ -28,7 +28,7 @@ if [ $# != 1 ]; then
 fi
 
 user_name=$1
-for job in `slurm-cluster-load | sort -nr -k 1 | awk -v user_name=$user_name '$2 == user_name { print $1 }'`; do
+for job in `slurm-cluster-load | sort -nr -k 1 | awk -v user_name=$user_name '$2 == user_name && $3 == "R" { print $1 }'`; do
     printf "\n==================\n"
     slurm-user-cores
     squeue -o '%6A %8u %2t %4C %3D %3h %8j %11M %N' -j $job
