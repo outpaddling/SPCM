@@ -750,6 +750,41 @@ disable_overcommit()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-14  root        Begin
+##########################################################################
+
+authorize_ssh()
+{
+    # Authorize ssh to and from head nodes
+    line
+    cat << EOM
+    
+    You may now specify other hosts in the cluster to and from which `hostname`
+    should not require a password for ssh.
+    
+EOM
+    
+    ssh_host='x'
+    while [ 0$ssh_host != 0 ]; do
+	printf "Hostname or IP of node? [Just press return if there are no more] "
+	read ssh_host
+	if [ 0$ssh_host != 0 ]; then
+	    auto-ssh-authorize $ssh_host
+	    ssh -t $ssh_host auto-ssh-authorize `hostname`
+	fi
+    done
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -875,12 +910,14 @@ case $NODE_TYPE in
     ;;
 
 'compute')    # Compute nodes
+    authorize_ssh
     set-compute-memory-limits
     
     # Set default OMP threads to 1 for all jobs
     ;;
 
 'io')
+    authorize_ssh
     ;;
 
 esac
