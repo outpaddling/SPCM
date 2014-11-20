@@ -1,7 +1,7 @@
 
 			    
 			  --------------------------
-			    CENTOS 6.4 DVD install
+			      CENTOS 6.6 install
 			  --------------------------
 
 Before installing OS
@@ -21,10 +21,11 @@ Router/gateway
 --------------
 Forward ssh and http to head node.
 
+
 CentOS install
 --------------
 Use minimal CD
-    Live DVD doesn't offer choices for installation type
+    Note: Live DVD doesn't offer choices for installation type
 
 Boot from DVD, USB or PXE
 
@@ -34,15 +35,11 @@ MEDIA TEST: ok
 basic storage devices
 	//may or may not see "Fresh Install", if so select this option.
 
-hostname
-    IF HEAD:              pigeon.local
-    IF COMPUTE NODE: compute-xxx.local
-
 Create custom layout
     * Make sure no tmp directories are on boot or root partitions
     
     create
-	If RAID
+	If software RAID
 	    Do not use logical volumes (cannot boot from them)
 	    1.  Create identical RAID partitions for each partition on 
 		both disks
@@ -58,14 +55,16 @@ Create custom layout
 	    
 	If not RAID
 	    standard partitions
-		/boot  ext4    1024 fixed size
-		/      ext4   16384 fixed size
-	    
-		swap
-		    32768 fixed size (must accommodate tmpfs)
-    
-		/var ext4 32768 fixed size
-		/home ext4     fill to max allowable size
+		/boot   ext4    1024 fixed size
+		/       ext4    16384 fixed size
+		swap    32768   fixed size (must accommodate tmpfs)
+		/var    ext4    32768 fixed size
+		/tmp    ext4    32768 fixed size (may or may not use)
+		/home   ext4    fill to max allowable size
+		
+		If using a large hardware RAID:
+		
+		/raid* xfs      fill to max allowable size
 
 write changes to disk
 
@@ -74,10 +73,7 @@ install boot loader on /dev/sda
     dd first block to sdb after install for redundancy?
 	dd if=/dev/sda of=/dev/sdb bs=512 count=1
 
-Minimal install (Customize later)
-
 reboot
-
 
 Network setup
 -------------
@@ -95,8 +91,8 @@ yum install subversion -y
 
 Copy config scripts to system
 -----------------------------
-svn co login@server:/path/CentOS-cluster-admin
-cd CentOS-cluster-admin/Ad-hoc-cluster-setup
+svn co login@server:/path/cluster-admin
+cd cluster-admin/Ad-hoc-cluster-setup
 chmod 700 cluster-setup
 
 All configuration from this point on is automated
