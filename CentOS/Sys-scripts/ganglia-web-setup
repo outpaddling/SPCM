@@ -10,7 +10,8 @@ service httpd restart
 mkdir -p /var/lib/ganglia/rrds
 chown nobody:nobody /var/lib/ganglia/rrds/
 
-cp global_styles.css centos-power.jpg /var/www/html
+DATADIR=/usr/local/share/cluster-admin
+cp $DATADIR/global_styles.css $DATADIR/centos-power.jpg /var/www/html
 chmod a+r /var/www/html/*
 
 if [ ! -e /var/www/html/index.php ]; then
@@ -19,11 +20,11 @@ if [ ! -e /var/www/html/index.php ]; then
     sed -e "s|login|$name|g" index.php > /var/www/html/index.php
 fi
 
-cp /usr/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
+ln -sf /usr/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
 chkconfig --add gmond
 service gmond restart
 
-cp /usr/pkg-1/share/examples/rc.d/gmetad.init /etc/init.d/gmetad
+ln -sf /usr/pkg-1/share/examples/rc.d/gmetad.init /etc/init.d/gmetad
 chkconfig --add gmetad
 service gmetad restart
 

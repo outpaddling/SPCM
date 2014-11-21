@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Use bash for pushd/popd
+# This is a Linux-only script, so bash is not an added dep
 
 ##########################################################################
 #   Script description:
@@ -695,10 +696,15 @@ ganglia_install()
     pkgsrc_prefix=$1
     
     if [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmond ]; then
-	pkgsrc_install_packages $pkgsrc_prefix parallel/ganglia-monitor-core
+	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
     fi
-    if [ $NODE_TYPE = head ] && [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmetad ]; then
-	pkgsrc_install_packages $pkgsrc_prefix www/ganglia-webfrontend
+    # Required for "service gmond"
+    ln -sf $pkgsrc_prefix/share/examples/rc.d/gmond.init /etc/init.d/gmond
+    
+    if [ $NODE_TYPE = head ] && \
+	[ ! -e $pkgsrc_prefix/share/httpd/htdocs/ganglia/actions.php ]; then
+	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-web
+	ganglia-web-setup
     fi
 }
 

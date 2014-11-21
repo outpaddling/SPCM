@@ -20,6 +20,9 @@ case `uname` in
 	if [ -s $PREFIX ]; then
 	    PREFIX=/usr/local
 	fi
+	DATADIR=$PREFIX/share/cluster-admin
+	mkdir -p $DATADIR
+	cp CentOS/WWW/centos-power.jpg CentOS/WWW/global_styles.css $DATADIR
 	;;
     *)
 	printf "Unsupported OS: `uname`\n"
