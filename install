@@ -22,7 +22,7 @@ case `uname` in
 	fi
 	DATADIR=$PREFIX/share/cluster-admin
 	mkdir -p $DATADIR
-	cp CentOS/WWW/centos-power.jpg CentOS/WWW/global_styles.css $DATADIR
+	cp CentOS/WWW/* $DATADIR
 	;;
     *)
 	printf "Unsupported OS: `uname`\n"

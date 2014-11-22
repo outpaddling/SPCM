@@ -500,10 +500,6 @@ ssh_config()
     if [ ! -e /root/.ssh/id_rsa ]; then
 	printf "Setting up public key...\n"
 	ssh-keygen -f /root/.ssh/id_rsa -N ""
-	
-	# FIXME: Should be part of kickstart setup
-	# mkdir -p /var/www/html
-	# cp /root/.ssh/id_rsa.pub /var/www/html/public_key
     else
 	printf "id_rsa already exists.\n"
     fi
@@ -908,10 +904,9 @@ case $NODE_TYPE in
     set-memory-limits 4194304
     set-memory-limits 16777216
 
-    # Set up kickstart server
-    kickstart=`auto-ask kickstart 'Enable kickstart server?' y`
+    kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
-	./kickstart-server-setup
+	auto-pxe-installer-setup
     fi
     ;;
 
