@@ -802,6 +802,8 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
+vi /etc/hosts.allow
+
 # cluster-setup expects to find certain things in CWD
 #if [ $0 != './cluster-setup' ]; then
     #printf 'Error: Must be run as ./cluster-setup.\n'

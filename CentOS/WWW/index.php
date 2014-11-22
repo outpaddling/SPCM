@@ -13,30 +13,50 @@
 
 <hr>
 
+<p>
+The %%HOSTNAME%% HPC cluster is operated by UWM's UITS Research Computing Support
+group and is available for grant-related research conducted by participating
+UWM schools and colleges.
+
+<p>
+For more information, please visit the
+<a href="http://uwm.edu/hpc">Research Computing Support website</a>.
+
 <h2>Current %%HOSTNAME%% Status</h2>
 
 <p>
 <a href="ganglia/">Ganglia Resource Monitor</a>
 <br>
 
-<h2>FreeBSD Ports Collection</h2>
+<h2>The Pkgsrc Collection</h2>
 
 <p>
-Users can request that additional software be installed on %%HOSTNAME%%'s
-head node or compute nodes.  %%HOSTNAME%% runs a Unix variant called FreeBSD,
-which has one of the most extensive pre-packaged software collections of
-any operating system, known as the "FreeBSD ports" collection.  Users can
-browse the ports collection by category to see what's available:
+%%HOSTNAME%% users can request that additional software be installed on %%HOSTNAME%%'s
+head node or compute nodes.
 
 <p>
-<a href="http://www.freebsd.org/ports/categories-grouped.html">http://www.freebsd.org/ports/categories-grouped.html</a>
+Most open source software is installed on %%HOSTNAME%% using the
+<a href="http://www.pkgsrc.org/">Pkgsrc</a> package management system,
+a fully-automated software installation system with an
+extensive collection pre-packaged software.  The Pkgsrc system
+was developed by the NetBSD project, but is designed to work on any
+Unix-compatible system.  In addition to being the native package-management
+system for NetBSD and DragonFly BSD, Pkgsrc is widely used on Linux
+(especially Redhat Enterprise, CentOS, and similar distributions),
+Mac OS X, and Solaris.
 
 <p>
-Software not currently included in the FreeBSD ports collection can also
-be requested, but may take longer to install.
+Users can browse the Pkgsrc collection by category to see what's available:
 
 <p>
-<img style="float:right" src="powerlogo.gif" alt="[Powered by FreeBSD]">
+<a href="http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/README.html">Pkgsrc packages by category</a>
+
+<p>
+Pkgsrc packages can generally be installed in minutes or hours.
+Software not presently in the Pkgsrc collection can also be requested,
+but will generally take longer to install.
+
+<img style="float:right" src="centos-power.jpg" alt="[Powered by CentOS]">
 
 </body>
 </html>

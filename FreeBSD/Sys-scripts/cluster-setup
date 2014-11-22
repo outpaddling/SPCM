@@ -1256,6 +1256,7 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
+vi /etc/hosts.allow
 
 ##########################################################################
 #   Set common variables

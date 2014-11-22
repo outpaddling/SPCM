@@ -23,11 +23,13 @@ if [ ! `iptables-save | grep -- "-j CLUSTER" | awk '{print $1}' | uniq` ]; then
     iptables -I CLUSTER -p tcp -s 10.1.0.0/16 -j ACCEPT
     iptables -I CLUSTER -p udp -s 10.2.0.0/16 -j ACCEPT
     iptables -I CLUSTER -p tcp -s 10.2.0.0/16 -j ACCEPT
+    iptables -I CLUSTER -p tcp -s 129.89.0.0/16 --dport 80 -j ACCEPT
+    iptables -I CLUSTER -p tcp -s 69.131.102.7/32 --dport 80 -j ACCEPT
+    iptables -I CLUSTER -p tcp -s 10.0.0.0/8 --dport 80 -j ACCEPT
     # Temporary hack for SMRT analysis portal
     iptables -I CLUSTER -p tcp -s 129.89.0.0/16 --dport 8080 -j ACCEPT
     iptables -I CLUSTER -p tcp -s 69.131.102.7/32 --dport 8080 -j ACCEPT
-    # SFS weird subnet
-    iptables -I CLUSTER -p tcp -s 10.7.76.0/24 --dport 8080 -j ACCEPT
+    iptables -I CLUSTER -p tcp -s 10.0.0.0/8 --dport 8080 -j ACCEPT
 fi
 
 # save iptables

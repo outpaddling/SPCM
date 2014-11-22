@@ -17,7 +17,7 @@ chmod a+r /var/www/html/*
 if [ ! -e /var/www/html/index.php ]; then
     printf "Cluster name? "
     read name
-    sed -e "s|login|$name|g" $DATADIR/index.php > /var/www/html/index.php
+    sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/index.php > /var/www/html/index.php
 fi
 
 ln -sf /usr/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
