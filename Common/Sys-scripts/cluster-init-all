@@ -1,10 +1,12 @@
 #!/bin/sh -e
 
+cluster-dist-file /etc/hosts /etc all 644
+
 for node in \
     `cluster-backup-login-nodes` \
     `cluster-io-nodes` \
     `cluster-compute-nodes`; do
     printf "$node\n"
-    init-node $node
+    cluster-init-node $node
 done
 
