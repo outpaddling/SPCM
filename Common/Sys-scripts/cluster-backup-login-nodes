@@ -1,0 +1,4 @@
+#!/bin/sh
+
+awk '$2 ~ "login.*[0-9]\\." { print $3 }' /etc/hosts
+

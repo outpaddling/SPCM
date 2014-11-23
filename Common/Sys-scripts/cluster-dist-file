@@ -45,6 +45,14 @@ if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
     done
 fi
 
+if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
+    for node in `cluster-backup-login-nodes`; do
+	printf "$node...\n"
+	scp $file ${node}:$dest_dir
+	ssh $node chmod $perms $dest_dir/`basename $file`
+    done
+fi
+
 if [ $node_type = 'compute' ] || [ $node_type = 'all' ]; then
     for node in `cluster-compute-nodes`; do
 	printf "$node...\n"
