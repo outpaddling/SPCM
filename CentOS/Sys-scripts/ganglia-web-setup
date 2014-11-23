@@ -15,11 +15,13 @@ mkdir -p $ganglia_web/dwoo/compiled
 mkdir -p $ganglia_web/dwoo/cache
 chown -R apache:apache $ganglia_web
 chmod -R u+rwX,g-w $ganglia_web
-#chgrp nobody /usr/pkg-1/var/lib/ganglia-web/dwoo/compiled
-#chmod 777 /usr/pkg-1/var/lib/ganglia-web/dwoo/compiled
-restorecon -R -v $ganglia_web
 
-# FIXME: Temporary debug
+# selinux attempted fixes
+#chcon -R -t httpd_sys_rw_content_t $ganglia_web
+#setsebool -P allow_httpd_sys_script_anon_write 1
+#restorecon -R -v $ganglia_web
+#setsebool -P allow_httpd_anon_write=1
+# FIXME: Temporary hack
 echo 0 > /selinux/enforce
 
 DATADIR=/usr/local/share/cluster-admin
