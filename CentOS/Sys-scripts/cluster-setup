@@ -571,29 +571,6 @@ ldap_config()
 #       
 #   History:
 #   Date        Name        Modification
-#   2013-12-29  bacon        Begin
-##########################################################################
-
-selinux_disable()
-{
-    # Disable SELinux
-    if [ ! -f /etc/sysconfig/selinux.orig ]; then
-	cp /etc/sysconfig/selinux /etc/sysconfig/selinux.orig
-    fi
-    sed -i 's|SELINUX=enforcing|SELINUX=permissive|' /etc/sysconfig/selinux
-    echo 0 > /selinux/enforce
-}
-
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
 #   2014-05-02  bacon        Begin
 ##########################################################################
 

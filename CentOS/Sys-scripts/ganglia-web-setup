@@ -5,17 +5,29 @@ yum install httpd php
 # php-mysql php-devel php-gd php-pecl-memcache php-pspell php-snmp \
 #    php-xmlrpc php-xml
 
-service httpd restart
+ganglia=/var/lib/ganglia
+mkdir -p $ganglia/rrds
+chown nobody:nobody $ganglia/rrds/
+restorecon -R -v $ganglia
 
-mkdir -p /var/lib/ganglia/rrds
-chown nobody:nobody /var/lib/ganglia/rrds/
+ganglia_web=/usr/pkg-1/var/lib/ganglia-web
+mkdir -p $ganglia_web/dwoo/compiled
+mkdir -p $ganglia_web/dwoo/cache
+chown -R apache:apache $ganglia_web
+chmod -R u+rwX,g-w $ganglia_web
+#chgrp nobody /usr/pkg-1/var/lib/ganglia-web/dwoo/compiled
+#chmod 777 /usr/pkg-1/var/lib/ganglia-web/dwoo/compiled
+restorecon -R -v $ganglia_web
+
+# FIXME: Temporary debug
+echo 0 > /selinux/enforce
 
 DATADIR=/usr/local/share/cluster-admin
 cp $DATADIR/global_styles.css $DATADIR/centos-power.jpg /var/www/html
 chmod a+r /var/www/html/*
 
 if [ ! -e /var/www/html/index.php ]; then
-    printf "Cluster name? "
+    printf "Cluster name as it should appear on the web? "
     read name
     sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/index.php > /var/www/html/index.php
 fi
@@ -27,4 +39,28 @@ service gmond restart
 ln -sf /usr/pkg-1/share/examples/rc.d/gmetad.init /etc/init.d/gmetad
 chkconfig --add gmetad
 service gmetad restart
+
+httpd_conf='/etc/httpd/conf/httpd.conf'
+
+if ! fgrep -q '/ganglia/' $httpd_conf; then
+
+    cat << EOM >> $httpd_conf
+
+Alias /ganglia/ "/usr/pkg-1/share/httpd/htdocs/ganglia/"
+
+<Directory "/usr/pkg-1/share/httpd/htdocs/ganglia/">
+    Options Indexes FollowSymlinks MultiViews
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+    <IfModule dir_module>
+	DirectoryIndex index.php
+    </IfModule>
+</Directory>
+
+TraceEnable Off
+EOM
+fi
+
+service httpd restart
 
