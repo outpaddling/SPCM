@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+for node in \
+    `cluster-backup-login-nodes` \
+    `cluster-io-nodes` \
+    `cluster-compute-nodes`; do
+    printf "$node\n"
+    init-node $node
+done
+
