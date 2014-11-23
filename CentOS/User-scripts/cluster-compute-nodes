@@ -1,4 +1,0 @@
-#!/bin/sh
-
-awk '$3 ~ "compute-" { print $3 }' /etc/hosts | fgrep -v ib0
-
