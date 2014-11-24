@@ -122,8 +122,16 @@ pkgsrc_install_packages()
     for pkg in $@; do
 	line
 	printf "Installing $pkg...\n"
+	pkg_name=`echo $pkg | cut -d '/' -f 2`
+	pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
 	pushd $pkgsrc_prefix/pkgsrc-1/$pkg
-	bmake install
+	if [ -e "$pkg_path" ]; then
+	    printf "Using binary package $pkg_path...\n"
+	    bmake bin-install
+	else
+	    printf "Building $pkg from source...\n"
+	    bmake install
+	fi
 	#bmake clean
 	#bmake clean-depends
 	popd
@@ -672,7 +680,8 @@ ganglia_install()
 	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
     fi
     # Required for "service gmond"
-    ln -sf $pkgsrc_prefix/share/examples/rc.d/gmond.init /etc/init.d/gmond
+    ln -sf $pkgsrc_prefix/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
+    service gmond restart
     
     if [ $NODE_TYPE = head ] && \
 	[ ! -e $pkgsrc_prefix/share/httpd/htdocs/ganglia/actions.php ]; then
@@ -816,9 +825,9 @@ export PATH=${PATH}:$START_DIR
 ##########################################################################
 
 yum update -y
-printf "Reboot? [y]/n "
+printf "Reboot? y/[n] "
 read reboot
-if [ 0$reboot != 0n ]; then
+if [ 0$reboot = 0y ]; then
     shutdown -r now
 fi
 
