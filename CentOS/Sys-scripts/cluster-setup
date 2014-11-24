@@ -757,8 +757,8 @@ authorize_ssh()
     line
     cat << EOM
     
-    You may now specify other hosts in the cluster to and from which `hostname`
-    should not require a password for ssh.
+You may now specify other hosts in the cluster to and from which
+`hostname` should not require a password for ssh.
     
 EOM
     
