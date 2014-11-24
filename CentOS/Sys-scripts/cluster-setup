@@ -405,8 +405,10 @@ nfs_config()
 	# Unnecessary after restarting daemons?
 	# exportfs -a
 	;;
+    esac
     
-    'compute')
+    case $NODE_TYPE in
+    'compute'|'io')
 	# Compute nodes
 	nfs_server='prime'
 	while [ x$nfs_server != x ]; do
