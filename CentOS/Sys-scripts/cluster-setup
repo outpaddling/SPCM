@@ -312,12 +312,9 @@ ntp_config()
     printf "Running ntpdate...\n"
     # Start with correct date
     yum install -y ntp ntpdate
+    ntpdate -u pool.ntp.org
     chkconfig ntpd on
     service ntpd stop
-    # pool.ntp.org sometimes fails with 'no suitable server found'
-    # ntpdate pool.ntp.org
-    # Temporary workaround
-    # ntpdate pool.ntp.org
     service ntpd start
 }
 
