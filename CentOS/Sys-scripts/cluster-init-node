@@ -28,6 +28,7 @@ if [ $# != 1 ]; then
 fi
 
 host_name=$1
+# FIXME: Should this be handled by DHCP?
 ssh $host_name hostname $host_name
 ssh $host_name \
     "sed -i -e 's|HOSTNAME=.*|HOSTNAME=$host_name|' /etc/sysconfig/network"
