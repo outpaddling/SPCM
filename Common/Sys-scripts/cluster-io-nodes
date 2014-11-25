@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
-awk '$2 ~ "data.*[0-9]\\." || $2 ~ "raid.*[0-9]\\." { print $2 }' /etc/hosts
+awk '$2 ~ "data-[0-9]+\\." || $2 ~ "raid-[0-9]+\\." { print $2 }' /etc/hosts
 

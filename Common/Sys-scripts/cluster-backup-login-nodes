@@ -1,4 +1,4 @@
 #!/bin/sh
 
-awk '$2 ~ "login.*[0-9]\\." { print $2 }' /etc/hosts
+awk '$2 ~ "login-[0-9]+\\." { print $2 }' /etc/hosts
 
