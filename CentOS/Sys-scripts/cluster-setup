@@ -130,7 +130,7 @@ pkgsrc_install_packages()
 	    bmake bin-install
 	else
 	    printf "Building $pkg from source...\n"
-	    bmake install
+	    env ALLOW_VULNERABLE_PACKAGES=yes bmake install
 	fi
 	#bmake clean
 	#bmake clean-depends
@@ -404,16 +404,19 @@ nfs_config()
 	;;
     esac
     
+    printf "Currently configured mounts:\n\n"
+    awk '$3 == "nfs" { print $0 }' /etc/fstab
+    
     case $NODE_TYPE in
     'compute'|'io')
 	# Compute nodes
 	nfs_server='prime'
 	while [ x$nfs_server != x ]; do
-	    printf 'Enter another NFS server, or press return to move on: '
+	    printf 'Enter an NFS server to mount from, or press return to move on: '
 	    read nfs_server
 	    
 	    if [ 0$nfs_server != 0 ]; then
-		printf "Export to mount? (e.g. /home) "
+		printf "Exported directory to mount? "
 		read export
 		# Add to fstab if not already there
 		auto-append-line "$export$num" \
