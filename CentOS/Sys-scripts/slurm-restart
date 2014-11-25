@@ -24,9 +24,10 @@ if [ 0$sure != 0yes ]; then
 fi
 
 cluster-sync-slurm.conf
+
 printf 'Compute and backup nodes...\n'
-cluster-run '/usr/pkg-1/etc/init.d/munge restart && /usr/pkg-1/etc/init.d/slurm restart' backup
-cluster-run '/sharedapps/pkg-1/etc/init.d/munge restart && /sharedapps/pkg-1/etc/init.d/slurm restart' compute
+cluster-run -c 'service munge restart && service slurm restart' compute backup
+
 printf 'Head node...\n'
-/usr/pkg-1/etc/init.d/munge restart && /usr/pkg-1/etc/init.d/slurm restart
+service munge restart && service slurm restart
 
