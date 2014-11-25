@@ -1,0 +1,79 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-26  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 node-type pkgsrc-prefix\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+node_type=$1
+prefix=$2/pkg-1
+
+case $node_type in
+'head')
+    munge_etc="$prefix/etc/munge"
+    mkdir -p -m 0700 $munge_etc
+    if [ ! -e $munge_etc/munge.key ]; then
+	printf "Generating munge key...\n"
+	dd if=/dev/urandom bs=1 count=1024 > $munge_etc/munge.key
+	chmod 400 $munge_etc/munge.key
+    fi
+    ;;
+
+'compute')
+    munge_etc="$prefix/etc/munge"
+    mkdir -p -m 0700 $munge_etc
+    if [ ! -e $munge_etc/munge.key ]; then
+	cat << EOM
+
+Missing munge key.  Copy it from the head node to $munge_etc
+and run $0 again.
+
+EOM
+	exit 1
+    fi
+    chmod 400 $munge_etc/munge.key
+    ;;
+
+*)
+    printf "$0 is only for head and compute nodes.\n"
+    exit 1
+    ;;
+esac
+
+# if $prefix is /sharedapps, all munge daemons on compute nodes will
+# try to share the same logs, lockfiles, etc, which won't work.
+rm -rf $prefix/var/log/munge $prefix/var/run/munge $prefix/var/lib/munge
+mkdir -p /var/log/munge /var/run/munge /var/lib/munge
+
+# Munge init script complains about ownership
+chown -Rh daemon:daemon /var/log/munge /var/run/munge \
+    /var/lib/munge $munge_etc
+chmod 755 /var/run/munge
+
+# RHEL init script
+ln -sf $prefix/share/examples/rc.d/init.d/munge /etc/init.d/munge
+chkconfig munge on
+service munge restart
+

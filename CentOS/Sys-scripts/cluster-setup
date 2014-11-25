@@ -651,6 +651,8 @@ slurm_install()
 	case $NODE_TYPE in
 	'head'|'compute')
 	    pkgsrc_install_packages $pkgsrc_prefix wip/slurm
+	    cluster-munge-enable $NODE_TYPE $pkgsrc_prefix
+	    cluster-slurm-enable $pkgsrc_prefix
 	    ;;
 	'io')
 	    ;;
