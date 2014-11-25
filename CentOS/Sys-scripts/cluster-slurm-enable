@@ -65,5 +65,4 @@ Run "service slurm start" after installing
 $prefix/pkg-1/etc/slurm.conf.
 
 EOM
-pause
 
