@@ -43,6 +43,11 @@ fi
 
 prefix=$1
 
+# Create slurm account
+cd $prefix/pkgsrc-1/wip/slurm
+bmake deinstall
+bmake install
+
 rm -f /etc/init.d/slurm
 sed -e "/^BINDIR=/ i exec_prefix=$prefix/pkg-1\nprefix=$prefix/pkg-1\n" \
     $prefix/pkg-1/share/examples/slurm/init.d.slurm > /etc/init.d/slurm
