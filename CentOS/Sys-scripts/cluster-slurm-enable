@@ -44,11 +44,11 @@ fi
 prefix=$1
 
 rm -f /etc/init.d/slurm
-sed -e '/^BINDIR=/ i exec_prefix=/usr/pkg-1\nprefix=/usr/pkg-1\n' \
+sed -e "/^BINDIR=/ i exec_prefix=$prefix/pkg-1\nprefix=$prefix/pkg-1\n" \
     $prefix/pkg-1/share/examples/slurm/init.d.slurm > /etc/init.d/slurm
 chmod 755 /etc/init.d/slurm
 
-mkdir /var/log/slurm
+mkdir -p /var/log/slurm
 chown slurm:slurm /var/log/slurm
 
 chkconfig slurm on
