@@ -1,11 +1,13 @@
 #!/bin/sh -e
 
 # Without this, users are mapped as nobody
+
+# Head
+sed -i 's|#Domain = .*|Domain = cluster|' /etc/idmapd.conf
+service rpcidmapd restart
+
 # Add this to cluster-setup
-for node in `cluster-io-nodes` `cluster-compute-nodes`; do
-    printf "$node...\n"
-    ssh $node \
-	"sed -i 's|Domain = hpc.uwm.edu|Domain = `domainname`|' /etc/idmapd.conf"
-    ssh $node "service rpcidmapd restart"
-done
+cluster-run \
+    "sed -i 's|#Domain = .*|Domain = cluster|' /etc/idmapd.conf; service rpcidmapd restart" \
+    all
 

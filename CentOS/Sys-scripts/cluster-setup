@@ -897,6 +897,8 @@ case $NODE_TYPE in
     # Set per-process memory limits to a fraction of RAM
     set-memory-limits 4194304
     set-memory-limits 16777216
+    
+    fix-idmapd-domain
 
     kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
