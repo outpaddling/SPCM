@@ -160,10 +160,16 @@ pkgsrc_setup()
     
     line
     pkgsrc_prefix=$1
-    printf "Installing pkgsrc in $pkgsrc_prefix...\n"
 
     if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
+	printf "Installing pkgsrc in $pkgsrc_prefix...\n"
 	pkgsrc-setup $pkgsrc_prefix
+    else
+	printf "Updating pkgsrc WIP...\n"
+	save_cwd=`pwd`
+	cd $pkgsrc_prefix/pkgsrc-1/wip
+	cvs up -dP
+	cd $save_cwd
     fi
     
     # FIXME: restore PATH after install in case this function is
@@ -684,6 +690,7 @@ ganglia_install()
     if [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmond ]; then
 	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
     fi
+
     # Required for "service gmond"
     ln -sf $pkgsrc_prefix/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
     service gmond restart
@@ -898,11 +905,16 @@ case $NODE_TYPE in
     set-memory-limits 4194304
     set-memory-limits 16777216
     
-    fix-idmapd-domain
-
+    fix_idmap=`auto-ask fix-idmap "Fix idmap?  ( Requires all nodes to be online )" n`
+    
+    if [ $fix_idmap = y ]; then
+	fix-idmapd-domain
+    fi
+    
     kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
-	auto-pxe-installer-setup
+	iso_path=`auto-ask pxe-iso-path 'Full pathname of ISO image? ' ''`
+	auto-pxe-installer-setup $iso_path
     fi
     ;;
 

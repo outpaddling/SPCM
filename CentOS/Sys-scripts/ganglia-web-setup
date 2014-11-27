@@ -59,8 +59,6 @@ Alias /ganglia/ "/usr/pkg-1/share/httpd/htdocs/ganglia/"
 	DirectoryIndex index.php
     </IfModule>
 </Directory>
-
-TraceEnable Off
 EOM
 fi
 
