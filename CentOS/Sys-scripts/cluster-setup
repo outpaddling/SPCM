@@ -164,12 +164,6 @@ pkgsrc_setup()
     if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
 	printf "Installing pkgsrc in $pkgsrc_prefix...\n"
 	pkgsrc-setup $pkgsrc_prefix
-    else
-	printf "Updating pkgsrc WIP...\n"
-	save_cwd=`pwd`
-	cd $pkgsrc_prefix/pkgsrc-1/wip
-	cvs up -dP
-	cd $save_cwd
     fi
     
     # FIXME: restore PATH after install in case this function is
