@@ -1106,7 +1106,8 @@ install_common_tools()
 {
     # Quick-install some common tools
     line
-    install_packages devel/gmake net/rsync converters/libiconv
+    install_packages devel/gmake net/rsync converters/libiconv \
+	editors/nano ftp/wget
 }
 
 
