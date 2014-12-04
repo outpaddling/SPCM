@@ -459,6 +459,8 @@ install_core_rpms()
     printf "Installing core utilities...\n"
     for pkg in \
 	rsync \
+	wget \
+	nano \
 	sysstat \
 	bind-utils \
 	tcsh zsh ksh \
