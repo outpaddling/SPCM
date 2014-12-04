@@ -49,6 +49,7 @@ printf "${email}\n" > /home/$user_name/.forward
 # FIXME: Create a separate protouser
 edquota -p bacon $user_name
 
+chage -M 365 -W 14 $user_name
 cluster-sync-user $user_name
 cluster-passwd $user_name
 ssh-keygen-for-user $user_name

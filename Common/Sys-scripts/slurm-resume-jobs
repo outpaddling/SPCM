@@ -32,7 +32,7 @@ for job in `slurm-cluster-load | sort -n -k 1 | awk -v user_name=$user_name '$2 
     printf "\n==================\n"
     slurm-user-cores
     squeue -o '%6A %8u %2t %4C %3D %3h %8j %11M %N' -j $job
-    printf "\nSuspend? (y/[n]/q) "
+    printf "\\Resume? (y/[n]/q) "
     read resp
     if [ 0$resp = 0y ]; then
 	scontrol resume $job

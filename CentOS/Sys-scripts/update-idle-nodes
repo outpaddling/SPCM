@@ -54,6 +54,9 @@ case $# in
 esac
 
 readonly updated_nodes='/root/updated-nodes'
+if [ ! -e $updated_nodes ]; then
+    touch $updated_nodes
+fi
 
 cd /root
 sinfo -o '%n %T'
