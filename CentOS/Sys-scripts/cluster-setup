@@ -864,14 +864,14 @@ ssh_config
 # Install user software independent of RPMS so that it will not be
 # broken by yum updates.
 
-case $NODE_TYPE in
-'head'|'io')
+#case $NODE_TYPE in
+#'head'|'io')
     pkgsrc_prefix='/usr'
-    ;;
-'compute')
-    pkgsrc_prefix=`auto-ask sharedapps-dir 'Pkgsrc prefix?' /sharedapps`
-    ;;
-esac
+    #;;
+#'compute')
+    #pkgsrc_prefix=`auto-ask sharedapps-dir 'Pkgsrc prefix?' /sharedapps`
+    #;;
+#esac
 
 # Pkgsrc base
 pkgsrc_setup $pkgsrc_prefix
