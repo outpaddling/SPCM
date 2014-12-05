@@ -121,20 +121,24 @@ pkgsrc_install_packages()
     shift
     for pkg in $@; do
 	line
-	printf "Installing $pkg...\n"
-	pkg_name=`echo $pkg | cut -d '/' -f 2`
-	pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
-	pushd $pkgsrc_prefix/pkgsrc-1/$pkg
-	if [ -e "$pkg_path" ]; then
-	    printf "Using binary package $pkg_path...\n"
-	    bmake bin-install
-	else
-	    printf "Building $pkg from source...\n"
-	    env ALLOW_VULNERABLE_PACKAGES=yes bmake install
-	fi
-	#bmake clean
-	#bmake clean-depends
-	popd
+        if pkg_info `basename $pkg`; then
+            printf "$pkg is already installed.\n"
+        else
+	    printf "Installing $pkg...\n"
+	    pkg_name=`echo $pkg | cut -d '/' -f 2`
+	    pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
+	    pushd $pkgsrc_prefix/pkgsrc-1/$pkg
+	    if [ -e "$pkg_path" ]; then
+	        printf "Using binary package $pkg_path...\n"
+	        bmake bin-install
+	    else
+	        printf "Building $pkg from source...\n"
+	        env ALLOW_VULNERABLE_PACKAGES=yes bmake install
+	    fi
+	    #bmake clean
+	    #bmake clean-depends
+	    popd
+        fi
     done
 }
 
@@ -625,6 +629,8 @@ apache_install()
 	exit 1
     fi
     
+    local pkgsrc_prefix=$1
+
     pkgsrc_install_packages $1 www/apache24
     
     # FIXME: Install proper init script
@@ -650,7 +656,6 @@ slurm_install()
 	exit 1
     fi
     
-    if [ ! -e $pkgsrc_prefix/pkg-1/sbin/slurmd ]; then
 	case $NODE_TYPE in
 	'head'|'compute')
 	    pkgsrc_install_packages $pkgsrc_prefix wip/slurm
@@ -660,7 +665,6 @@ slurm_install()
 	'io')
 	    ;;
 	esac
-    fi
 }
 
 
@@ -684,16 +688,16 @@ ganglia_install()
     fi
     pkgsrc_prefix=$1
     
-    if [ ! -e $pkgsrc_prefix/pkg-1/sbin/gmond ]; then
-	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
+    # Redundant check due to name diff between pkg and port
+    if ! pkg_info ganglia-monitor-core > /dev/null; then
+        pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
     fi
 
     # Required for "service gmond"
     ln -sf $pkgsrc_prefix/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
     service gmond restart
     
-    if [ $NODE_TYPE = head ] && \
-	[ ! -e $pkgsrc_prefix/share/httpd/htdocs/ganglia/actions.php ]; then
+    if [ $NODE_TYPE = head ]; then
 	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-web
 	ganglia-web-setup
     fi
@@ -878,8 +882,9 @@ pkgsrc_setup $pkgsrc_prefix
 pkgsrc_append_default_path $pkgsrc_prefix
 
 # Common packages
-pkgsrc_install_packages $pkgsrc_prefix \
-    wip/auto-admin wip/ape net/iperf
+for pkg in wip/auto-admin wip/ape net/iperf; do
+    pkgsrc_install_packages $pkgsrc_prefix $pkg
+done
 
 # Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit
