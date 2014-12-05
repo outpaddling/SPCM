@@ -28,6 +28,9 @@ if [ $# != 1 ]; then
 fi
 
 host_name=$1
+
+scp /etc/hosts ${host_name}:/etc
+
 # FIXME: Should this be handled by DHCP?
 ssh $host_name hostname $host_name
 ssh $host_name \
@@ -35,5 +38,13 @@ ssh $host_name \
 # Hack to get around missing feature in PXE installer
 ssh $host_name 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY=10.1.1.1" >> /etc/sysconfig/network; fi; service network restart'
 ssh $host_name yum update -y
+
+printf "Installing yum updates...\n"
 ssh $host_name yum install -y subversion rsync
+
+printf "Reboot? (y/[n]) "
+read reboot
+if [ 0$reboot = 0y ]; then
+    ssh $host_name shutdown -r now
+fi
 
