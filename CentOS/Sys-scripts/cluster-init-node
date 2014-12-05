@@ -34,5 +34,6 @@ ssh $host_name \
     "sed -i -e 's|HOSTNAME=.*|HOSTNAME=$host_name|' /etc/sysconfig/network"
 # Hack to get around missing feature in PXE installer
 ssh $host_name 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY=10.1.1.1" >> /etc/sysconfig/network; fi; service network restart'
+ssh $host_name yum update -y
 ssh $host_name yum install -y subversion rsync
 
