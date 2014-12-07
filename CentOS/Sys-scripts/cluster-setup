@@ -121,24 +121,24 @@ pkgsrc_install_packages()
     shift
     for pkg in $@; do
 	line
-        if pkg_info `basename $pkg`; then
-            printf "$pkg is already installed.\n"
-        else
+	if pkg_info `basename $pkg`; then
+	    printf "$pkg is already installed.\n"
+	else
 	    printf "Installing $pkg...\n"
 	    pkg_name=`echo $pkg | cut -d '/' -f 2`
 	    pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
 	    pushd $pkgsrc_prefix/pkgsrc-1/$pkg
 	    if [ -e "$pkg_path" ]; then
-	        printf "Using binary package $pkg_path...\n"
-	        bmake bin-install
+		printf "Using binary package $pkg_path...\n"
+		bmake bin-install
 	    else
-	        printf "Building $pkg from source...\n"
-	        env ALLOW_VULNERABLE_PACKAGES=yes bmake install
+		printf "Building $pkg from source...\n"
+		env ALLOW_VULNERABLE_PACKAGES=yes bmake install
 	    fi
 	    #bmake clean
 	    #bmake clean-depends
 	    popd
-        fi
+	fi
     done
 }
 
@@ -229,8 +229,14 @@ ib_config()
     # Can we avoid using a groupinstall and just install the essential packages?
     # Are these necessary, or do we just need to enable rdma?
     yum groupinstall -y "Infiniband Support"
-    yum install -y infiniband-diags
-    yum install -y perftest
+    yum install -y \
+	libibverbs-devel \
+	libibcommon-devel \
+	libibmad-devel \
+	libibcm-devel \
+	librdmacm-devel \
+	infiniband-diags \
+	perftest
     
     # SCSI RDMA Protocol
     # yum install -y srptools rdma
@@ -690,7 +696,7 @@ ganglia_install()
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
-        pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
+	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
     fi
 
     # Required for "service gmond"

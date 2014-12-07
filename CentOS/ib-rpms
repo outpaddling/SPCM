@@ -1,5 +1,0 @@
-#!/bin/sh
-
-yum install -y libibverbs-devel libibcommon-devel libibmad-devel libibcm-devel \
-    librdmacm-devel 
-
