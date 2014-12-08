@@ -348,11 +348,11 @@ boot_block_backup()
     line
     printf "Backing up boot block...\n"
     # Save boot block for restoring software RAID
-    if [ ! -e boot-block.$NODE_TYPE ]; then
+    if [ ! -e /root/Save/boot-block.$NODE_TYPE ]; then
 	line
 	printf "Backing up boot block...\n"
-	mkdir -p /root/Backup
-	dd if=/dev/sda of=/root/Backup/boot-block.$NODE_TYPE bs=512 count=1
+	mkdir -p /root/Save
+	dd if=/dev/sda of=/root/Save/boot-block.$NODE_TYPE bs=512 count=1
     fi
 }
 
@@ -828,7 +828,7 @@ esac
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
 
-if [ -e ~/Save/anaconda-ks.cfg ]; then
+if [ -e /root/Save/anaconda-ks.cfg ]; then
     printf "Node already configured.  Reconfigure? [n] "
     read reconfig
     if [ 0$reconfig != 0y ]; then
@@ -940,6 +940,6 @@ case $NODE_TYPE in
 esac
 
 # Save Kickstart file
-mkdir -p ~/Save
-backup_file ~/anaconda-ks.cfg ~/Save
+mkdir -p /root/Save
+backup_file ~/anaconda-ks.cfg /root/Save
 
