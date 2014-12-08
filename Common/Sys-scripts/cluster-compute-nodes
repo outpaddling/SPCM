@@ -1,4 +1,4 @@
 #!/bin/sh
 
-awk '$2 ~ "compute-[0-9]+" { print $2 }' /etc/hosts | fgrep -v ib0
+awk '$2 ~ "compute-.*[0-9]+" { print $2 }' /etc/hosts | fgrep -v ib0
 
