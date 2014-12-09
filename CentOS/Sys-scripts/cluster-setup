@@ -481,7 +481,8 @@ install_core_rpms()
 	parted \
 	lsof \
 	emacs \
-	words 
+	words \
+	environment-modules
     do
 	yum install -y $pkg
     done
