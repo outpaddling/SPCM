@@ -167,7 +167,7 @@ pkgsrc_setup()
 
     if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
 	printf "Installing pkgsrc in $pkgsrc_prefix...\n"
-	pkgsrc-setup $pkgsrc_prefix
+	auto-pkgsrc-setup $pkgsrc_prefix
     fi
     
     # FIXME: restore PATH after install in case this function is
