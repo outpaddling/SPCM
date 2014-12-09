@@ -46,7 +46,13 @@ yum install quota
 
 # Also you have to edit the edit the /etc/fstab and add:
 # usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
-printf 'usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0\n'
+cat << EOM
+
+Add the following to $dir in /etc/fstab:
+
+usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
+
+EOM
 pause
 vi /etc/fstab
 

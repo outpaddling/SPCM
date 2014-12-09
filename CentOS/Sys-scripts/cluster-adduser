@@ -46,7 +46,7 @@ read user_name
 
 # Find next available UID
 # FIXME: Hack to get past the old UIDs intil they're cleaned up
-default_uid=780
+default_uid=501
 while [ 0`awk -F : -v uid=$default_uid '$3 == uid { print $3 }' /etc/passwd` = 0$default_uid ]; do
     default_uid=$(($default_uid + 1))
 done
@@ -87,7 +87,7 @@ fi
 home_dir=/home/$user_name
 
 # User's college/school
-colleges="CEAS LS LSOB SFS SPH Other"
+colleges="CEAS LS LSOB SFS SPH UITS Other"
 select_from_list $colleges
 college=$selection
 
@@ -99,21 +99,21 @@ fi
 # User's department
 case $college in
 CEAS)
-    depts="CIV COMPSCI ELEC IND MAT MECH"
+    depts="CIV COMPSCI ELEC IND MAT MECH NA"
     select_from_list $depts
     ;;
 LS)
-    depts="IT BIO CHM ECN MTH PHY POL PSY"
+    depts="IT BIO CHM ECN MTH PHY POL PSY NA"
     select_from_list $depts
     ;;
 LSOB)
-    selection="LSOB"
+    selection="LSOB NA"
     ;;
 SFS)
-    selection="SFS"
+    selection="SFS NA"
     ;;
 SPH)
-    selection="SPH"
+    selection="SPH NA"
     ;;
 Other)
     printf "Department abbreviation? "
@@ -123,7 +123,7 @@ esac
 dept=$selection
 
 # User's role in the organization
-titles='Facilitator Faculty Postdoc Researcher Student Other'
+titles='Sysadmin Facilitator Faculty Postdoc Researcher Student Other'
 select_from_list $titles
 title=$selection
 
@@ -220,7 +220,7 @@ chmod 750 /home/$user_name
 # If a new group was created for this user, create the directory structure
 if [ 0$create_group = 0'y' ]; then
     # Data directory
-    share=`df /share[2-9]* | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+    share=`df /share[0-9]* /*raid-[0-9]* | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
     data_dir=$share/$college/$user_name
     mkdir -p $data_dir
     chown -Rh ${user_name}:$user_name $data_dir
