@@ -487,6 +487,12 @@ install_core_rpms()
 	yum install -y $pkg
     done
     # No such package yum install -y impitool     # Remote management and LOM
+    
+    if [ $NODE_TYPE = compute ]; then
+	for pkg in openmpi-devel; do
+	    yum install -y $pkg
+	done
+    fi
 
     # Install compilers, etc.
     line
@@ -496,7 +502,7 @@ install_core_rpms()
 
     # Enable X11 apps without installing a desktop system like KDE
     line
-    printf "Enableing X11 apps without installing desktop...\n"
+    printf "Enabling X11 apps without installing desktop...\n"
     yum install -y xauth
 }
 
@@ -875,16 +881,8 @@ ssh_config
 # Install user software independent of RPMS so that it will not be
 # broken by yum updates.
 
-#case $NODE_TYPE in
-#'head'|'io')
-    pkgsrc_prefix='/usr'
-    #;;
-#'compute')
-    #pkgsrc_prefix=`auto-ask sharedapps-dir 'Pkgsrc prefix?' /sharedapps`
-    #;;
-#esac
-
 # Pkgsrc base
+pkgsrc_prefix='/usr'
 pkgsrc_setup $pkgsrc_prefix
 pkgsrc_append_default_path $pkgsrc_prefix
 
