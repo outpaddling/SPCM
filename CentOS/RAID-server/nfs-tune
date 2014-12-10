@@ -38,7 +38,7 @@ sysctl net.core.wmem_default=$mem
 # This should be small, so that background flushing is utilized
 # as much as possible.  Otherwise, the server may be twiddling its
 # thumbs while it could be writing data to disk.
-sysctl vm.dirty_background_ratio=2
+#sysctl vm.dirty_background_ratio=2
 #sysctl vm.dirty_background_bytes=1073741824
 #sysctl vm.dirty_background_bytes=268435456
 #sysctl vm.dirty_background_bytes=134217728
@@ -59,8 +59,10 @@ vi /etc/sysctl.conf
 # available memory for disk buffering.  Leave some for read caching
 # and other OS functions.  On other computers that need
 # memory to run applications, it should be kept fairly small.
-sysctl vm.dirty_ratio=50
-auto-append-line vm.dirty_ratio=50 /etc/sysctl.conf $0
+
+dirty_ratio=80
+sysctl vm.dirty_ratio=$dirty_ratio
+auto-append-line vm.dirty_ratio=$dirty_ratio /etc/sysctl.conf $0
 #vi /etc/sysconfig/nfs
 #service nfs restart
 
