@@ -133,6 +133,7 @@ while [ $success != 1 ]; do
 	    cat $errfile
 	fi
     fi
+    rm -f $errfile
 done
 
 # Do this only for remote passwd commands, since the string passes through
