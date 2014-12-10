@@ -52,7 +52,6 @@ bytes=268435456
 sysctl vm.dirty_background_bytes=$bytes
 # FIXME: Remove old entry from sysctl.conf
 auto-append-line vm.dirty_background_bytes=$bytes /etc/sysctl.conf $0
-vi /etc/sysctl.conf
 
 # Percent of memory to use before I/O is blocked until flush is complete.
 # On a dedicated file server, this should be high, to utilize
@@ -66,7 +65,7 @@ auto-append-line vm.dirty_ratio=$dirty_ratio /etc/sysctl.conf $0
 #vi /etc/sysconfig/nfs
 #service nfs restart
 
-pause
+vi /etc/sysctl.conf
 
 iostat -dm 1
 
