@@ -67,6 +67,6 @@ auto-append-line vm.dirty_ratio=$dirty_ratio /etc/sysctl.conf $0
 
 vi /etc/sysctl.conf
 vi /etc/sysconfig/nfs
-service nfsd restart
+service nfs restart
 iostat -dm 1
 
