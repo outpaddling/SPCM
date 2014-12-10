@@ -52,7 +52,7 @@ EOM
 	pause
 	;;
     5)
-	cluster-load
+	slurm-cluster-load
 	pause
 	;;
     Q|q)
