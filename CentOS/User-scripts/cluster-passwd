@@ -58,14 +58,6 @@ cat << EOM
 Changing cluster password for $user_name...
 ==========================================================================
 
-Users are strongly advised to use a passphrase, not a password.
-A 3-word, 20-character passphrase is usually easier to remember
-than an 8-character random password that is equally secure.
-
-Passwords based on a single real word are not allowed, since they are
-easy to crack.  A passphrase based on 3 real words of sufficient length
-is difficult to crack, but easy to remember.
-
 Do not share your passphrase with anyone, including your adviser or
 other lab members.  Files can be shared by setting group permissions.
 See the user's guide or contact your facilitator if you need assistance.
@@ -75,32 +67,25 @@ If you want to record it, use a password vault such as KeePassX:
 
     http://www.keepassx.org/
 
-==========================================================================
-
-EOM
-
-pause
-
-cat << EOM
-
 A valid password should be a mix of upper and lower case letters,
-digits, and other characters.  You can use a 14 character long
-password with characters from at least 3 of these 4 classes, or
-a 12 character long password containing characters from all the
-classes.  An upper case letter that begins the password and a
-digit that ends it do not count towards the number of character
-classes used.
+digits, and other characters.
 
-A passphrase should be of at least 3 words, separated by random
-characters such as digits or punctuation, and at least 20 characters
-long.
+An upper case letter that begins the password and a digit that ends it do
+not count towards the number of character classes used.
+
+Users are strongly advised to use a passphrase, not a password.
+A 3-word, 20-character passphrase is usually easier to remember
+than an 8-character random password that is equally secure.
 
 ==========================================================================
 
 EOM
 
-pause
-ppgen
+proper_response="I have carefully read the requirements above"
+while [ 0"$agree" != 0"$proper_response" ]; do
+    printf "Type '$proper_response' to continue.\n"
+    read agree
+done
 
 if [ `whoami` != 'root' ]; then
     printf "Old password? "
