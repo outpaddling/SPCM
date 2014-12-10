@@ -133,7 +133,6 @@ while [ $success != 1 ]; do
 	    cat $errfile
 	fi
     fi
-    rm -f $errfile
 done
 
 # Do this only for remote passwd commands, since the string passes through
@@ -167,6 +166,8 @@ for node in $nodes; do
 	fi
     fi
 done
+
+rm -f $errfile
 
 if [ `whoami` = 'root' ]; then
     printf 'Is this a permanent password? (y/[n]) '
