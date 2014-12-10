@@ -193,14 +193,8 @@ if [ 0$resp != 0y ]; then
 fi
 
 if [ 0$create_group = 0'y' ]; then
-    groupadd -g $gid $user_name
-    
-    # Add facilitator to new group
-    # Problems due to 16-group auth_sys limit for NFS and no
-    # --manage-gids flag in our old version of rcp.mountd
-    #for admin in bacon_a dsiercks_a davidc_a; do
-    #    usermod -a -G $user_name $admin
-    #done
+    printf "Adding group $primary_group...\n"
+    groupadd -g $gid $primary_group
 fi
 
 # Create user account
@@ -210,18 +204,21 @@ else
     agroup_flags=""
 fi
 
-set -x
+printf "Adding user $user_name...\n"
 useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
     $agroup_flags -m $user_name
-set +x
-
 chmod 750 /home/$user_name
 
 # If a new group was created for this user, create the directory structure
 if [ 0$create_group = 0'y' ]; then
     # Data directory
-    share=`df /share[0-9]* /*raid-[0-9]* | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+    if [ -e /share1 ]; then
+	share=`df /share[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+    elif [ -e /raid-01 ]; then
+	share=`df /raid-[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+    fi
     data_dir=$share/$college/$user_name
+    printf "Creating $data_dir...\n"
     mkdir -p $data_dir
     chown -Rh ${user_name}:$user_name $data_dir
     chmod 770 $data_dir
@@ -230,7 +227,12 @@ if [ 0$create_group = 0'y' ]; then
     # the PI's group by default.
     chmod g+s $data_dir
 else
-    data_dir=`echo /share[2-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+    if [ -e /share1 ]; then
+	data_dir=`echo /share[0-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+    elif [ -e /raid-01 ]; then
+	data_dir=`echo /raid-[0-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+    fi
+    printf "Linking to existing data dir $data_dir...\n"
 fi
 rm -f $home_dir/Data
 ln -s $data_dir $home_dir/Data
