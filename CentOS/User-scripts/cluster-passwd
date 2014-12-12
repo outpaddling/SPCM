@@ -82,11 +82,11 @@ than an 8-character random password that is equally secure.
 EOM
 
 if [ `whoami` != 'root' ]; then
-    proper_response="I have carefully read the requirements above"
-    while [ 0"$agree" != 0"$proper_response" ]; do
-	printf "Type '$proper_response' to continue.\n"
-	read agree
-    done
+    #proper_response="I have carefully read the requirements above"
+    #while [ 0"$agree" != 0"$proper_response" ]; do
+    #    printf "Type '$proper_response' to continue.\n"
+    #    read agree
+    #done
 
     printf "Old password? "
     read -s old_pw
