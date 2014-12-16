@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+for node in `cluster-backup-login-nodes` `cluster-io-nodes`; do
+    printf "$node...\n"
+    rsync -av --delete --exclude pkg-1/var /usr/pkg-1 /usr/pkgsrc-1 ${node}:/usr
+done
+
+for node in `cluster-compute-nodes`; do
+    printf "$node...\n"
+    rsync -av --delete --exclude pkg-1/var /usr/pkg-1 ${node}:/usr
+done
+
