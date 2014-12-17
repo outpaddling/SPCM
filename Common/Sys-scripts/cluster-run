@@ -3,7 +3,7 @@
 usage()
 {
     cat << EOM
-Usage: $0 [-p] [-c] [-n] 'command'
+Usage: $0 [-p] [-c] [-n] 'command' backup|io|compute|all
     -c = continue running if there are errors.
     -p = run in parallel, redirecting output to files. (implies -c)
     -n = omit ssh -t flag to disable full terminal control.
