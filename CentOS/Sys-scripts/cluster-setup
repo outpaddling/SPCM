@@ -814,6 +814,13 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
+if [ ! -e /root/ssh.backup ]; then
+    printf 'Backing up .ssh...\n'
+    cp -R /root/.ssh /root/ssh.backup
+fi
+
+vi /etc/hosts.allow
+
 printf "Run harden script. "
 pause
 

@@ -923,30 +923,13 @@ reconfigure the head node.
 EOM
     fi
     
+    # All nodes should already accept passwordless login from the head node
+    # This is set up by auto-pxe-installer-setup and left to the user
+    # is they are not using it.
     if [ $NODE_TYPE = 'head' ]; then
-	# Generate ssh keys
-	id_dsa="$CLUSTER_DATA/id_dsa"
-	if [ ! -e $id_dsa ]; then
-	    printf "Generating ssh keys for the head node...\n"
-	    rm -rf ~/.ssh
-	    ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ''
-	    rm -f $id_dsa*
-	    cp -p ~/.ssh/id_dsa* $CLUSTER_DATA
-	    chmod 600 $id_dsa*
-	fi
-	
 	# Disable prompting for new hosts, etc.
 	cluster-update-ssh_config
     else
-	# Install ssh keys from head node
-	if [ -e $HEAD_USR/local/cluster/id_dsa.pub ]; then
-	    mkdir -p ~/.ssh
-	    chmod 0700 ~/.ssh
-	    cp $HEAD_USR/local/cluster/id_dsa* ~/.ssh
-	    cp $HEAD_USR/local/cluster/id_dsa.pub ~/.ssh/authorized_keys2
-	    chmod 0600 ~/.ssh/authorized_keys2 ~/.ssh/id_dsa
-	fi
-	
 	# Add this host to authorized keys for root on head node(s)
 	ssh_authorize $head_host
     fi
@@ -1255,6 +1238,11 @@ fi
 if [ `whoami` != root ]; then
     printf "$0 must be run as root.\n"
     exit 1
+fi
+
+if [ ! -e /root/ssh.backup ]; then
+    printf 'Backing up .ssh...\n'
+    cp -R /root/.ssh /root/ssh.backup
 fi
 
 vi /etc/hosts.allow
