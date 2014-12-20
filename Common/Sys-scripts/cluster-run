@@ -17,7 +17,7 @@ EOM
 parallel=0
 flags=''
 terminal_control=on
-while [ 0`printf '%s' $1 | cut -c 1,1` = 0'-' ]; do
+while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
     if [ $1 = '-p' ]; then
 	parallel=1
 	set +e
@@ -45,14 +45,13 @@ remote_cmd="$1"
 
 while [ $# -gt 1 ]; do
     node_type=$2
-    echo $node_type
     
     if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
 	nodes="$nodes `cluster-backup-login-nodes`"
     fi
     
     if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
-	nodes="$node `cluster-io-nodes`"
+	nodes="$nodes `cluster-io-nodes`"
     fi
     
     if [ $node_type = 'compute' ] || [ $node_type = 'all' ]; then
@@ -60,7 +59,6 @@ while [ $# -gt 1 ]; do
     fi
     shift
 done
-echo $remote_cmd $nodes
 
 for node in $nodes; do
     printf "\n============================================================\n"
