@@ -9,5 +9,5 @@ service gmetad restart
 service gmond restart
 
 # gmond doesn't restart unless -n is used here.  Why?
-cluster-run -n 'service gmond restart' all
+cluster-run -c -n 'service gmond restart' all
 
