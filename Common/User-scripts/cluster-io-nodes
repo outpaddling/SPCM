@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
 # Return 0 status regardless
-awk '$2 ~ "data.*[0-9]*\\." || $2 ~ "raid.*[0-9]+\\." { print $3 }' \
-    /etc/hosts | fgrep -qv ib0 || true
+awk '$2 ~ "^data" || $2 ~ "^raid.*[0-9]+\\." { print $3 }' \
+    /etc/hosts | fgrep -v ib0 || true
 
