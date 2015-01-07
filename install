@@ -29,8 +29,10 @@ case `uname` in
 	exit 1
 esac
 
-
 set -x
+for dir in bin sbin libexec; do
+    mkdir -p ${STAGEDIR}${PREFIX}/$dir
+done
 rm -f ${STAGEDIR}${PREFIX}/sbin/cluster-*
 rm -f ${STAGEDIR}${PREFIX}/bin/cluster-*
 cp $os/Sys-scripts/* ${STAGEDIR}${PREFIX}/sbin
@@ -40,3 +42,7 @@ cp Common/User-scripts/* ${STAGEDIR}${PREFIX}/bin
 chmod 750 ${STAGEDIR}${PREFIX}/sbin/*
 chmod 755 ${STAGEDIR}${PREFIX}/bin/*
 
+cp Common/*.awk ${STAGEDIR}${PREFIX}/libexec
+sed -e "s|add-gecos.awk|${PREFIX}/add-gecos.awk|g" \
+    Common/Sys-scripts/slurm-usage-report \
+    > ${STAGEDIR}${PREFIX}/sbin/slurm-usage-report
