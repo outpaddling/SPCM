@@ -1,5 +1,10 @@
 #!/bin/sh -e
 
+if ! lsmod | fgrep -q mlx4_core; then
+    printf "$0: No mlx4_core module present.\n"
+    exit 1
+fi
+
 ram_size=`awk '$1 == "MemTotal:" { print $2 }' /proc/meminfo`
 page_size=`getconf PAGESIZE`
 pages=$((ram_size / page_size * 1024))
@@ -13,7 +18,13 @@ printf "Using log = $log_pages to set $reg_mem MiB registerable memory.\n"
 
 log_mtts_per_seg=`cat /sys/module/mlx4_core/parameters/log_mtts_per_seg`
 log_num_mtt=$((log_pages - log_mtts_per_seg))
-printf "Setting log_num_mtt to $log_num_mtt.\n"
 
-printf "$log_num_mtt\n" >> /sys/module/mlx4_core/parameters/log_num_mtt
+printf "Setting log_num_mtt to $log_num_mtt.\n"
+auto-append-line \
+    "options mlx4_core log_num_mtt=$log_num_mtt log_mtts_per_seg=3" \
+    /etc/modprobe.d/mlx4_core.conf $0
+
+# Better to reboot
+#modprobe -r mlx4_core
+#modprobe mlx4_core
 
