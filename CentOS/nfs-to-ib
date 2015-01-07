@@ -1,4 +1,0 @@
-#!/bin/sh -e
-
-cluster-run "sed -i -e 's|data:|data-ib0:|' /etc/fstab" compute
-

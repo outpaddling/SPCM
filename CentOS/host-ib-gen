@@ -1,5 +1,0 @@
-#!/bin/sh -e
-
-awk '$2 ~ "compute-" { printf("%s\t%s-ib0\n",$1,$3) }' /etc/hosts | \
-    sed -e 's|10.1.1|10.2.1|'
-
