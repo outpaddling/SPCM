@@ -20,11 +20,12 @@ log_mtts_per_seg=`cat /sys/module/mlx4_core/parameters/log_mtts_per_seg`
 log_num_mtt=$((log_pages - log_mtts_per_seg))
 
 printf "Setting log_num_mtt to $log_num_mtt.\n"
+
+# https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General%20Parallel%20File%20System%20%28GPFS%29/page/Using%20RDMA%20with%20pagepool%20larger%20than%208GB
+# gives wrong filename (mlx4_core.conf)
 auto-append-line \
     "options mlx4_core log_num_mtt=$log_num_mtt log_mtts_per_seg=3" \
-    /etc/modprobe.d/mlx4_core.conf $0
+    /etc/modprobe.d/mlx4.conf $0
 
-# Better to reboot
-#modprobe -r mlx4_core
-#modprobe mlx4_core
+# Reboot
 
