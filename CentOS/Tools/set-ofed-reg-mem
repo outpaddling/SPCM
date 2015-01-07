@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+ram_size=`awk '$1 == "MemTotal:" { print $2 }' /proc/meminfo`
+page_size=`getconf PAGESIZE`
+pages=$((ram_size / page_size * 1024))
+
+printf "RAM size = $((ram_size / 1024)) MiB\n"
+
+log_pages=`printf "l($pages)/l(2)\n" | bc -l`
+log_pages=`printf "scale=0\n($log_pages + 1) / 1\n" | bc`
+reg_mem=`printf "2 ^ $log_pages * $page_size / 1024 / 1024\n" | bc`
+printf "Using log = $log_pages to set $reg_mem MiB registerable memory.\n"
+
+log_mtts_per_seg=`cat /sys/module/mlx4_core/parameters/log_mtts_per_seg`
+log_num_mtt=$((log_pages - log_mtts_per_seg))
+printf "Setting log_num_mtt to $log_num_mtt.\n"
+
+printf "$log_num_mtt\n" >> /sys/module/mlx4_core/parameters/log_num_mtt
+
