@@ -1,7 +1,0 @@
-
-CD-Adapco installer modifies startup scripts without warning.
-    Do not install as root if it can be avoided.
-    Remove the additions immediately after installing.
-    If installing as root, global startup scripts.
-    If installing as non-root, user's startup scripts.
-

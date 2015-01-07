@@ -1,7 +1,0 @@
-#!/bin/sh
-
-for node in `cat updated-nodes`; do
-    printf "$node\t"
-    ssh $node uname -r
-done
-

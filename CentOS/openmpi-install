@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Main thing is probably infinipath
-cluster-run 'yum install -y openmpi infinipath-psm-devel' compute
-
-cluster-run 'chmod 666 /dev/ipath*' compute
-

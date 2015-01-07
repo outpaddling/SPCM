@@ -1,8 +1,0 @@
-#!/bin/sh -e
-
-for mac in `awk ' { print $2 }' mac-addresses`; do
-    filename="01-"`echo $mac | tr : -`
-    echo $mac $filename
-    ls /var/lib/tftpboot/pxelinux.cfg/$filename
-done
-

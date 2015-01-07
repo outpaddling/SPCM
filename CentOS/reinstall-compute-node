@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-# tftpboot/pxelinux.cfg
-
-# Install all yum updates
-

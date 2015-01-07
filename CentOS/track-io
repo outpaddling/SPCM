@@ -1,5 +1,0 @@
-#!/bin/sh
-
-ssh data iostat -p sdb,sdc,sdd,sde -dm 1
-slurm-user-cores
-

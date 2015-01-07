@@ -1,5 +1,0 @@
-#!/bin/sh
-
-export CVS_RSH=ssh
-cvs -d :ext:outpaddling@pkgsrc-wip.cvs.sourceforge.net:/cvsroot/pkgsrc-wip checkout -P wip
-

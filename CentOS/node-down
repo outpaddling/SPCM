@@ -1,4 +1,0 @@
-#!/bin/sh -e
-
-scontrol update NodeName=$1 state=down
-

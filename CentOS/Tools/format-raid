@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-parted $1
-mkfs.xfs /dev/sdb1
-mkdir $2
-vi /etc/fstab
-mount $2

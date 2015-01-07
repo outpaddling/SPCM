@@ -1,6 +1,0 @@
-
-ip route list
-netstat -plunt
-
-iftop (not in yum)
-

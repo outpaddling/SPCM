@@ -1,6 +1,0 @@
-#!/bin/sh
-
-for user in `awk -F : '$1 ! "_a" { print $1 }' passwd.old`; do
-    printf "%s\n" ${user%_a}
-done
-

@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-service ibacm stop
-service rdma restart
-service ibacm start
-

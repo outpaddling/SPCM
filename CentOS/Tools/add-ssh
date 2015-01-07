@@ -1,7 +1,0 @@
-#!/bin/sh
-
-ssh-keygen-for-user $1
-cluster-sync-login2
-su - $1
-ls /home
-
