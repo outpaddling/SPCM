@@ -169,11 +169,3 @@ done
 
 rm -f $errfile
 
-if [ `whoami` = 'root' ]; then
-    printf 'Is this a permanent password? (y/[n]) '
-    read permanent
-    if [ 0$permanent = 0y ]; then
-	touch /home/$user_name/.pwchanged
-    fi
-fi
-
