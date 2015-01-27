@@ -23,7 +23,7 @@ if [ 0$sure != 0yes ]; then
     exit 0
 fi
 
-cluster-cp /usr/local/etc/slurm.conf /usr/local/etc
+cluster-dist-file /usr/local/etc/slurm.conf /usr/local/etc compute 644
 service munged restart
 cluster-run 'service munged restart && service slurmd restart' compute
 service slurmctld restart
