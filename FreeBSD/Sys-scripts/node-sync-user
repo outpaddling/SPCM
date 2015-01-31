@@ -54,7 +54,9 @@ Linux)
 	-s $shell -u $user_id $user_name
     ;;
 FreeBSD)
-    ssh $node pw groupadd $group_name -g $group_id
+    if ! ssh $node pw groupadd $group_name -g $group_id; then
+	printf 'Group add failed.\n'
+    fi
 
     # Create user
     ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g $group_id \

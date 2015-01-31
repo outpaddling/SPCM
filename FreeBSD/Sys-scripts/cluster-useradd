@@ -39,7 +39,7 @@ printf "Generating ssh keys for $username on head...\n"
 cluster-ssh-keygen $username $primary_group
 
 # Directory to contain stdout and stderr for running jobs
-mkdir -m 0700 /home/$username/.pbs_spool
+mkdir -p -m 0700 /home/$username/.pbs_spool
 chown -Rh ${username}:$primary_group /home/$username/.pbs_spool
 
 cluster-sync-user $username
