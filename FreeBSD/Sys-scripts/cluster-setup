@@ -358,9 +358,6 @@ slurm_config()
     
     if [ $NODE_TYPE = 'head' ]; then
 	slurm_conf="$LOCALBASE/etc/slurm.conf"
-	if [ ! -e $slurm_conf ]; then
-	    cp $LOCALBASE/share/examples/slurm/slurm.conf $slurm_conf
-	fi
 	line
 	cat << EOM
     In another terminal, edit slurm.conf to taste, or you can generate a SLURM
@@ -562,6 +559,11 @@ EOM
 # Currently must come after Torque setup.  Reorg to consolidate scheduler conf
 nfs_config()
 {
+    nfs_config=`auto-ask nfs-config 'Configure NFS?' n`
+    if [ $nfs_config != 'y' ]; then
+	return
+    fi
+    
     # Share space on head node
     line
     share="/usr"
@@ -770,8 +772,9 @@ ganglia_config()
 	
 	line
 	# Install ganglia web frontend
-	if ! auto-package-installed sysutils/ganglia-webfrontend; then
-	    install_packages sysutils/ganglia-webfrontend
+	if ! auto-package-installed sysutils/ganglia-web; then
+	    #install_packages sysutils/ganglia-webfrontend
+	    reinstall-wip-port sysutils/ganglia-web
 	fi
 
 	# patch creates gmetad.orig
@@ -805,7 +808,8 @@ EOM
     
     line
     if ! auto-package-installed sysutils/ganglia-monitor-core; then
-	install_packages sysutils/ganglia-monitor-core
+	#install_packages sysutils/ganglia-monitor-core
+	reinstall-wip-port sysutils/ganglia-monitor-core
     fi
     
     if grep -q 'name = "unspecified"' $LOCALBASE/etc/gmond.conf; then
@@ -1245,14 +1249,14 @@ if [ ! -e /root/ssh.backup ]; then
     cp -R /root/.ssh /root/ssh.backup
 fi
 
-vi /etc/hosts.allow
-
 ##########################################################################
 #   Set common variables
 ##########################################################################
 
 EDITOR=`auto-ask editor 'What is your preferred editor?' $EDITOR`
 export EDITOR
+
+$EDITOR /etc/hosts.allow
 
 # Recommended layout for dedicated hardware:
 # Use netmask of 255.255.0.0.
