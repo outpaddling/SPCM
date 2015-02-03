@@ -21,7 +21,9 @@ primary_group=$2
 shift
 shift
 
-useradd_cmd='pw useradd $username -g $primary_group'
+# Make sure standard login class has appropriate settings for password
+# expiration, etc.
+useradd_cmd='pw useradd $username -g $primary_group -L standard'
 for arg in "$@"; do
     # Quote all non-option arguments so that those containing spaces
     # are not separated
