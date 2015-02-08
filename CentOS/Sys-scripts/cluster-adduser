@@ -46,7 +46,7 @@ read user_name
 
 # Find next available UID
 # FIXME: Hack to get past the old UIDs intil they're cleaned up
-default_uid=501
+default_uid=781
 while [ 0`awk -F : -v uid=$default_uid '$3 == uid { print $3 }' /etc/passwd` = 0$default_uid ]; do
     default_uid=$(($default_uid + 1))
 done
@@ -149,9 +149,13 @@ EOM
 
     if [ 0$create_group != 0y ]; then
 	# The primary group for assistants should be that of some PI
-	printf "Primary group for this user? (usually their advisor's user name) "
+	printf "Primary group name for this user? (usually their advisor's user name) "
 	read primary_group
 	gid=`awk -F : -v username=$primary_group '$1 == username { print $3 }' /etc/group`
+	if [ 0$gid = 0 ]; then
+	    printf "Invalid group name: $primary_group\n"
+	    exit 1
+	fi
     else
 	primary_group=$user_name
 	
