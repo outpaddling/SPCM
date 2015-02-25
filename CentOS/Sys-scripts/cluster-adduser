@@ -217,9 +217,9 @@ chmod 750 /home/$user_name
 if [ 0$create_group = 0'y' ]; then
     # Data directory
     if [ -e /share1 ]; then
-	share=`df /share[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+	share=`df -P /share[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
     elif [ -e /raid-01 ]; then
-	share=`df /raid-[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+	share=`df -P /raid-[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
     fi
     data_dir=$share/$college/$user_name
     printf "Creating $data_dir...\n"
