@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+# http://www.open-mpi.org/faq/?category=openfabrics#ib-locked-pages
+# https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General%20Parallel%20File%20System%20%28GPFS%29/page/Using%20RDMA%20with%20pagepool%20larger%20than%208GB
+
 if ! lsmod | fgrep -q mlx4_core; then
     printf "$0: No mlx4_core module present.\n"
     exit 1
