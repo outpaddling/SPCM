@@ -1,7 +1,4 @@
 #!/bin/sh -e
 
-vi /etc/ssh/sshd_config
-
-chmod 750 /usr/bin/scp
-chmod 750 /usr/bin/rsync
+chmod 750 /usr/bin/scp /usr/bin/sftp /usr/bin/rsync
 
