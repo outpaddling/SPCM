@@ -63,7 +63,7 @@ set +e
 for node in `cluster-compute-nodes`; do
     printf "."
 
-    processes=`ssh -o ConnectTimeout=30 $node ps --no-heading -u $user_name | \
+    processes=`ssh -o ConnectTimeout=30 $node ps --no-headers -u $user_name | \
 	awk '$4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'`
     if [ -n "$processes" ]; then
 	
