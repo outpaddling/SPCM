@@ -6,6 +6,9 @@ down_nodes=`sinfo | awk '$5 ~ "down" { print $6 }'`
 
 for node in $down_nodes; do
     printf "Resuming $node...\n"
+    # Scontrol reports invalid node state with resume sometimes.  This
+    # seems to fix it.
+    scontrol update state=down nodename=$node
     scontrol update state=resume nodename=$node
 done
 

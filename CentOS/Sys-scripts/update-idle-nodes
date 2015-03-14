@@ -107,6 +107,7 @@ for node in $nodes; do
 		    fi
 		fi
 	    else
+		scontrol update State=DOWN NodeName=$node
 		scontrol update State=RESUME NodeName=$node
 	    fi
 	    
