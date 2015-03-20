@@ -536,7 +536,8 @@ EOM
 	done
 	
 	printf "Updating $RC_CONF...\n"
-	auto-append-line 'nfs_server_flags="-t -n 16"' $RC_CONF $0
+	# Need UDP for some PXE ROMs
+	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
 	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
 	service nfsd restart
 	killall -HUP mountd
@@ -672,6 +673,11 @@ EOM
 
 ganglia_config()
 {
+    ##########################################################################
+    #   Head node: bind in both send and receive?
+    #   Compute nodes: host = head IP
+    ##########################################################################
+    
     if [ $NODE_TYPE = "head" ]; then
 	# Install apache
 	line
