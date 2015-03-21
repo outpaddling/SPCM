@@ -301,15 +301,22 @@ slurm_config()
     if [ $NODE_TYPE = 'head' ]; then
 	line
 	cat << EOM
-    In another terminal, edit slurm.conf to taste, or you can generate a SLURM
-    config file using the web wizard at:
-    
-	$LOCALBASE/share/doc/slurm-*/html/configurator.html
-    
-    The slurmctld daemon will be started after you press enter.
+
+After you press return, slurm.conf will be opened in $EDITOR.
+
+You can also generate a SLURM config file using the web wizard at:
+
+    $LOCALBASE/share/doc/slurm-*/html/configurator.html
+
+The slurmctld daemon will be started after you exit the editor.
+
 EOM
 	line
 	pause
+	if [ ! -e $slurm_conf ]; then
+	    cp $slurm_conf.example $slurm_conf
+	fi
+	$EDITOR $slurm_conf
 	stop_service slurmctld
 	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
 	service slurmctld restart
@@ -519,21 +526,27 @@ EOM
 	# FIXME: Make sure NFS server is enabled in rc.conf first
 	# Does not work for multi-homed host
 	# ip=`fgrep $head_host /etc/hosts | awk ' { print $1 }' | uniq`
-	net=${HEAD_IP%.[0-9]*}
-
+	subnet=`auto-ask subnet "Subnet for NFS?" 10.1.0.0`
+	
 	share='x'
 	while [ 0$share != 0 ]; do
+	    df
 	    printf "Directory to export? [Press enter to quit] "
 	    read share
 	    
 	    if [ 0$share != 0 ]; then
 		# FIXME: Add support for ZFS
-		if false; then
+		fs_type=`mount | awk '$3 == "/usr/home" { print $4 }'`
+		if [ $fs_type == '(zfs,' ]; then
+		    zfs_share=`mount | awk '$3 == "/usr/home" { print $1 }'`
+		    zfs set sharenfs="-maproot=root -network $subnet -mask $NETMASK" $zfs_share
+		else
 		    printf "Updating /etc/exports...\n"
-		    auto-append-line "$share\t-maproot=0\t-network $net.0 -mask $NETMASK\n" /etc/exports $0
+		    auto-append-line "$share\t-maproot=0\t-network $subnet -mask $NETMASK\n" /etc/exports $0
 		fi
 	    fi
 	done
+	zfs get sharenfs
 	
 	printf "Updating $RC_CONF...\n"
 	# Need UDP for some PXE ROMs
@@ -1228,7 +1241,7 @@ START_DIR=`pwd`
 APACHE_PKG=apache24
 
 # Used by child scripts, so export it
-LOG_DIR=$START_DIR/desktop-installer-log
+LOG_DIR=$START_DIR/cluster-setup-log
 line
 printf "Command output will be stored in $LOG_DIR.\n"
 line
