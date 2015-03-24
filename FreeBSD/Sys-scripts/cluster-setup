@@ -949,12 +949,13 @@ Usually, something like 10 + the number of cores is a good limit for compute
 nodes.
 
 EOM
-	printf "Max processes for the $NODE_TYPE node? "
-	read maxproc
-	printf "Max memory use for the $NODE_TYPE node? (use 'm' or 'g' suffix) "
-	read vmem
-	printf "umask for the $NODE_TYPE node? 027 "
-	read umask
+	default_maxproc=$(( `sysctl -n kern.smp.cpus` * 2 ))
+	maxproc=`auto-ask max-proc "Max processes for the $NODE_TYPE node?" $default_maxproc`
+	
+	default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
+	vmem=`auto-ask vmem "Max memory use for the $NODE_TYPE node? (use 'm' or 'g' suffix)" $default_vmem`
+	
+	umask=`auto-ask umask "umask for the $NODE_TYPE node?" 027`
 	sed -i '' -e "s/maxproc=unlimited/maxproc=$maxproc/g" \
 		 -e "s/vmemoryuse=unlimited/vmemoryuse=$vmem/g" \
 		 -e "s|umask=022|umask=$umask|g" \
@@ -1024,7 +1025,8 @@ install_common_tools()
     line
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion
-    (cd /usr/wip/ports-mgmt/update-wip-ports && make install)
+    # FIXME: Remove this once all ports are committed
+    (cd /usr/wip/ports-mgmt/update-wip-ports && make deinstall reinstall)
 }
 
 
