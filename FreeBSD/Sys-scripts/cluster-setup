@@ -745,8 +745,7 @@ ganglia_config()
 	line
 	# Install ganglia web frontend
 	if ! auto-package-installed sysutils/ganglia-web; then
-	    #install_packages sysutils/ganglia-webfrontend
-	    reinstall-wip-port sysutils/ganglia-web
+	    install_packages sysutils/ganglia-web
 	fi
 
 	# patch creates gmetad.orig
@@ -780,8 +779,7 @@ EOM
     
     line
     if ! auto-package-installed sysutils/ganglia-monitor-core; then
-	#install_packages sysutils/ganglia-monitor-core
-	reinstall-wip-port sysutils/ganglia-monitor-core
+	install_packages sysutils/ganglia-monitor-core
     fi
     
     if grep -q 'name = "unspecified"' $LOCALBASE/etc/gmond.conf; then
@@ -1025,8 +1023,6 @@ install_common_tools()
     line
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion
-    # FIXME: Remove this once all ports are committed
-    (cd /usr/wip/ports-mgmt/update-wip-ports && make deinstall reinstall)
 }
 
 
