@@ -43,16 +43,8 @@ fi
 
 prefix=$1
 
-# Create slurm account
-#cd $prefix/pkgsrc-1/wip/slurm
-#bmake deinstall
-#bmake install
-pkg_delete slurm
-pkg_add $prefix/pkgsrc-1/packages/All/slurm*.tgz
-
 rm -f /etc/init.d/slurm
-sed -e "/^BINDIR=/ i exec_prefix=$prefix/pkg-1\nprefix=$prefix/pkg-1\n" \
-    $prefix/pkg-1/share/examples/slurm/init.d.slurm > /etc/init.d/slurm
+ln -s $prefix/pkg-1/share/examples/slurm/init.d.slurm /etc/init.d/slurm
 chmod 755 /etc/init.d/slurm
 
 mkdir -p /var/log/slurm /home/slurm
@@ -67,4 +59,6 @@ Run "service slurm start" after installing
 $prefix/pkg-1/etc/slurm.conf.
 
 EOM
+
+pause
 

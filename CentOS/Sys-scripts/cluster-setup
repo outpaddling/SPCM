@@ -256,6 +256,7 @@ ib_config()
     # service srpd restart
 
     # Enable and test IB interface
+    ip link show
     if ip link show | fgrep -q eth0; then
 	default_if=eth0
     else
