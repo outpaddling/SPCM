@@ -10,9 +10,12 @@ mkdir -p $ganglia/rrds
 chown nobody:nobody $ganglia/rrds/
 restorecon -R -v $ganglia
 
-ganglia_web=/usr/pkg-1/var/lib/ganglia-web
-mkdir -p $ganglia_web/dwoo/compiled
-mkdir -p $ganglia_web/dwoo/cache
+#ganglia_web=/usr/pkg-1/var/lib/ganglia-web
+ganglia_web=/var/lib/ganglia-web
+set -x
+cp -Rp /usr/pkg-1/$ganglia_web /var/lib
+#mkdir -p $ganglia_web/dwoo/compiled
+#mkdir -p $ganglia_web/dwoo/cache
 chown -R apache:apache $ganglia_web
 chmod -R u+rwX,g-w $ganglia_web
 
@@ -24,7 +27,7 @@ chmod -R u+rwX,g-w $ganglia_web
 # FIXME: Temporary hack
 echo 0 > /selinux/enforce
 
-DATADIR=%%DATADIR%%
+DATADIR=/usr/pkg-1/share/cluster-admin
 cp $DATADIR/WWW/global_styles.css $DATADIR/WWW/centos-power.jpg /var/www/html
 chmod a+r /var/www/html/*
 
