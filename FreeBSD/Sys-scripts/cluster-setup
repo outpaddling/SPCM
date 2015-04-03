@@ -575,6 +575,17 @@ EOM
 		    mount=$share
 		fi
 		
+		# Unmount local if necessary
+		# First try ZFS
+		zfs_ds=`zfs list | awk -v share=$share '$5 == share { print $1 }'`
+		if [ 0$zfs_ds != 0 ]; then
+		    zfs set mountpoint=none $zfs_ds
+		fi
+		# Not a ZFS mount?  Maybe some other FS.
+		if mount | fgrep $share; then
+		    umount $share
+		fi
+		
 		# Configure shared directory
 		found=`awk '$1 == "'${head_host}:$share'" { print $1 }' /etc/fstab`
 		if [ 0$found = 0 ]; then
