@@ -270,7 +270,7 @@ ib_config()
     # FIXME: Unmount NFS shares on ib0 first
     
     # Strip down ifcfg-ib0
-    ifdown ib0
+    ip link set ib0 down
     file=/etc/sysconfig/network-scripts/ifcfg
     # FIXME: How to we generate ifcfg-ib0 with type, uuid, etc?
     touch $file-ib0
@@ -298,10 +298,12 @@ EOM
     # Causes network to hang if done remotely
     # Start ib0 by other means
     # service network restart
-    ifup ib0
+    ip link set ib0 up
     ip addr show ib0
     
     # Add ib interface to /etc/hosts
+    printf "Add ib0 interace to /etc/hosts on all nodes.\n"
+    pause
     
     # Set ipath lanes to twice the number of cores?
 }
@@ -346,8 +348,6 @@ ntp_config()
 
 boot_block_backup()
 {
-    line
-    printf "Backing up boot block...\n"
     # Save boot block for restoring software RAID
     if [ ! -e /root/Save/boot-block.$NODE_TYPE ]; then
 	line
@@ -670,15 +670,22 @@ slurm_install()
 	exit 1
     fi
     
-	case $NODE_TYPE in
-	'head'|'compute')
+    case $NODE_TYPE in
+    'head'|'compute')
+	if ! pkg_info -e slurm; then
 	    pkgsrc_install_packages $pkgsrc_prefix wip/slurm
-	    cluster-munge-enable $NODE_TYPE $pkgsrc_prefix
-	    cluster-slurm-enable $pkgsrc_prefix
-	    ;;
-	'io')
-	    ;;
-	esac
+	else
+	    if ! fgrep slurm /etc/passwd; then
+		printf 'Run node-sync-user `hostname` slurm from the head node\n'
+		pause
+	    fi
+	fi
+	cluster-munge-enable $NODE_TYPE $pkgsrc_prefix
+	cluster-slurm-enable $pkgsrc_prefix
+	;;
+    'io')
+	;;
+    esac
 }
 
 
@@ -820,17 +827,6 @@ if [ ! -e /root/ssh.backup ]; then
     cp -R /root/.ssh /root/ssh.backup
 fi
 
-vi /etc/hosts.allow
-
-printf "Run harden script. "
-pause
-
-# cluster-setup expects to find certain things in CWD
-#if [ $0 != './cluster-setup' ]; then
-    #printf 'Error: Must be run as ./cluster-setup.\n'
-    #exit 1
-#fi
-
 NODE_TYPE=$1
 case $NODE_TYPE in
 'head'|'compute'|'io')
@@ -839,6 +835,19 @@ case $NODE_TYPE in
     usage $0
     ;;
 esac
+
+printf "Make sure /etc/hosts is up-to-date on all nodes.\n"
+pause
+
+if [ $NODE_TYPE != head ]; then
+    printf "Run cluster-sync-pkgsrc on the head node.\n"
+    pause
+fi
+
+vi /etc/hosts.allow
+
+printf "Run harden script. "
+pause
 
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
@@ -895,9 +904,11 @@ pkgsrc_setup $pkgsrc_prefix
 pkgsrc_append_default_path $pkgsrc_prefix
 
 # Common packages
-for pkg in wip/auto-admin wip/ape net/iperf; do
-    pkgsrc_install_packages $pkgsrc_prefix $pkg
-done
+if [ $NODE_TYPE = head ]; then
+    for pkg in wip/auto-admin wip/ape net/iperf; do
+	pkgsrc_install_packages $pkgsrc_prefix $pkg
+    done
+fi
 
 # Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit

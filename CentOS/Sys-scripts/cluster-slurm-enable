@@ -52,13 +52,11 @@ chown slurm:slurm /var/log/slurm /home/slurm
 
 chkconfig slurm on
 
-cat << EOM
-
-Run "service slurm start" after installing
-
-$prefix/pkg-1/etc/slurm.conf.
-
-EOM
+if [ -e $prefix/pkg-1/etc/slurm.conf ]; then
+    service slurm restart
+else
+    printf "Run \"service slurm start\" after installing $prefix/pkg-1/etc/slurm.conf.\n"
+fi
 
 pause
 
