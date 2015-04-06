@@ -711,11 +711,14 @@ ganglia_install()
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
-	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core319
+	pkgsrc_install_packages $pkgsrc_prefix wip/ganglia-monitor-core
     fi
 
     # Required for "service gmond"
-    ln -sf $pkgsrc_prefix/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
+    ln -sf $pkgsrc_prefix/pkg-1/share/examples/ganglia-monitor-core/gmond.init.linux \
+	/etc/init.d/gmond
+    chkconfig --add gmond
+    chkconfig gmond on
     service gmond restart
     
     if [ $NODE_TYPE = head ]; then

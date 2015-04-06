@@ -1,21 +1,29 @@
 #!/bin/sh -e
 
-yum install httpd php
 
-# php-mysql php-devel php-gd php-pecl-memcache php-pspell php-snmp \
-#    php-xmlrpc php-xml
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+prefix=/usr/pkg-1
+yum install httpd php
 
 ganglia=/var/lib/ganglia
 mkdir -p $ganglia/rrds
 chown nobody:nobody $ganglia/rrds/
 restorecon -R -v $ganglia
 
-#ganglia_web=/usr/pkg-1/var/lib/ganglia-web
 ganglia_web=/var/lib/ganglia-web
-set -x
-cp -Rp /usr/pkg-1/$ganglia_web /var/lib
-#mkdir -p $ganglia_web/dwoo/compiled
-#mkdir -p $ganglia_web/dwoo/cache
+cp -Rp $prefix/$ganglia_web /var/lib
 chown -R apache:apache $ganglia_web
 chmod -R u+rwX,g-w $ganglia_web
 
@@ -27,7 +35,7 @@ chmod -R u+rwX,g-w $ganglia_web
 # FIXME: Temporary hack
 echo 0 > /selinux/enforce
 
-DATADIR=/usr/pkg-1/share/cluster-admin
+DATADIR=$prefix/share/cluster-admin
 cp $DATADIR/WWW/global_styles.css $DATADIR/WWW/centos-power.jpg /var/www/html
 chmod a+r /var/www/html/*
 
@@ -37,13 +45,19 @@ if [ ! -e /var/www/html/index.php ]; then
     sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/WWW/index.php > /var/www/html/index.php
 fi
 
-ln -sf /usr/pkg-1/share/examples/rc.d/gmond.init /etc/init.d/gmond
-chkconfig --add gmond
-service gmond restart
+for service in gmond gmetad; do
+    if [ ! -e $prefix/etc/$service.conf ]; then
+	cp $prefix/share/examples/ganglia-monitor-core/$service.conf $prefix/etc
+    fi
+    vi $prefix/etc/$service.conf
+    chmod 644 $prefix/etc/$service.conf
 
-ln -sf /usr/pkg-1/share/examples/rc.d/gmetad.init /etc/init.d/gmetad
-chkconfig --add gmetad
-service gmetad restart
+    ln -sf $prefix/share/examples/ganglia-monitor-core/$service.init.linux /etc/init.d/$service
+    chkconfig --add $service
+    chkconfig $service on       # probably redundant
+    service $service restart
+    pause
+done
 
 httpd_conf='/etc/httpd/conf/httpd.conf'
 
@@ -51,9 +65,9 @@ if ! fgrep -q '/ganglia/' $httpd_conf; then
 
     cat << EOM >> $httpd_conf
 
-Alias /ganglia/ "/usr/pkg-1/share/httpd/htdocs/ganglia/"
+Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
 
-<Directory "/usr/pkg-1/share/httpd/htdocs/ganglia/">
+<Directory "$prefix/share/httpd/htdocs/ganglia/">
     Options Indexes FollowSymlinks MultiViews
     AllowOverride None
     Order allow,deny
