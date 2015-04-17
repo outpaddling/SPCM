@@ -29,5 +29,5 @@ fi
 
 job_id=$1
 
-sacct -o alloccpus,nodelist,elapsed,cputime -j $job_id
+sacct -o alloccpus,nodelist%40,elapsed,cputime -j $job_id
 
