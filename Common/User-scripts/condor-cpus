@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+#condor_status -pool cm.chtc.wisc.edu -constraint 'SlotType =?= "Partitionable"' -autof Machine Cpus
+condor_status -autof Machine Cpus | uniq
+condor_status -autof Machine Cpus | uniq | awk ' { sum += $2 } END { print sum }'
+
+
