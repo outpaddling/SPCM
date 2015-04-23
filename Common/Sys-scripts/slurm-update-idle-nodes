@@ -53,22 +53,27 @@ if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
     exit 1
 fi
 
-for part in `sinfo -h | awk ' { print $1 }'`; do
+# List all partitions.  The partition name is requires by sbatch
+# even when explicitly specifying a node list.
+# tr removes '*' after default partition name
+for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
     echo $part
 
+    # All nodes in this partition
     nodes=`sinfo --partition=$part -o %n -h`
     for node in $nodes; do
+	# Update node if it's not in the updated list
 	if ! fgrep -q $node $updated_nodes; then
 	    state=`sinfo -n $node -o %T -h`
 	    case $state in
 	    idle|drained)
 		printf "Updating $node...\n"
-		sbatch --partition=$part --nodelist=$node %%DATADIR%%/sys-update.sbatch
-		scontrol update state=resume nodename=$node || true
+		sbatch --partition=$part --nodelist=$node /usr/pkg-1/share/cluster-admin/sys-update.sbatch
 		echo $node >> $updated_nodes
 		pause
 		;;
 	    *)
+		# If the noe is busy, drain it so it can be updated ASAP
 		printf "$node is busy (state = $state)\n"
 		scontrol update nodename=$node state=drain reason=Upgrading
 		printf "Draining $node...\n"
