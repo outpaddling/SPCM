@@ -1,0 +1,81 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-05  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [-p]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+
+readonly updated_nodes='/root/updated-nodes'
+if [ ! -e $updated_nodes ]; then
+    touch $updated_nodes
+fi
+
+cd /root
+sinfo -o '%n %T'
+wc $updated_nodes
+updated=0
+
+if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
+    printf "There are suspended jobs.  It is not safe to run updates.\n"
+    exit 1
+fi
+
+for part in `sinfo -h | awk ' { print $1 }'`; do
+    echo $part
+
+    nodes=`sinfo --partition=$part -o %n -h`
+    for node in $nodes; do
+	if ! fgrep -q $node $updated_nodes; then
+	    state=`sinfo -n $node -o %T -h`
+	    case $state in
+	    idle|drained)
+		printf "Updating $node...\n"
+		sbatch --partition=$part --nodelist=$node %%DATADIR%%/sys-update.sbatch
+		scontrol update state=resume nodename=$node || true
+		echo $node >> $updated_nodes
+		pause
+		;;
+	    *)
+		printf "$node is busy (state = $state)\n"
+		scontrol update nodename=$node state=drain reason=Upgrading
+		printf "Draining $node...\n"
+		;;
+	    esac
+	fi
+    done
+done
+wc updated-nodes
+
