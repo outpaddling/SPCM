@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -9,12 +9,12 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-03-26  root        Begin
+#   2015-04-14  Charlie &   Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 node\n"
+    printf "Usage: $0 old-node new-node\n"
     exit 1
 }
 
@@ -23,18 +23,23 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
     usage
 fi
 
-node=$1
+old_node=$1
+new_node=$2
 
-for user_name in `awk -F : ' { print $1 }' /etc/passwd`; do
-    user_id=`awk -F : -v user_name=$user_name '$1 == user_name { print $3 }' /etc/passwd`
-    printf "$user_name $user_id\n"
-    # FIXME: > 500 is not a generalized criteria for normal users
-    if [ $user_id -gt 500 ]; then
-	node-sync-user $node $user_name
+packages=`ssh $old_node pkg info | awk ' { print $1 }'`
+rm -f $new_node.installed $new_node.failed
+set +e
+for pkg in $packages; do
+    basename=`echo ${pkg%%-[0-9]*}`
+    echo $basename
+    if ssh $new_node pkg install -y $basename; then
+	echo $pkg >> $new_node.installed
+    else
+	echo $pkg >> $new_node.failed
     fi
 done
 

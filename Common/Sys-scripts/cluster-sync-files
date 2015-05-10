@@ -18,7 +18,13 @@ for node in `cluster-compute-nodes`; do
     rsync -avR * ${node}:/
 done
 
-# Assume login.conf was modified.  No harm in this.
-printf "Rebuilding login.conf db...\n"
-cluster-run 'cap_mkdb /etc/login.conf'
+case `uname` in
+FreeBSD)
+    # Assume login.conf was modified.  No harm in this.
+    printf "Rebuilding login.conf db...\n"
+    cluster-run 'cap_mkdb /etc/login.conf'
+    ;;
+*)
+    ;;
+esac
 

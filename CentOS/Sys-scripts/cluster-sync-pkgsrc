@@ -1,0 +1,52 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-03  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+prefix=/usr/pkg-1
+
+for node in `cluster-backup-login-nodes`; do
+    printf "$node...\n"
+    rsync -av --delete /usr/pkgsrc-1 ${node}:/usr
+done
+
+for node in `cluster-backup-login-nodes` `cluster-io-nodes` \
+	`cluster-compute-nodes`; do
+    printf "$node...\n"
+    rsync -av --delete --exclude pkg-1/var $prefix ${node}:/usr
+    ssh $node mkdir -p \
+	$prefix/var/db \
+	$prefix/var/log/munge \
+	$prefix/var/run/munge \
+	$prefix/var/lib/munge
+    rsync -av --delete $prefix/var/db/pkg* ${node}:$prefix/var/db
+done
+
+# Statrup scripts
+cluster-dist-file /etc/profile.d/pkgsrc.csh /etc/profile.d all 644
+cluster-dist-file /etc/profile.d/pkgsrc.sh /etc/profile.d all 644
+
