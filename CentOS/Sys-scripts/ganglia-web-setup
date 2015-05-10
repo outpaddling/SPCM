@@ -79,5 +79,7 @@ Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
 EOM
 fi
 
+chkconfig --add httpd
+chkconfig httpd on
 service httpd restart
 

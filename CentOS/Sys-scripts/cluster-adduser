@@ -35,18 +35,50 @@ select_from_list()
     selection=${list[$i]}
 }
 
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-03  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [username]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -gt 1 ]; then
+    usage
+fi
+
 if [ `whoami` != "root" ]; then
     printf "$0 must be run by root.\n"
     exit 1
 fi
 
 # User information
-printf "Username? "
-read user_name
+if [ $# = 1 ]; then
+    user_name=$1
+else
+    printf "Username? "
+    read user_name
+fi
 
 # Find next available UID
 # FIXME: Hack to get past the old UIDs intil they're cleaned up
-default_uid=781
+default_uid=501
 while [ 0`awk -F : -v uid=$default_uid '$3 == uid { print $3 }' /etc/passwd` = 0$default_uid ]; do
     default_uid=$(($default_uid + 1))
 done
@@ -69,18 +101,38 @@ fi
 # Prevent collisions
 if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/passwd` = 0$uid ]; then
     printf "Error: UID $uid is not available.\n"
+    exit 1
 fi
 
-# FIXME: Get gecos from LDAP if possible
+if [ -e /etc/openldap/ldap.conf ]; then
+    # Flag usernames not in LDAP
+    ldap_verified_uid=`ldapsearch -x uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+    if [ 0$ldap_verified_uid != 0$user_name ]; then
+	printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	read resp
+	if [ 0$resp != 0'y' ]; then
+	    exit 0
+	fi
+    fi
+fi
 
-printf "Full name? "
+if [ -e /etc/openldap/ldap.conf ]; then
+    default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+else
+    default_gecos=''
+fi
+
+printf "Full name? [$default_gecos] "
 read gecos
+if [ 0$gecos = 0 ]; then
+    gecos="$default_gecos"
+fi
 
 # Email address
 printf "Email address? [$user_name@uwm.edu] "
 read email
 if [ 0$email = 0 ]; then
-    email=$user_name'@uwm.edu'
+    email="$user_name@uwm.edu"
 fi
 
 # Convention
@@ -144,7 +196,7 @@ will allow the PI to access their assistants' files.
 
 EOM
 
-    printf "Create primary group with same name? (y/n) "
+    printf "Create primary group with same name? y/[n] "
     read create_group
 
     if [ 0$create_group != 0y ]; then
@@ -190,9 +242,9 @@ printf "UID:            $uid\n"
 printf "GID:            $gid\n"
 printf "Comment:        $gecos\n"
 printf "Primary group:  $primary_group\n"
-printf "\nCreate account? (y/n) "
+printf "\nCreate account? [y]/n "
 read resp
-if [ 0$resp != 0y ]; then
+if [ 0$resp = 0n ]; then
     exit
 fi
 
@@ -215,11 +267,16 @@ chmod 750 /home/$user_name
 
 # If a new group was created for this user, create the directory structure
 if [ 0$create_group = 0'y' ]; then
-    # Data directory
+    df
     if [ -e /share1 ]; then
-	share=`df -P /share[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
-    elif [ -e /raid-01 ]; then
-	share=`df -P /raid-[0-9]* 2> /dev/null | sort -n -k 4 | tail -1 | awk ' { print $6 }'`
+	default_share='/share1'
+    else
+	default_share='/raid-01'
+    fi
+    printf "Location for user's shared files? [$default_share] "
+    read share
+    if [ 0$share = 0 ]; then
+	share=$default_share
     fi
     data_dir=$share/$college/$user_name
     printf "Creating $data_dir...\n"

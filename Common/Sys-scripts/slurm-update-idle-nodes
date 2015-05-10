@@ -68,7 +68,7 @@ for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
 	    case $state in
 	    idle|drained)
 		printf "Updating $node...\n"
-		sbatch --partition=$part --nodelist=$node /usr/pkg-1/share/cluster-admin/sys-update.sbatch
+		sbatch --partition=$part --nodelist=$node %%DATADIR%%/sys-update.sbatch
 		if [ $state = drained ]; then
 		    scontrol update nodename=$node state=resume
 		fi
