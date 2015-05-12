@@ -1,0 +1,8 @@
+#!/bin/sh
+
+for node in `cluster-compute-nodes`; do
+    if ! ping -c 1 $node > /dev/null 2>&1; then
+	echo $node
+    fi
+done
+
