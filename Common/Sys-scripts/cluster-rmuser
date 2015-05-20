@@ -1,5 +1,19 @@
 #!/bin/sh
 
+os_type=`uname`
+case $os_type in
+FreeBSD)
+    cmd='rmuser -y'
+    ;;
+Linux)
+    cmd='userdel -r'
+    ;;
+*)
+    printf "Unsupported OS: $os_type\n"
+    exit 1
+    ;;
+esac
+
 if [ `whoami` != root ]; then
     printf "$0 must be run as root.\n"
     exit 1
@@ -12,33 +26,32 @@ fi
 
 user_name=$1
 
-printf "Are you sure you want to remove user $user_name? (yes/no) "
+printf "Are you sure you want to remove user $user_name? yes/[no] "
 read resp
 if [ 0$resp = 0'yes' ]; then
-    printf "Save home directory? (y/n) [y] "
+    printf "Save home directory? [yes]/no "
     read save_home
-    if [ x$save_home != xn ]; then
+    if [ x$save_home != xno ]; then
 	# Save home dir from removal by rmuser -y
 	mv /home/$user_name /home/$user_name.save
     fi
 
-    if [ -e /share1 ]; then
-	for share in /share[1-9]*/Data/$user_name; do
-	    printf "Save $share? (y/n) [y] "
-	    read save_share
-	    if [ x$save_share = xn ]; then
-		rm -rf $share
-	    fi
-	done
-    fi
-    
     if [ x$save_home = xy ]; then
 	mv /home/$user_name /home/$user_name.save
     fi
 
-    rmuser -y $user_name
+    case $os_type in
+    FreeBSD)
+	$cmd $user_name
+	;;
+    Linux)
+	$cmd $user_name
+	;;
+    *)
+	;;
+    esac
     
     # Group should be removed by rmuser, but it isn't!
-    cluster-run "rmuser -y $user_name" all
+    cluster-run -c "$cmd $user_name" all
 fi
 
