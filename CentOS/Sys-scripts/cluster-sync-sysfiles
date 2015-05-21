@@ -31,7 +31,7 @@ for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nod
     rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
     
     printf "system-auth"
-    rsync -rpog /etc/pam.d/system-auth ${node}:/etc/pam.d
+    rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
     
     # printf "idmapd.conf\n"
     # rsync -p /etc/idmapd.conf ${node}:/etc
