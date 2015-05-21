@@ -19,8 +19,6 @@ for node in `cluster-backup-login-nodes` `cluster-io-nodes`; do
     rsync -av /root/bin ${node}:/root
 done
 
-cluster-sync-slurm.conf
-
 # FIXME: Use cluster-dist-file
 for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
     # /etc/hosts
@@ -33,7 +31,7 @@ for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nod
     rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
     
     printf "system-auth"
-    rsync -pog /etc/pam.d/system-auth ${node}:/etc/pam.d
+    rsync -rpog /etc/pam.d/system-auth ${node}:/etc/pam.d
     
     # printf "idmapd.conf\n"
     # rsync -p /etc/idmapd.conf ${node}:/etc
