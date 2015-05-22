@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -9,7 +9,7 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-09-09  Charlie &   Begin
+#   2013-12-31  root        Begin
 ##########################################################################
 
 usage()
@@ -23,16 +23,20 @@ usage()
 #   Main
 ##########################################################################
 
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
 if [ $# != 1 ]; then
     usage
 fi
 
-user_name=$1
+user_name="$1"
 
-for node in `cluster-compute-nodes`; do
-    echo $node $user_name
-    if ! node-sync-user $node $user_name; then
-	printf "Error syncing to $node.\n"
-    fi
+# Add user and group to I/O and compute nodes
+for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
+    printf "$node $user_name\n"
+    node-sync-user $node $user_name
 done
 
