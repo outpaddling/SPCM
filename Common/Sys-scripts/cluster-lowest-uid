@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+printf "1000\n"
+

@@ -1,0 +1,91 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-01-31  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username raw-passwd-file shadow-passwd-file\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 4 ]; then
+    usage
+fi
+
+user_name=$1
+old_raw_pw=$2
+old_shadow_pw=$3
+old_group=$4
+os_type=`uname`
+
+case $os_type in
+FreeBSD)
+    shadow_pw='/etc/master.passwd'
+    ;;
+Linux)
+    shadow_pw='/etc/shadow'
+    ;;
+*)
+    printf "Unsupported OS: $os_type\n"
+    exit 1
+esac
+
+# Create account if it doesn't exist
+found_user=`awk -F : '$1 == "'$user_name'" { print $1 }' /etc/passwd`
+if [ 0$found_user != 0$user_name ]; then
+    # cluster-useradd specify all attributes
+    # Get attributes from passwd.old rather than users.txt, since
+    # chsh/chfn may have been used
+    user_id=`awk -F : '$1 == "'$user_name'" { print $3 }' $old_raw_pw`
+    group_id=`awk -F : '$1 == "'$user_name'" { print $4 }' $old_raw_pw`
+    gecos="`awk -F : '$1 == "'$user_name'" { print $5 }' $old_raw_pw`"
+    shell=`awk -F : '$1 == "'$user_name'" { print $7 }' $old_raw_pw`
+    
+    group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' $old_group`
+    set -x
+    found_group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' /etc/group`
+    
+    # cluster-useradd2 will create a group with GID=UID if the group
+    # doesn't exist, so create it with the original GID beforehand.
+    if [ 0$found_group_name = 0 ]; then
+	printf "$0: Creating $group_name $group_id\n"
+	case $os_type in
+	FreeBSD)
+	    pw groupadd $group_name -g $group_id
+	    ;;
+	Linux)
+	    groupadd -g $group_id $group_name
+	    ;;
+	esac
+    fi
+    
+    NOPW=true
+    export NOPW
+    if ! cluster-useradd2 $user_name $user_id $group_name "$gecos" $shell
+    then
+	printf "$cmd failed.\n"
+    fi
+else
+    printf "User $user_name already exists.\n"
+    exit 1
+fi
+
+pw="`awk -F : '$1 == "'$user_name'" { print $2 }' $old_shadow_pw`"
+auto-restore-pw $user_name "$pw"
+cluster-run "auto-restore-pw $user_name \"$pw\"" io
+
