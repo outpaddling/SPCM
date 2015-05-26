@@ -94,10 +94,6 @@ if [ `whoami` != "root" ]; then
     exit 1
 fi
 
-# Temp hack
-PATH=${PATH}:/home/bacon/scripts
-export PATH
-
 os_type=`uname`
 case $os_type in
 FreeBSD)
