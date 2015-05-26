@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 username raw-passwd-file shadow-passwd-file\n"
+    printf "Usage: $0 username old-passwd-file old-shadow-file old-group-file\n"
     exit 1
 }
 
