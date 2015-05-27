@@ -88,3 +88,14 @@ if [ 0$NOPW != 0true ]; then
     cluster-passwd $user_name
 fi
 
+post_setup=/root/bin/useradd-post-setup
+if [ -e $post_setup ]; then
+    if auto-file-secure $post_setup; then
+	$post_setup $user_name
+    else
+	exit 1
+    fi
+else
+    printf "No $post_setup found; ignoring.\n"
+fi
+
