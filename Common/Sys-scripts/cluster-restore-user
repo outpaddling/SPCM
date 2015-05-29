@@ -84,7 +84,5 @@ else
     exit 1
 fi
 
-pw="`awk -F : '$1 == "'$user_name'" { print $2 }' $old_shadow_pw`"
-auto-restore-pw $user_name "$pw"
-cluster-run "auto-restore-pw $user_name \"$pw\"" io
+cluster-restore-pw $user_name $old_shadow_pw
 

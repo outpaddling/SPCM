@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-05-29  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username shadow-file\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+set -x
+user_name="$1"
+old_shadow_pw="$2"
+
+pw="`awk -F : '$1 == "'$user_name'" { print $2 }' $old_shadow_pw`"
+auto-restore-pw $user_name "$pw"
+cluster-run "auto-restore-pw $user_name '$pw'" io
+
