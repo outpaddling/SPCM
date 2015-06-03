@@ -496,6 +496,7 @@ EOM
 # Currently must come after Torque setup.  Reorg to consolidate scheduler conf
 nfs_config()
 {
+    df
     cat << EOM
 
 Some schedulers require a shared spool or config directory.  Check the
@@ -1309,7 +1310,8 @@ case $NODE_TYPE in
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi
-    ssh $head_host cluster-update-all-ssh_config
+    ssh $head_host cluster-update-ssh_config
+    cluster-update-ssh_config
     ;;
 *)
     ;;
