@@ -1000,12 +1000,12 @@ update_system()
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
     service ntpd restart
     
-    freebsd_update=`auto-ask freebsd-update 'Update system base?' y`
+    freebsd_update=`auto-ask freebsd-update 'Update system base?' n`
     if [ $freebsd_update = y ]; then
 	freebsd-update fetch install
     fi
     
-    portsnap=`auto-ask portsnap 'Update ports tree?' y`
+    portsnap=`auto-ask portsnap 'Update ports tree?' n`
     if [ $portsnap = y ]; then
 	portsnap fetch
 	if [ -e /usr/ports ]; then
