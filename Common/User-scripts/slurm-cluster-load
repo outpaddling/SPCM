@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-squeue -o '%6A %8u %2t %4C %3D %3h %8j %11M %N'
+squeue -o '%7A %8u %2t %4C %3D %3h %8j %11M %11P %N'
 
 printf '\n'
 
