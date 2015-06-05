@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [-p]\n"
+    printf "Usage: $0 slurm-partition submit-directory\n"
     exit 1
 }
 
@@ -37,13 +37,18 @@ pause()
 #   Main
 ##########################################################################
 
+if [ $# != 2 ]; then
+    usage
+fi
 
-readonly updated_nodes='/root/updated-nodes'
+part="$1"
+dir="$2"
+readonly updated_nodes="$dir/updated-nodes"
 if [ ! -e $updated_nodes ]; then
     touch $updated_nodes
 fi
 
-cd /root
+cd "$dir"
 sinfo -o '%n %T'
 wc $updated_nodes
 updated=0
@@ -56,7 +61,7 @@ fi
 # List all partitions.  The partition name is requires by sbatch
 # even when explicitly specifying a node list.
 # tr removes '*' after default partition name
-for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
+# for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
     echo $part
 
     # All nodes in this partition
@@ -68,7 +73,7 @@ for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
 	    case $state in
 	    idle|drained)
 		printf "Updating $node...\n"
-		sbatch --partition=$part --nodelist=$node %%DATADIR%%/sys-update.sbatch
+		sbatch --partition=$part --nodelist=$node /usr/pkg-1/share/cluster-admin/sys-update.sbatch
 		if [ $state = drained ]; then
 		    scontrol update nodename=$node state=resume
 		fi
@@ -84,6 +89,6 @@ for part in `sinfo -h | awk ' { print $1 }' | tr '*' ' '`; do
 	    esac
 	fi
     done
-done
+# done
 wc updated-nodes
 
