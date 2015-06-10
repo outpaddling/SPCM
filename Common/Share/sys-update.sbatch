@@ -10,5 +10,6 @@ else
     printf "Error: Only FreeBSD and RHEL-compatible Linux are supported at this time.\n"
 fi
 
+touch update-done
 shutdown -r now
 
