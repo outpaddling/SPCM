@@ -179,7 +179,7 @@ fi
 
 printf "Full name? [$default_gecos] "
 read gecos
-if [ 0$gecos = 0 ]; then
+if [ 0"$gecos" = 0 ]; then
     gecos="$default_gecos"
 fi
 
