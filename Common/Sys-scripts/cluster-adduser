@@ -287,5 +287,5 @@ printf "Adding user $user_name...\n"
 # $agroup_flags -m $user_name
 
 umask 027
-cluster-useradd2 $user_name $uid $primary_group "$gecos" $shell $agroup_flags
+cluster-useradd $user_name $uid $primary_group "$gecos" $shell $agroup_flags
 

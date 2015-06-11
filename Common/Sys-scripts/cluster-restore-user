@@ -59,7 +59,7 @@ if [ 0$found_user != 0$user_name ]; then
     group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' $old_group`
     found_group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' /etc/group`
     
-    # cluster-useradd2 will create a group with GID=UID if the group
+    # cluster-useradd will create a group with GID=UID if the group
     # doesn't exist, so create it with the original GID beforehand.
     if [ 0$found_group_name = 0 ]; then
 	printf "$0: Creating $group_name $group_id\n"
@@ -75,7 +75,7 @@ if [ 0$found_user != 0$user_name ]; then
     
     NOPW=true
     export NOPW
-    if ! cluster-useradd2 $user_name $user_id $group_name "$gecos" $shell
+    if ! cluster-useradd $user_name $user_id $group_name "$gecos" $shell
     then
 	printf "$cmd failed.\n"
     fi
