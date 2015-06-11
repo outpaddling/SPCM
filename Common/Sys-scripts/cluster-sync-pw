@@ -9,12 +9,12 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-05-29  root        Begin
+#   2015-06-11  root        Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 username shadow-file\n"
+    printf "Usage: $0 username\n"
     exit 1
 }
 
@@ -23,18 +23,24 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# != 1 ]; then
     usage
 fi
 
-user_name="$1"
-old_shadow_pw="$2"
-
-pw="`awk -F : '$1 == "'$user_name'" { print $0 }' $old_shadow_pw`"
-if [ 0$pw = 0 ]; then
-    printf "No such user: $user_name\n"
+user_name=$1
+os_type=`uname`
+case $os_type in
+FreeBSD)
+    master_pw=/etc/master.passwd
+    ;;
+Linux)
+    master_pw=/etc/shadow
+    ;;
+*)
+    printf "Unsupported OS: $os_type\n"
     exit 1
-fi
-auto-restore-pw $user_name "$pw"
-cluster-run "auto-restore-pw $user_name '$pw'" io
+    ;;
+esac
+
+cluster-restore-pw $user_name $master_pw
 
