@@ -2,10 +2,10 @@
 
 cat << EOM
 
-This will distribute current files to all compute nodes.  Are you
-sure you want to proceed? (y/n)
+This will distribute current files to all compute nodes.
 EOM
 
+printf "Are you sure you want to proceed? y/[n] "
 read resp
 if [ 0$resp != 0y ]; then
     exit 0
@@ -22,7 +22,7 @@ case `uname` in
 FreeBSD)
     # Assume login.conf was modified.  No harm in this.
     printf "Rebuilding login.conf db...\n"
-    cluster-run 'cap_mkdb /etc/login.conf'
+    cluster-run 'cap_mkdb /etc/login.conf' all
     ;;
 *)
     ;;

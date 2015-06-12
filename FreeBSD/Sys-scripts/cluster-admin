@@ -151,7 +151,7 @@ EOM
     11)
 	printf "Command? "
 	read command
-	printf "Enable terminal control (ssh -t)? (y/n) "
+	printf "Enable terminal control (ssh -t)? y/[n] "
 	read tc
 	if [ 0$tc = 0y ]; then
 	    cluster-run -t "'"$command"'"

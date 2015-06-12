@@ -360,17 +360,6 @@ scheduler_config()
 	    printf "sge_execd       6445/tcp   #Grid Engine Execution Service\n" >> /etc/services
 	    printf "sge_execd       6445/udp   #Grid Engine Execution Service\n" >> /etc/services
 	fi
-	
-	# Look into this later...
-	# Install PVM utilities if desired
-	#printf "Install SGE PVM utils? (y/n) "
-	#read resp
-	#if [ 0$resp = 0'y' ]; then
-	#    cd $LOCALBASE/sge/pvm/src
-	#    ./aimk
-	#    ./install.sh
-	#    cd $start_dir
-	#fi
     fi
     
     if auto-package-installed sysutils/torque; then

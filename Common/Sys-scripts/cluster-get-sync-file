@@ -47,9 +47,9 @@ cat << EOM
 ${host}:$path will be distributed to all compute nodes by
 all future cluster-sync-files commands.
 
-Are you sure you want to proceed? (y/n)
 EOM
 
+printf "Are you sure you want to proceed? y/[n] "
 read resp
 if [ 0$resp != 0y ]; then
     exit 0
@@ -57,7 +57,7 @@ fi
 
 # Guard against overwriting master copies!
 if [ -e $repo$path ]; then
-    printf "$path is already saved.  Overwrite? (y/n) "
+    printf "$path is already saved.  Overwrite? y/[n] "
     read resp
     if [ 0$resp != 0y ]; then
 	printf "File not overwritten.\n"
