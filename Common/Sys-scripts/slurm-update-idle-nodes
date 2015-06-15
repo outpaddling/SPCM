@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 slurm-partition submit-directory\n"
+    printf "Usage: $0 output-directory\n"
     exit 1
 }
 
@@ -37,12 +37,15 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+case $# in
+1)
+    ;;
+*)
     usage
-fi
+    ;;
+esac
 
-part="$1"
-dir="$2"
+dir="$1"
 readonly updated_nodes="$dir/updated-nodes"
 if [ ! -e $updated_nodes ]; then
     touch $updated_nodes
@@ -58,30 +61,29 @@ if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
     exit 1
 fi
 
-echo $part
-
-# All nodes in this partition
-nodes=`sinfo --partition=$part -o %n -h`
+nodes=`sinfo -o %n -h`
 for node in $nodes; do
     # Update node if it's not in the updated list
     if ! fgrep -q $node $updated_nodes; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
-	idle|drained)
-	    printf "Updating $node...\n"
-	    # Submit job before resuming node to prevent race with user jobs
-	    sbatch --partition=$part --nodelist=$node /usr/pkg-1/share/cluster-admin/sys-update.sbatch
-	    if [ $state = drained ]; then
+	'drained')
+	    printf "Updating $node.   State = $state...\n"
+	    ssh $node yum-complete-transaction || true
+	    if ssh $node yum update -y; then
+		printf 'Reboot? [y]/n '
+		read reboot
+		if [ 0$reboot != 0n ]; then
+		    ssh $node shutdown -r now
+		fi
 		scontrol update nodename=$node state=resume
+		echo $node >> $updated_nodes
+	    else
+		printf "Update failed.\n"
 	    fi
-	    printf "Waiting for job to complete...\n"
-	    while [ ! -e update-done ]; do
-		sleep 2
-		printf '.'
-	    done
-	    printf '\n'
-	    rm -f update-done
-	    echo $node >> $updated_nodes
+	    # FIXME: Can SLURM be configured to resume nodes automatically
+	    # after they reboot?
+	    slurm-resume-down-nodes > /dev/null 2>&1
 	    ;;
 	*)
 	    # If the noe is busy, drain it so it can be updated ASAP
