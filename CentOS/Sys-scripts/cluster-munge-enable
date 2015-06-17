@@ -70,15 +70,16 @@ case $node_type in
     ;;
 esac
 
+mkdir -p /var/log/munge /var/run/munge /var/lib/munge
 chown -Rh daemon:daemon \
-    $prefix/var/log/munge \
-    $prefix/var/run/munge \
-    $prefix/var/lib/munge \
+    /var/log/munge \
+    /var/run/munge \
+    /var/lib/munge \
     $munge_etc
-chmod 755 $prefix/var/run/munge
+chmod 755 /var/run/munge
 
 # RHEL init script
-ln -sf $prefix/share/examples/rc.d/init.d/munge /etc/init.d/munge
+cp $prefix/etc/init.d/munge /etc/init.d/munge
 chkconfig munge on
 service munge restart
 

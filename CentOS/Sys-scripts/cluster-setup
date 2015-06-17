@@ -802,6 +802,8 @@ EOM
 	printf "Hostname or IP of node? [Just press return if there are no more] "
 	read ssh_host
 	if [ 0$ssh_host != 0 ]; then
+	    printf "Make sure $ssh_host has PermitRootLogin=yes.\n"
+	    pause
 	    auto-ssh-authorize $ssh_host
 	    ssh -t $ssh_host auto-ssh-authorize `hostname`
 	fi

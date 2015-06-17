@@ -44,7 +44,7 @@ fi
 prefix=$1
 
 rm -f /etc/init.d/slurm
-ln -s $prefix/pkg-1/share/examples/slurm/init.d.slurm /etc/init.d/slurm
+cp $prefix/pkg-1/etc/init.d/slurm /etc/init.d/slurm
 chmod 755 /etc/init.d/slurm
 
 mkdir -p /var/log/slurm /home/slurm

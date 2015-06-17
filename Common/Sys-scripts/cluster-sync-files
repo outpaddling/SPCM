@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 cat << EOM
 
@@ -14,6 +14,7 @@ fi
 repo=/usr/local/cluster/sync-files
 
 cd $repo
+set +e  # Rsync may return non-zero status
 for node in `cluster-compute-nodes`; do
     rsync -avR * ${node}:/
 done
