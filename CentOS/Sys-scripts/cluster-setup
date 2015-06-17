@@ -935,11 +935,8 @@ case $NODE_TYPE in
     # Set per-process memory limits to a fraction of RAM
     auto-set-memory-limits 16777216
     
-    fix_idmap=`auto-ask fix-idmap "Fix idmap?  ( Requires all nodes to be online )" n`
-    
-    if [ $fix_idmap = y ]; then
-	fix-idmapd-domain
-    fi
+    # files will be owned by 'nobody' unless a domain is set
+    cluster-set-idmapd-domain cluster
     
     kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
