@@ -1,0 +1,42 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-06-17  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 domain\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+domain=$1
+
+# Without this, users are mapped as nobody
+
+# Head
+sed -i "s|.*Domain = .*|Domain = $domain|" /etc/idmapd.conf
+service rpcidmapd restart
+
+# Add this to cluster-setup
+cluster-run \
+    "sed -i 's|.*Domain = .*|Domain = $domain|' /etc/idmapd.conf; service rpcidmapd restart" \
+    all
+
