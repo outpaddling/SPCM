@@ -27,16 +27,12 @@ if [ $# != 1 ]; then
     usage
 fi
 
+# Without a domain, users are mapped as nobody
 domain=$1
 
-# Without this, users are mapped as nobody
-
-# Head
 sed -i "s|.*Domain = .*|Domain = $domain|" /etc/idmapd.conf
-service rpcidmapd restart
+cluster-run "sed -i 's|.*Domain = .*|Domain = $domain|' /etc/idmapd.conf" all
 
-# Add this to cluster-setup
-cluster-run \
-    "sed -i 's|.*Domain = .*|Domain = $domain|' /etc/idmapd.conf; service rpcidmapd restart" \
-    all
+service rpcidmapd restart
+cluster-run "service rpcidmapd restart" all
 
