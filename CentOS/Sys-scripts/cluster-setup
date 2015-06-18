@@ -266,6 +266,7 @@ ib_config()
     current_ip=`ip addr show $interface | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
     # FIXME: Specific to x.y.1.z networks
     ib_ip=`printf "$current_ip" | awk -F '.' ' { printf("%d.2.%d.%d",$1,$3,$4); }'`
+    ib_ip=`auto-ask ib-ip 'ib0 IP address?' $ib_ip`
     
     # FIXME: Unmount NFS shares on ib0 first
     
@@ -285,6 +286,7 @@ ib_config()
     hwaddr=`ip addr show ib0 | awk '$1 == "link/infiniband" { print $2 }'`
     # FIXME: Make this user input
     netmask='255.255.0.0'
+    netmask=`auto-ask ib-netmask 'ib0 netmask?' $netmask`
     cat << EOM > $file-ib0
 DEVICE=ib0
 HWADDR=$hwaddr
@@ -896,6 +898,10 @@ if [ $ib = y ]; then
     ib_config
 fi
 
+idmapd_domain=`auto-ask idmapd-domain 'IDMAPD domain for NFS4?' cluster`
+sed -i "s|.*Domain = .*|Domain = $idmapd_domain|" /etc/idmapd.conf
+service rpcidmapd restart
+
 nfs_config
 ssh_config
 
@@ -918,7 +924,6 @@ fi
 # Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit
 
-slurm_install $pkgsrc_prefix
 ganglia_install $pkgsrc_prefix
 
 case $NODE_TYPE in
@@ -934,9 +939,6 @@ case $NODE_TYPE in
 
     # Set per-process memory limits to a fraction of RAM
     auto-set-memory-limits 16777216
-    
-    # files will be owned by 'nobody' unless a domain is set
-    cluster-set-idmapd-domain cluster
     
     kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
@@ -958,7 +960,22 @@ case $NODE_TYPE in
 
 esac
 
+# Do this LAST to ensure node is fully operational before going live
+case $NODE_TYPE in
+'head'|'compute')
+    slurm_install $pkgsrc_prefix
+    ;;
+*)
+    ;;
+esac
+
 # Save Kickstart file
 mkdir -p /root/Save
 backup_file ~/anaconda-ks.cfg /root/Save
+
+printf 'Reboot? [y]/n '
+read reboot
+if [ 0$reboot != 0n ]; then
+    shutdown -r now
+fi
 
