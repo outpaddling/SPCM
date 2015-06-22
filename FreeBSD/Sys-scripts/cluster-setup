@@ -1024,6 +1024,7 @@ install_common_tools()
     line
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion
+    yes | pkg install -y bsdstats
 }
 
 
