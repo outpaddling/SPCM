@@ -20,17 +20,12 @@ case $# in
 		{ total += $1; }
 	END     { print total; }'`
     
-    if [ -r /home/$user ]; then
-	share=`ls -ld /home/$user/[Dd]ata | awk ' { print $11 }'`
-    else
-	share='Cannot read home directory.  Try running as root.'
-    fi
-    printf "%-12s%-8s%-8s%s\n" $user $running_cores $pending_cores "$share"
+    printf "%-12s%-8s%-8s%s\n" $user $running_cores $pending_cores
     ;;
 0)
     # Recursive call for each active user
     running_users=`squeue -h --states=all | awk ' { print $4 }' | sort | uniq`
-    printf "%-12s%-8s%-8s%s\n" "Username" "Running" "Pending" "Share"
+    printf "%-12s%-8s%-8s%s\n" "Username" "Running" "Pending"
     for user in $running_users; do
 	slurm-user-cores $user
     done
