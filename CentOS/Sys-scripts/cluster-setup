@@ -683,7 +683,7 @@ slurm_install()
 	    pkgsrc_install_packages $pkgsrc_prefix wip/slurm
 	else
 	    if ! fgrep slurm /etc/passwd; then
-		printf 'Run node-sync-user `hostname` slurm from the head node\n'
+		printf "Run node-sync-user `hostname` slurm from the head node\n"
 		pause
 	    fi
 	fi
