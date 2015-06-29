@@ -1,0 +1,76 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-06-16  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hostname\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+node=$1
+
+switch `uname` in
+Linux)
+    # Prevent node from being enabled in the scheduler
+    
+    # Run cluster-init-node
+    # cluster-init-node $node
+    
+    ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
+    ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
+    
+    # Sync users
+    node-sync-user $node slurm || true
+    printf "Sync users? [y]/n "
+    read sync
+    if [ 0$sync != 0n ]; then
+	node-sync-all-users $node
+    fi
+    
+    # Sync software
+    
+    # Sync sys files
+    cluster-sync-sysfiles $node
+    
+    printf "Sync custom files? [y]/n "
+    read sync
+    if [ 0$sync != 0n ]; then
+	cluster-sync-files
+    fi
+    
+    # Other stuff
+    # Done by cluster-setup
+    # ssh $node "sed -i 's|#Domain = .*|Domain = hpc.uwm.edu|' /etc/idmapd.conf; service rpcidmapd restart"
+    
+    # Run cluster-setup compute
+    # Do this last, since it enables the scheduler
+    ssh -t $node cluster-setup compute
+    ;;
+*)
+    printf "Not yet implemented for `uname`.\n"
+    ;;
+    exit 1
+esac
+
+# Reboot
+

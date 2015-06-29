@@ -1,0 +1,67 @@
+#!/bin/sh
+
+# DO NOT sync /etc/passwd, /etc/ssh*, or any other file that may contain
+# different information on different node types!
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+if [ `whoami` != root ]; then
+    printf "Can only be run by root.\n"
+    exit 1
+fi
+
+login_nodes="`cluster-backup-login-nodes`"
+root_nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
+all_nodes="`cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`"
+
+# Select nodes of each category from list
+if [ $# -gt 0 ]; then
+    nodes="$@"
+    login_nodes=$(printf "%s\n" $login_nodes $nodes | sort | uniq -d)
+    root_nodes=$(printf "%s\n" $root_nodes $nodes | sort | uniq -d)
+    all_nodes=$(printf "%s\n" $all_nodes $nodes | sort | uniq -d)
+fi
+
+echo $login_nodes
+echo $root_nodes
+echo $all_nodes
+
+printf "limits.d...\n"
+for node in $login_nodes; do
+    rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
+done
+
+os_type=`uname`
+case $ostype in
+Linux)
+    printf "root home...\n"
+    for node in $root_nodes; do
+	rsync /root/.bash_profile ${node}:/root
+	rsync -av /root/bin ${node}:/root
+    done
+    
+    for node in $all_nodes; do
+	# /etc/hosts
+	printf "$node: hosts "
+	rsync -pog /etc/hosts ${node}:/etc
+	
+	# Do not sync sshd_config.  Public-facing servers are different than
+	# compute nodes.
+	printf "ssh_config "
+	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+	
+	printf "system-auth"
+	rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
+	
+	printf '\n'
+    done
+    ;;
+*)
+    printf "Not yet implemented for $os_type.\n"
+    exit 1
+    ;;
+esac
+

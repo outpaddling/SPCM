@@ -46,6 +46,22 @@ gecos="$4"
 shell="$5"
 shift; shift; shift; shift; shift
 
+printf "Checking cluster integrity.  One moment please...\n"
+if ! cluster-down-nodes; then
+    cat << EOM
+
+Nodes are currently down.  The useradd operation will not be able to complete.
+You will need to node-sync-user for the nodes listed above after they are
+restored.
+
+EOM
+    printf "Continue anyway? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit
+    fi
+fi
+
 # Create group if necessary
 found_name=`awk -F : '$1 == "'$group_name'" { print $1 }' /etc/group`
 if [ 0$found_name = 0$group_name ]; then
