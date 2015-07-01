@@ -62,6 +62,24 @@ if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
 fi
 
 nodes=`sinfo -o %n -h`
+# First pass simply drains as many nodes as possible to prevent more jobs
+# from allocating them.
+for node in $nodes; do
+    # Update node if it's not in the updated list
+    if ! fgrep -q $node $updated_nodes; then
+	state=`sinfo -n $node -o %T -h`
+	case $state in
+	'drained')
+	    ;;
+	*)
+	    scontrol update nodename=$node state=drain reason=Upgrading
+	    printf "Draining $node...\n"
+	    ;;
+	esac
+    fi
+done
+
+# Second pass will update already drained nodes.
 for node in $nodes; do
     # Update node if it's not in the updated list
     if ! fgrep -q $node $updated_nodes; then
@@ -86,8 +104,6 @@ for node in $nodes; do
 	    slurm-resume-down-nodes > /dev/null 2>&1
 	    ;;
 	*)
-	    # If the noe is busy, drain it so it can be updated ASAP
-	    printf "$node is busy (state = $state)\n"
 	    scontrol update nodename=$node state=drain reason=Upgrading
 	    printf "Draining $node...\n"
 	    ;;
