@@ -87,13 +87,7 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
-	    ssh $node yum-complete-transaction || true
-	    if ssh $node yum update -y; then
-		printf 'Reboot? [y]/n '
-		read reboot
-		if [ 0$reboot != 0n ]; then
-		    ssh $node shutdown -r now
-		fi
+	    if ssh -t $node auto-update-system; then
 		scontrol update nodename=$node state=resume
 		echo $node >> $updated_nodes
 	    else
