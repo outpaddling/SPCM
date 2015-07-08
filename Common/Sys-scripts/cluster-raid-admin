@@ -1,0 +1,59 @@
+#!/bin/sh
+
+while true; do
+
+    clear
+    cat << EOM
+
+1.. Monitor file server load with iostat
+2.. Monitor file server load with iftop
+Q.. Quit
+
+EOM
+
+    os_type=`uname`
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	printf "Hostname? "
+	read host_name
+	case $os_type in
+	FreeBSD)
+	    ssh $host_name iostat -w 1
+	    ;;
+	Linux)
+	    ssh $host_name iostat -p ALL -m 1
+	    ;;
+	*)
+	    printf "$os_name is not yet supported.\n"
+	esac
+	;;
+    2)
+	printf "Hostname? "
+	read host_name
+	case $os_type in
+	FreeBSD)
+	    ssh $host_name ifconfig | fgrep UP
+	    ;;
+	Linux)
+	    ssh $host_name ip link | fgrep UP
+	    ;;
+	*)
+	    printf "$os_name is not yet supported.\n"
+	esac
+	printf "Network interface? [default] "
+	read iface
+	if [ 0$iface = 0 ]; then
+	    ssh -t $host_name iftop
+	else
+	    ssh -t $host_name iftop -i $iface
+	fi
+	;;
+    Q|q)
+	exit 0
+    esac
+done
+
