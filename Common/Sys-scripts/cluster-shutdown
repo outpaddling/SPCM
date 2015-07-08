@@ -37,27 +37,40 @@ if [ `whoami` != 'root' ]; then
     exit 1
 fi
 
+os_type=`uname`
+case $os_type in
+FreeBSD)
+    flag='-p'
+    ;;
+Linux)
+    flag='-h'
+    ;;
+*)
+    printf "$os_type is not yet supported.\n"
+    exit 1
+esac
+
 printf "Shut down compute nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run 'shutdown -h now' compute
+    cluster-run 'shutdown $flag now' compute
 fi
 
 printf "Shut down I/O nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run 'shutdown -h now' io
+    cluster-run 'shutdown $flag now' io
 fi
 
-printf "Shut down login2? (yes/[no]) "
+printf "Shut down backup login nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    ssh login2 'shutdown -h now'
+    cluster-run 'shutdown $flag now' backup
 fi
 
 printf "Shut down head node? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    shutdown -h now
+    shutdown $flag now
 fi
 
