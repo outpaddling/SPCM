@@ -37,12 +37,11 @@ while true; do
 			    **************************
 				
 1.. Shut down cluster
-2.. Back up system files
-3.. SLURM management
-4.. RAID management
-5.. Network management
-6.. User management
-7.. Restart Ganglia
+2.. SLURM management
+3.. RAID management
+4.. Network management
+5.. User management
+6.. Restart Ganglia
 Q.. Quit
 
 EOM
@@ -55,21 +54,18 @@ EOM
 	cluster-shutdown
 	;;
     2)
-	cluster-backup-sysfiles
-	;;
-    3)
 	slurm-admin
 	;;
-    4)
+    3)
 	cluster-raid-admin
 	;;
-    5)
+    4)
 	cluster-net-admin
 	;;
-    6)
+    5)
 	cluster-user-admin
 	;;
-    7)
+    6)
 	cluster-ganglia-restart
 	;;
     Q|q)
