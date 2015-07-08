@@ -30,6 +30,7 @@ EOM
     case $resp in
     1)
 	slurm-restart
+	pause
 	;;
     2)
 	printf "Node number? (e.g. 1-01) "
