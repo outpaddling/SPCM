@@ -42,6 +42,7 @@ while true; do
 4.. RAID management
 5.. Network management
 6.. User management
+7.. Restart Ganglia
 Q.. Quit
 
 EOM
@@ -67,6 +68,9 @@ EOM
 	;;
     6)
 	cluster-user-admin
+	;;
+    7)
+	cluster-ganglia-restart
 	;;
     Q|q)
 	exit 0

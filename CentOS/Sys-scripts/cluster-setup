@@ -497,7 +497,7 @@ install_core_rpms()
     # No such package yum install -y impitool     # Remote management and LOM
     
     if [ $NODE_TYPE = compute ]; then
-	for pkg in openmpi-devel; do
+	for pkg in openmpi-devel numactl numactl-devel; do
 	    yum install -y $pkg
 	done
     fi
