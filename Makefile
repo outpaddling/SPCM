@@ -1,6 +1,8 @@
 
 all:
 
+clean:
+
 install:
 	./install
 
