@@ -6,5 +6,5 @@ clean:
 realclean:  clean
 
 install:
-	./install
+	./install.sh
 
