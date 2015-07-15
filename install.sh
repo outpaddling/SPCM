@@ -46,7 +46,7 @@ cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 
 # FIXME: Create and install man pages
 
-mkdir ${DESTDIR}${DATADIR}/WWW
+mkdir -p ${DESTDIR}${DATADIR}/WWW
 cp Common/Share/* ${DESTDIR}${DATADIR}
 cp $os/Share/* ${DESTDIR}${DATADIR}
 cp $os/WWW/* ${DESTDIR}${DATADIR}
