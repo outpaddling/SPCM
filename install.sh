@@ -56,7 +56,7 @@ sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
 sed -e "s|%%DATADIR%%|${DATADIR}|g" \
     Common/Sys-scripts/slurm-update-idle-nodes \
-    > ${DESTDIR}${PREFIX}/sbin/slurm-upate-idle-nodes
+    > ${DESTDIR}${PREFIX}/sbin/slurm-update-idle-nodes
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
