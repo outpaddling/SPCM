@@ -1,0 +1,6 @@
+
+all:
+
+install:
+	./install
+

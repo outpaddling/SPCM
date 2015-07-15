@@ -43,9 +43,20 @@ chmod 750 ${STAGEDIR}${PREFIX}/sbin/*
 chmod 755 ${STAGEDIR}${PREFIX}/bin/*
 
 cp Common/*.awk ${STAGEDIR}${PREFIX}/libexec
+
+# FIXME: Create and install man pages
+
+mkdir ${STAGEDIR}${DATADIR}/WWW
+cp Common/Share/* ${STAGEDIR}${DATADIR}
+cp $os/Share/* ${STAGEDIR}${DATADIR}
+cp $os/WWW/* ${STAGEDIR}${DATADIR}
+
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${STAGEDIR}${PREFIX}/sbin/slurm-usage-report
+sed -e "s|%%DATADIR%%|${DATADIR}|g" \
+    Common/Sys-scripts/slurm-update-idle-nodes \
+    > ${STAGEDIR}${PREFIX}/sbin/slurm-upate-idle-nodes
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-admin.conf \
     > ${STAGEDIR}${PREFIX}/sbin/cluster-admin.conf
