@@ -1,4 +1,12 @@
 #!/bin/sh -e
 
-printf "1000\n"
+# ${PREFIX} is prepended by install script
+if ! fgrep -q lowest-uid cluster-admin.conf; then
+    printf "Lowest UID for this cluster? "
+    read lowest_uid
+    printf "lowest-uid $lowest_uid\n" >> cluster-admin.conf
+fi
+
+awk '$1 == "lowest-uid" { print $2 }' cluster-admin.conf
+
 
