@@ -221,6 +221,10 @@ else
     if [ 0$gid = 0 ]; then
 	gid=$uid
     fi
+    if gid_taken $gid; then
+	printf "$gid is in use.\n"
+	exit 1
+    fi
 fi
 
 if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/group` = 0$uid ]; then
