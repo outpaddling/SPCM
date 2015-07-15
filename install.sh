@@ -47,9 +47,9 @@ cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 # FIXME: Create and install man pages
 
 mkdir -p ${DESTDIR}${DATADIR}/WWW
-cp Common/Share/* ${DESTDIR}${DATADIR}
-cp $os/Share/* ${DESTDIR}${DATADIR}
-cp $os/WWW/* ${DESTDIR}${DATADIR}
+cp Common/Share/* ${DESTDIR}${DATADIR}/WWW
+cp $os/Share/* ${DESTDIR}${DATADIR}/WWW
+cp $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
