@@ -48,7 +48,9 @@ cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 
 mkdir -p ${DESTDIR}${DATADIR}/WWW
 cp Common/Share/* ${DESTDIR}${DATADIR}
-cp $os/Share/* ${DESTDIR}${DATADIR}
+if [ -e $os/Share ]; then
+    cp $os/Share/* ${DESTDIR}${DATADIR}
+fi
 cp $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
