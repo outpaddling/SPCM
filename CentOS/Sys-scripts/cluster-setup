@@ -974,6 +974,10 @@ esac
 mkdir -p /root/Save
 backup_file ~/anaconda-ks.cfg /root/Save
 
+if ! fgrep -q clusteradmin /etc/passwd; then
+    cluster-adduser cluster-admin
+fi
+
 printf 'Reboot? [y]/n '
 read reboot
 if [ 0$reboot != 0n ]; then

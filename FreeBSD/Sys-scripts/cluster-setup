@@ -1307,6 +1307,10 @@ case $NODE_TYPE in
     ;;
 esac
 
+if ! fgrep -q clusteradmin /etc/passwd; then
+    cluster-adduser cluster-admin
+fi
+
 # Reboot to test new config after initial setup
 reboot_maybe
 
