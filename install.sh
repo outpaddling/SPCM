@@ -31,33 +31,33 @@ esac
 
 set -x
 for dir in bin sbin libexec; do
-    mkdir -p ${STAGEDIR}${PREFIX}/$dir
+    mkdir -p ${DESTDIR}${PREFIX}/$dir
 done
-rm -f ${STAGEDIR}${PREFIX}/sbin/cluster-*
-rm -f ${STAGEDIR}${PREFIX}/bin/cluster-*
-cp $os/Sys-scripts/* ${STAGEDIR}${PREFIX}/sbin
-cp $os/User-scripts/* ${STAGEDIR}${PREFIX}/bin
-cp Common/Sys-scripts/* ${STAGEDIR}${PREFIX}/sbin
-cp Common/User-scripts/* ${STAGEDIR}${PREFIX}/bin
-chmod 750 ${STAGEDIR}${PREFIX}/sbin/*
-chmod 755 ${STAGEDIR}${PREFIX}/bin/*
+rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
+rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
+cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin
+cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
+chmod 750 ${DESTDIR}${PREFIX}/sbin/*
+chmod 755 ${DESTDIR}${PREFIX}/bin/*
 
-cp Common/*.awk ${STAGEDIR}${PREFIX}/libexec
+cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 
 # FIXME: Create and install man pages
 
-mkdir ${STAGEDIR}${DATADIR}/WWW
-cp Common/Share/* ${STAGEDIR}${DATADIR}
-cp $os/Share/* ${STAGEDIR}${DATADIR}
-cp $os/WWW/* ${STAGEDIR}${DATADIR}
+mkdir ${DESTDIR}${DATADIR}/WWW
+cp Common/Share/* ${DESTDIR}${DATADIR}
+cp $os/Share/* ${DESTDIR}${DATADIR}
+cp $os/WWW/* ${DESTDIR}${DATADIR}
 
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
-    > ${STAGEDIR}${PREFIX}/sbin/slurm-usage-report
+    > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
 sed -e "s|%%DATADIR%%|${DATADIR}|g" \
     Common/Sys-scripts/slurm-update-idle-nodes \
-    > ${STAGEDIR}${PREFIX}/sbin/slurm-upate-idle-nodes
+    > ${DESTDIR}${PREFIX}/sbin/slurm-upate-idle-nodes
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-admin.conf \
-    > ${STAGEDIR}${PREFIX}/sbin/cluster-admin.conf
+    > ${DESTDIR}${PREFIX}/sbin/cluster-admin.conf
 
