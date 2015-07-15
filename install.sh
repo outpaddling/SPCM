@@ -58,6 +58,6 @@ sed -e "s|%%DATADIR%%|${DATADIR}|g" \
     Common/Sys-scripts/slurm-update-idle-nodes \
     > ${DESTDIR}${PREFIX}/sbin/slurm-upate-idle-nodes
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
-    Common/Sys-scripts/cluster-admin.conf \
-    > ${DESTDIR}${PREFIX}/sbin/cluster-admin.conf
+    Common/Sys-scripts/cluster-lowest-uid \
+    > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
 
