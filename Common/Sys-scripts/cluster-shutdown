@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -53,19 +53,19 @@ esac
 printf "Shut down compute nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run 'shutdown $flag now' compute
+    cluster-run -c 'shutdown $flag now' compute
 fi
 
 printf "Shut down I/O nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run 'shutdown $flag now' io
+    cluster-run -c 'shutdown $flag now' io
 fi
 
 printf "Shut down backup login nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run 'shutdown $flag now' backup
+    cluster-run -c 'shutdown $flag now' backup
 fi
 
 printf "Shut down head node? (yes/[no]) "
