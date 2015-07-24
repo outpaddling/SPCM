@@ -93,9 +93,6 @@ for node in $nodes; do
 	    else
 		printf "Update failed.\n"
 	    fi
-	    # FIXME: Can SLURM be configured to resume nodes automatically
-	    # after they reboot?
-	    slurm-resume-down-nodes > /dev/null 2>&1
 	    ;;
 	*)
 	    scontrol update nodename=$node state=drain reason=Upgrading
@@ -105,4 +102,8 @@ for node in $nodes; do
     fi
 done
 wc updated-nodes
+
+# FIXME: Can SLURM be configured to resume nodes automatically
+# after they reboot?
+slurm-resume-down-nodes > /dev/null 2>&1
 
