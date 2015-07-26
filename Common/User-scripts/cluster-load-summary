@@ -1,9 +1,0 @@
-#!/bin/sh
-
-sinfo -o '%C'
-
-allocated=`sinfo -h -o '%C' | awk -F '/' ' { print $1 }'`
-total=`sinfo -h -o '%C' | awk -F '/' ' { print $4 }'`
-load=$((allocated * 100 / total))
-printf "\nLoad: %s%%\n" $load
-

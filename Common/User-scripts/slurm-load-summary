@@ -1,0 +1,12 @@
+#!/bin/sh
+
+partitions=`sinfo -h -o '%R'`
+
+for partition in $partitions; do
+    allocated=`sinfo -h -p $partition -o '%C' | awk -F '/' ' { print $1 }'`
+    total=`sinfo -h -p $partition -o '%C' | awk -F '/' ' { print $4 }'`
+    load=$((allocated * 100 / total))
+    printf "\n%s: %s%%\n" $partition $load
+    sinfo -p $partition -o '%C'
+done
+

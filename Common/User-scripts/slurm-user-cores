@@ -30,7 +30,7 @@ case $# in
 	slurm-user-cores $user
     done
     printf "\n"
-    cluster-load-summary
+    slurm-load-summary
     ;;
 *)
     usage
