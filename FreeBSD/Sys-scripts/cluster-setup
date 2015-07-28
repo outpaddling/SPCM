@@ -211,12 +211,12 @@ EOM
 	    ;;
 	3)
 	    # Install dependencies
-	    pkg install -y slurm-hpc
+	    pkg install -y slurm-wlm
 	    
 	    # Reinstall with custom options
 	    reinstall=`auto-ask reinstall-slurm "Rebuild slurm with custom options?" n`
 	    if [ $reinstall = 'y' ]; then
-		install_port sysutils slurm-hpc
+		install_port sysutils slurm-wlm
 	    fi
 	    ;;
 	4)
@@ -332,7 +332,7 @@ EOM
 scheduler_config()
 {
     line
-    if auto-package-installed sysutils/slurm-hpc; then
+    if auto-package-installed sysutils/slurm-wlm; then
 	slurm_config
     fi
     
