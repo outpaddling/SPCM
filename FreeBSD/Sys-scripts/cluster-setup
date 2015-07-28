@@ -717,8 +717,14 @@ ganglia_config()
 		$LOCALBASE/www/$APACHE_PKG/data/index.php
 	fi
 	
-	# Check for php5 apache module.  It is not included in the
-	# standard php5 build. Need WITH_APACHE.
+	line
+	# Install ganglia web frontend
+	if ! auto-package-installed sysutils/ganglia-webfrontend; then
+	    install_packages sysutils/ganglia-webfrontend
+	fi
+	
+	# Should be pulled in by ganglia-webfrontend, but they're not
+	# Needed for Apache
 	install_packages lang/php5 www/mod_php5
 	
 	# FIXME: Dying here on first run
@@ -741,12 +747,6 @@ ganglia_config()
 	    read zone
 	    sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
 		$LOCALBASE/etc/php.ini
-	fi
-	
-	line
-	# Install ganglia web frontend
-	if ! auto-package-installed sysutils/ganglia-web; then
-	    install_packages sysutils/ganglia-web
 	fi
 
 	# patch creates gmetad.orig
