@@ -747,28 +747,6 @@ ganglia_install()
 #   2014-05-02  root        Begin
 ##########################################################################
 
-passwdqc_enable()
-{
-    # Enable PAM passwdqc
-    # http://www.cyberciti.biz/faq/rhel-fedora-centos-linux-password-quality-cont
-    yum install -y pam_passwdqc
-    sed -i -E 's|pam_cracklib.so.*|pam_passwdqc.so min=disabled,disabled,16,12,10 retry=3|g' \
-	/etc/pam.d/system-auth
-}
-
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2014-05-02  root        Begin
-##########################################################################
-
 disable_overcommit()
 {
     # Tighten memory allocation to prevent overcommits from crashing nodes
@@ -893,7 +871,7 @@ cluster_startup_scripts
 boot_block_backup
 ntp_config
 install_core_rpms
-passwdqc_enable
+auto-enable-passwdqc
 
 # Configure firewall
 iptables-config
