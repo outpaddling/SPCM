@@ -73,7 +73,6 @@ for node in $nodes; do
 	    ;;
 	*)
 	    scontrol update nodename=$node state=drain reason=Upgrading
-	    printf "Draining $node...\n"
 	    ;;
 	esac
     fi
@@ -96,7 +95,6 @@ for node in $nodes; do
 	    ;;
 	*)
 	    scontrol update nodename=$node state=drain reason=Upgrading
-	    printf "Draining $node...\n"
 	    ;;
 	esac
     fi
