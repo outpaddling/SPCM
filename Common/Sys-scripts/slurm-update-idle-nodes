@@ -46,6 +46,15 @@ case $# in
 esac
 
 dir="$1"
+
+lock_file=$dir/lockfile
+
+if [ -e $lock_file ]; then
+    printf "Another instance of $0 is currently running.\n"
+    exit
+fi
+
+touch $lock_file
 readonly updated_nodes="$dir/updated-nodes"
 if [ ! -e $updated_nodes ]; then
     touch $updated_nodes
@@ -104,4 +113,5 @@ wc updated-nodes
 # FIXME: Can SLURM be configured to resume nodes automatically
 # after they reboot?
 slurm-resume-down-nodes > /dev/null 2>&1
+rm -f $lock_file
 
