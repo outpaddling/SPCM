@@ -47,16 +47,18 @@ esac
 
 dir="$1"
 
-lock_file="$dir/lockfile"
-update_node_file="$dir/updated-nodes"
-
+readonly lock_file="$dir/lockfile"
 if [ -e "$lock_file" ]; then
     printf "Another instance of $0 is currently running.\n"
     printf "Remove $lock_file to override.\n"
     exit
 fi
-
 touch "$lock_file"
+
+readonly updated_nodes_file="$dir/updated-nodes"
+if [ ! -e "$updated_nodes_file" ]; then
+    touch "$updated_nodes_file"
+fi
 
 if test -t 0; then
     cat << EOM
@@ -72,20 +74,15 @@ must allow this round of updates to complete before starting a new round.
 
 To start a new round of updates, simply delete the file
 
-    $updated_node_file
+    $updated_nodes_file
 
 EOM
     pause
 fi
 
-readonly updated_nodes="$updated_node_file"
-if [ ! -e "$updated_nodes" ]; then
-    touch "$updated_nodes"
-fi
-
 cd "$dir"
 sinfo -o '%n %T'
-wc "$updated_nodes"
+wc "$updated_nodes_file"
 updated=0
 
 if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
@@ -98,7 +95,7 @@ nodes=`sinfo -o %n -h`
 # from allocating them.
 for node in $nodes; do
     # Update node if it's not in the updated list
-    if ! fgrep -q $node "$updated_nodes"; then
+    if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
 	'drained')
@@ -113,14 +110,14 @@ done
 # Second pass will update already drained nodes.
 for node in $nodes; do
     # Update node if it's not in the updated list
-    if ! fgrep -q $node "$updated_nodes"; then
+    if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
 	    if ssh -t $node auto-update-system; then
 		scontrol update nodename=$node state=resume
-		echo $node >> "$updated_nodes"
+		echo $node >> "$updated_nodes_file"
 	    else
 		printf "Update failed.\n"
 	    fi
