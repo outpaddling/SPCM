@@ -31,10 +31,14 @@ user_name="$1"
 old_shadow_pw="$2"
 
 pw="`awk -F : '$1 == "'$user_name'" { print $0 }' $old_shadow_pw`"
-if [ 0$pw = 0 ]; then
+if [ "0$pw" = 0 ]; then
     printf "No such user: $user_name\n"
     exit 1
 fi
 auto-restore-pw $user_name "$pw"
-cluster-run "auto-restore-pw $user_name '$pw'" io
+if [ $user_name = root ]; then
+    cluster-run "auto-restore-pw $user_name '$pw'" all
+else
+    cluster-run "auto-restore-pw $user_name '$pw'" io
+fi
 
