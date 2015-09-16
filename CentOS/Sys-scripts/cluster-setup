@@ -812,10 +812,12 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-if [ ! -e /root/ssh.backup ]; then
-    printf 'Backing up .ssh...\n'
-    cp -R /root/.ssh /root/ssh.backup
-fi
+for file in /root/ssh /etc/fstab; do
+    if [ ! -e $file.backup ]; then
+	printf 'Backing up $file...\n'
+	cp -R $file $file.backup
+    fi
+done
 
 NODE_TYPE=$1
 case $NODE_TYPE in

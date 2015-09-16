@@ -102,6 +102,7 @@ FreeBSD)
     default_shell="/bin/tcsh"
     ;;
 Linux)
+    yum install openldap-clients
     ldap_conf=/etc/openldap/ldap.conf
     ldap_flags='-x'
     default_shell="/bin/bash"
