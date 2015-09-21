@@ -104,13 +104,13 @@ success=0
 while [ $success != 1 ]; do
     new_pw='x'
     pw2='y'
-    while [ 0$new_pw != 0$pw2 ]; do
+    while [ 0"$new_pw" != 0"$pw2" ]; do
 	printf "Password? "
 	read -s new_pw
 	printf "\nAgain? "
 	read -s pw2
 	printf "\n"
-	if [ 0$new_pw != 0$pw2 ]; then
+	if [ 0"$new_pw" != 0"$pw2" ]; then
 	    printf "Passwords do not match.  Please try again.\n"
 	fi
     done
@@ -126,7 +126,7 @@ while [ $success != 1 ]; do
 	    cat $errfile
 	fi
     else
-	if printf '%s\n%s\n' "$new_pw" "$new_pw" | passwd $user_name \
+	if printf '%s\n%s\n' "$new_pw" "$new_pw" | passwd "$user_name" \
 		> /dev/null 2> $errfile; then
 	    success=1
 	else
@@ -142,7 +142,7 @@ old_pw=`echo $old_pw | sed -e 's|\\$|\\\\$|g'`
 new_pw=`echo $new_pw | sed -e 's|\\$|\\\\$|g'`
 
 nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
-if [ 0$user_name = 0root ]; then
+if [ 0"$user_name" = 0root ]; then
     nodes="$nodes `cluster-compute-nodes`"
 fi
 
