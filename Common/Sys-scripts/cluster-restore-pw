@@ -39,6 +39,6 @@ auto-restore-pw $user_name "$pw"
 if [ $user_name = root ]; then
     cluster-run "auto-restore-pw $user_name '$pw'" all
 else
-    cluster-run "auto-restore-pw $user_name '$pw'" io
+    cluster-run "auto-restore-pw $user_name '$pw'" backup io vis
 fi
 

@@ -68,6 +68,12 @@ if [ 0$sure = 0yes ]; then
     cluster-run -c 'shutdown $flag now' backup
 fi
 
+printf "Shut down visualization nodes? (yes/[no]) "
+read sure
+if [ 0$sure = 0yes ]; then
+    cluster-run -c 'shutdown $flag now' vis
+fi
+
 printf "Shut down head node? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
