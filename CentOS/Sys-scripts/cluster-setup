@@ -1,7 +1,4 @@
-#!/usr/bin/env bash
-
-# Use bash for pushd/popd
-# This is a Linux-only script, so bash is not an added dep
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -127,7 +124,8 @@ pkgsrc_install_packages()
 	    printf "Installing $pkg...\n"
 	    pkg_name=`echo $pkg | cut -d '/' -f 2`
 	    pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
-	    pushd $pkgsrc_prefix/pkgsrc-1/$pkg
+	    save_cwd=`pwd`
+	    cd $pkgsrc_prefix/pkgsrc-1/$pkg
 	    if [ -e "$pkg_path" ]; then
 		printf "Using binary package $pkg_path...\n"
 		bmake bin-install
@@ -137,7 +135,7 @@ pkgsrc_install_packages()
 	    fi
 	    #bmake clean
 	    #bmake clean-depends
-	    popd
+	    cd $save_cwd
 	fi
     done
 }
