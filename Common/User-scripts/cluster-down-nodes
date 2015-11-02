@@ -3,8 +3,13 @@
 status=0
 for node in `cluster-compute-nodes`; do
     if ! ping -c 1 $node > /dev/null 2>&1; then
-	echo $node
+	printf "$node is not responding to ping.\n"
 	status=1
+    else
+	if ! ssh $node hostname > /dev/null 2>&1; then
+	    printf "Cannot ssh to $node.\n"
+	    status=1
+	fi
     fi
 done
 exit $status
