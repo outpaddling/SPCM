@@ -1,14 +1,19 @@
 #!/bin/sh
 
 status=0
+printf "%-20s %-10s %s\n" "Host" "Ping" "SSH"
 for node in `cluster-compute-nodes`; do
+    printf "%-20s " $node
     if ! ping -c 1 $node > /dev/null 2>&1; then
-	printf "$node is not responding to ping.\n"
+	printf "%-10s " "Failed"
 	status=1
     else
+	printf "%-10s " "OK"
 	if ! ssh $node hostname > /dev/null 2>&1; then
-	    printf "Cannot ssh to $node.\n"
+	    printf "Failed\n"
 	    status=1
+	else
+	    printf "OK\n"
 	fi
     fi
 done
