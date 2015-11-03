@@ -5,7 +5,7 @@ printf "%-20s %-10s %s\n" "Host" "Ping" "SSH"
 for node in `cluster-compute-nodes`; do
     printf "%-20s " $node
     if ! ping -c 1 $node > /dev/null 2>&1; then
-	printf "%-10s " "Failed"
+	printf "%-10s %s\n" "Failed" "-"
 	status=1
     else
 	printf "%-10s " "OK"
