@@ -1,0 +1,128 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-11-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 opsys arch R-lib [R-lib ...]
+
+Example:
+
+    $0 FreeBSD X86_64 magic
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 3 ]; then
+    usage
+fi
+
+opsys=$1
+arch=$2
+shift
+shift
+
+##########################################################################
+#   Generate HTCondor executable file
+##########################################################################
+
+cat << EOM > R-packages.sh
+#!/bin/sh -e
+
+hostname
+pwd
+
+# Condor nodes have no home directory
+release=\$(uname -r)
+os=\$(uname -s)-\${release%-*}-\$(uname -m)
+export R_LIBS="\$(pwd)/R/lib/\$os"
+echo \$R_LIBS
+mkdir -p \$R_LIBS
+
+# Help script find Rscript
+export PATH=\${PATH}:/usr/local/bin:/usr/pkg-1/bin
+
+# HTCondor process IDs begin at 0. 
+Rscript R-packages.r
+
+EOM
+
+##########################################################################
+#   Generate R script for building R libraries
+##########################################################################
+
+cat << EOM > R-packages.r
+# Alternative to specifying in install.packages()
+# old <- getOption("defaultPackages");
+# r <- getOption("repos")
+# r["CRAN"] <- "http://cran.mtu.edu"
+# r["CRAN"] <- "http://cran.fhcrc.org"
+# r["CRAN"] <- "http://rweb.crmda.ku.edu"
+# options(defaultPackages = c(old, "MASS"), repos = r)
+EOM
+
+for package in $@; do
+    printf \
+	"install.packages(\"$package\", repos=\"http://cran.us.r-project.org\")\n" \
+	>> R-packages.r
+done
+
+##########################################################################
+#   Generate HTCondor submit file
+##########################################################################
+
+cat << EOM > R-packages.condor
+universe = vanilla 
+
+executable = R-packages.sh
+output = R-packages.out
+error = R-packages.err
+log = R-packages.log 
+
+request_memory = 1000
+requirements = (target.arch == "$arch") && (target.opsys == "$opsys")
+
+transfer_executable = true
+should_transfer_files = if_needed
+transfer_input_files = R-packages.r
+transfer_output_files = R
+when_to_transfer_output = on_exit 
+queue 1
+EOM
+
+# rm -rf R R-packages.log
+condor_submit R-packages.condor
+condor_wait R-packages.log
+tar zcvf R-packages.tgz R
+
+cat << EOM
+
+In your HTCondor executable script:
+
+1)  Make sure R-packages.tgz is listed as an input
+
+2)  Add the following commands before your R/Rscript commands:
+
+tar zxvf R-packages.tgz
+release=\$(uname -r)
+os=\$(uname -s)-\${release%-p*}-\$(uname -m)
+export R_LIBS="\$(pwd)/R/lib/\$os"
+
+EOM
