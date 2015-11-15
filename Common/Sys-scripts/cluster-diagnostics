@@ -47,16 +47,10 @@ while true; do
     cat << EOM
     
 			    **************************
-				Cluster Admin Menu
+			     Cluster Diagnositcs Menu
 			    **************************
 				
-1.. Shut down cluster
-2.. SLURM management
-3.. RAID management
-4.. Network management
-5.. User management
-6.. Restart Ganglia
-7.. Diagnostics
+1.. Check for down nodes
 Q.. Quit
 
 EOM
@@ -66,28 +60,7 @@ EOM
     clear
     case $selection in
     1)
-	cluster-shutdown
-	;;
-    2)
-	slurm-admin
-	;;
-    3)
-	cluster-raid-admin
-	;;
-    4)
-	cluster-net-admin
-	;;
-    5)
-	cluster-user-admin
-	pause
-	;;
-    6)
-	cluster-ganglia-restart
-	pause
-	;;
-    7)
-	cluster-diagnostics
-	pause
+	cluster-down-nodes
 	;;
     Q|q)
 	exit 0
