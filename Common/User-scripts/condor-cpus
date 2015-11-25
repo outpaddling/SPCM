@@ -1,6 +1,17 @@
 #!/bin/sh -e
 
 #condor_status -pool cm.chtc.wisc.edu -constraint 'SlotType =?= "Partitionable"' -autof Machine Cpus
-condor_status -autof Machine Cpus Memory
-condor_status -autof Machine Cpus | awk ' { sum += $2 } END { print sum }'
+condor_status \
+    -format '%-023s' Machine \
+    -format '%-9s' OpSys \
+    -format '%-8s' Arch \
+    -format '%-10s' State \
+    -format '%4d' Cpus \
+    -format '%7d\n' Memory
+condor_status -autof State Cpus | \
+    awk '$1 == "Claimed" { sum += $2 } END { print "\nClaimed: ", sum }'
+condor_status -autof State Cpus | \
+    awk '$1 == "Unclaimed" || $1 == "Backfill" { sum += $2 } END { print "Unclaimed: ", sum }'
+condor_status -autof Machine Cpus | \
+    awk ' { sum += $2 } END { print "Total: ", sum }'
 
