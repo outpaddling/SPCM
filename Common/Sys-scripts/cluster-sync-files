@@ -1,5 +1,11 @@
 #!/bin/sh -e
 
+repo=/usr/local/cluster/sync-files
+if [ ! -d $repo ]; then
+    printf "$0: No files to sync.\n"
+    exit 0
+fi
+
 cat << EOM
 
 This will distribute current files to all compute nodes.
@@ -10,8 +16,6 @@ read resp
 if [ 0$resp != 0y ]; then
     exit 0
 fi
-
-repo=/usr/local/cluster/sync-files
 
 cd $repo
 set +e  # Rsync may return non-zero status
