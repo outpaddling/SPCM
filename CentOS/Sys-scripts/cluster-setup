@@ -810,7 +810,7 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-for file in /root/ssh /etc/fstab; do
+for file in /root/.ssh /etc/fstab; do
     if [ ! -e $file.backup ]; then
 	printf 'Backing up $file...\n'
 	cp -R $file $file.backup
@@ -834,10 +834,11 @@ if [ $NODE_TYPE != head ]; then
     pause
 fi
 
-vi /etc/hosts.allow
-
-printf "Run harden script. "
-pause
+printf "Run harden script? y/[n] "
+read harden
+if [ 0$harden = 0y ]; then
+    auto-harden
+fi
 
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf

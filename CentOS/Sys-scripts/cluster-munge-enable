@@ -42,8 +42,8 @@ if [ $# != 2 ]; then
 fi
 
 node_type=$1
-prefix=$2/pkg-1
-munge_etc="$prefix/etc/munge"
+pkgsrc_prefix=$2
+munge_etc="$pkgsrc_prefix/pkg-1/etc/munge"
 mkdir -p -m 0700 $munge_etc
 
 case $node_type in
@@ -79,7 +79,8 @@ chown -Rh daemon:daemon \
 chmod 755 /var/run/munge
 
 # RHEL init script
-cp $prefix/etc/init.d/munge /etc/init.d/munge
+rm -f /etc/init.d/munge
+ln -s $pkgsrc_prefix/pkg-1/share/examples/rc.d/init.d/munge /etc/init.d/munge
 chkconfig munge on
 service munge restart
 

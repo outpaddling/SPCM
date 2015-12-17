@@ -41,18 +41,17 @@ if [ $# != 1 ]; then
     usage
 fi
 
-prefix=$1
+pkgsrc_prefix=$1
 
 rm -f /etc/init.d/slurm
-cp $prefix/pkg-1/etc/init.d/slurm /etc/init.d/slurm
+ln -s $pkgsrc_prefix/pkg-1/share/examples/slurm/init.d.slurm /etc/init.d/slurm
 chmod 755 /etc/init.d/slurm
 
 mkdir -p /var/log/slurm /home/slurm
 chown slurm:slurm /var/log/slurm /home/slurm
 
 chkconfig slurm on
-
-printf "Run \"service slurm start\" after installing $prefix/pkg-1/etc/slurm.conf.\n"
+service slurm restart
 
 pause
 

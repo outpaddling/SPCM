@@ -29,25 +29,27 @@ fi
 
 node=$1
 
-switch `uname` in
+case `uname` in
 Linux)
     # Prevent node from being enabled in the scheduler
-    
-    # Run cluster-init-node
-    # cluster-init-node $node
+
+    printf "Run cluster-init-node? [y]/n "
+    read resp
+    if [ 0$resp != 0n ]; then
+	cluster-init-node $node
+    fi
     
     ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
     ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
     
     # Sync users
+    # FIXME: Don't assume slurm
     node-sync-user $node slurm || true
     printf "Sync users? [y]/n "
     read sync
     if [ 0$sync != 0n ]; then
 	node-sync-all-users $node
     fi
-    
-    # Sync software
     
     # Sync sys files
     cluster-sync-sysfiles $node
@@ -58,9 +60,12 @@ Linux)
 	cluster-sync-files
     fi
     
+    # hosts.allow
+    rsync -av /etc/hosts.allow $node:/etc
+    
     # Other stuff
-    # Done by cluster-setup
-    # ssh $node "sed -i 's|#Domain = .*|Domain = hpc.uwm.edu|' /etc/idmapd.conf; service rpcidmapd restart"
+    
+    # Sync software
     
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
@@ -68,8 +73,8 @@ Linux)
     ;;
 *)
     printf "Not yet implemented for `uname`.\n"
-    ;;
     exit 1
+    ;;
 esac
 
 # Reboot

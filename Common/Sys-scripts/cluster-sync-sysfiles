@@ -35,7 +35,7 @@ for node in $login_nodes; do
 done
 
 os_type=`uname`
-case $ostype in
+case $os_type in
 Linux)
     printf "root home...\n"
     for node in $root_nodes; do
