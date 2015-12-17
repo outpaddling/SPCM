@@ -36,7 +36,9 @@ Linux)
     printf "Run cluster-init-node? [y]/n "
     read resp
     if [ 0$resp != 0n ]; then
-	cluster-init-node $node
+	printf "Gateway? "
+	read gateway
+	cluster-init-node $node $gateway
     fi
     
     ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
