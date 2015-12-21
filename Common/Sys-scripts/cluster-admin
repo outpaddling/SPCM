@@ -57,6 +57,7 @@ while true; do
 5.. User management
 6.. Restart Ganglia
 7.. Diagnostics
+8.. Node management
 Q.. Quit
 
 EOM
@@ -88,6 +89,9 @@ EOM
     7)
 	cluster-diagnostics
 	pause
+	;;
+    8)
+	cluster-node-admin
 	;;
     Q|q)
 	exit 0

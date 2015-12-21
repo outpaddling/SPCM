@@ -1,0 +1,66 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-23  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hostname gateway\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+host_name=$1
+gateway=$2      # Hack to get around missing feature in PXE installer
+
+case `auto-ostype` in
+RHEL)
+    scp /etc/hosts ${host_name}:/etc
+    
+    # FIXME: Should this be handled by DHCP?
+    ssh $host_name hostname $host_name
+    ssh $host_name \
+	"sed -i -e 's|HOSTNAME=.*|HOSTNAME=$host_name|' /etc/sysconfig/network"
+    
+    ssh $host_name 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    
+    printf "Installing basic tools...\n"
+    ssh $host_name yum install -y subversion rsync
+    
+    rsync -av /usr/pkg-1 ${host_name}:/usr
+    ssh $host_name mkdir -p /usr/pkgsrc-1
+    rsync -av /usr/pkgsrc-1/packages ${host_name}:/usr/pkgsrc-1
+    ssh $host_name cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
+    ssh $host_name cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
+    
+    printf "Installing yum updates...\n"
+    ssh $host_name yum update -y
+    
+    printf "Reboot? ([y]/n) "
+    read reboot
+    if [ 0$reboot != 0n ]; then
+	ssh $host_name shutdown -r now
+    fi
+    ;;
+*)
+    printf "Not yet implemented for `uname`.\n" >> /dev/stderr
+    ;;
+esac
+
