@@ -1,0 +1,128 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-19  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    cat << EOM
+    
+			    **************************
+				Cluster Admin Menu
+			    **************************
+
+1.. PXE install new nodes
+2.. Initialize newly installed nodes
+3.. Configure a compute node
+4.. Configure an I/O node
+5.. Configure a head node
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	printf "Host name prefix? [compute-] "
+	read host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
+	printf "Digits in hostname #? [3] "
+	read host_digits
+	if [ 0$host_digits = 0 ]; then
+	    host_digits=3
+	fi
+	printf "Domain? [local] "
+	read domain
+	if [ 0$domain = 0 ]; then
+	    domain='local'
+	fi
+	auto-pxe-node-discover $host_prefix $host_digits $domain
+	pause
+	;;
+    2)
+	printf "Host name prefix? [compute-] "
+	read host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
+	printf "Digits in hostname #? [3] "
+	read host_digits
+	if [ 0$host_digits = 0 ]; then
+	    host_digits=3
+	fi
+	printf "First host number? "
+	read first_num
+	printf "Last host number? "
+	read last_num
+	printf "Gateway IP? [10.1.1.1] "
+	read gateway
+	if [ 0$gateway = 0 ]; then
+	    gateway=10.1.1.1
+	fi
+	num=$first_num
+	while [ $num -le $last_num ]; do
+	    node=`printf '%s%0*d' $host_prefix $host_digits $num`
+	    printf "Initializing $node...\n"
+	    yes | cluster-init-node $node $gateway 2>&1 | tee init-$node.log
+	    printf "Done with $node...\n"
+	    num=$((num + 1))
+	done
+	;;
+    3)
+	printf "Host number? "
+	read host_num
+	ssh compute-$host_num cluster-setup compute
+	;;
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+    pause
+done
+

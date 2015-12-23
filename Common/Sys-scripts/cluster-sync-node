@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname\n"
+    printf "Usage: $0 hostname compute|io\n"
     exit 1
 }
 
@@ -23,39 +23,45 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
     usage
 fi
 
 node=$1
+node_type=$2
+
+if [ -z EDITOR ]; then
+    EDITOR="vi"
+fi
+
+conf_dir='/usr/local/cluster'
 
 case `uname` in
 Linux)
     # Prevent node from being enabled in the scheduler
 
-    printf "Run cluster-init-node? [y]/n "
-    read resp
-    if [ 0$resp != 0n ]; then
+    if ! ssh $node test -e $conf_dir/init-done; then
 	cluster-init-node $node
     fi
     
     # Sync users
     # FIXME: Don't assume slurm
-    node-sync-user $node slurm || true
-    printf "Sync users? [y]/n "
-    read sync
-    if [ 0$sync != 0n ]; then
-	node-sync-all-users $node
+    if ! ssh $node test -e $conf_dir/user-sync-done; then
+	node-sync-user $node slurm || true
+	node-sync-all-users $node || true
+	ssh $node touch $conf_dir/user-sync-done
     fi
     
     # Sync sys files
     cluster-sync-sysfiles $node
     
-    printf "Sync custom files? [y]/n "
-    read sync
-    if [ 0$sync != 0n ]; then
-	cluster-sync-files
-    fi
+    # Should this be part of cluster-sync-sysfiles?
+    rsync -av /usr/local/cluster ${node}:/usr/local
+    
+    # Temporary
+    rsync -av /usr/pkg-1/sbin/cluster-setup ${node}:/usr/pkg-1/sbin
+    
+    cluster-sync-files
     
     # hosts.allow
     rsync -av /etc/hosts.allow $node:/etc
@@ -63,10 +69,14 @@ Linux)
     # Other stuff
     
     # Sync software
+    printf "Installing local packages...\n"
+    ssh $node yum install -y `cat /usr/local/cluster/$node_type-node-yum-packages`
     
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
-    ssh -t $node cluster-setup compute
+    ssh -t $node cluster-setup $node_type
+    
+    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 *)
     printf "Not yet implemented for `uname`.\n"
@@ -74,5 +84,6 @@ Linux)
     ;;
 esac
 
-# Reboot
+# FIXME: Support other schedulers
+scontrol update nodename=$node state=resume
 

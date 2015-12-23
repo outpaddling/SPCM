@@ -428,22 +428,28 @@ nfs_config()
     case $NODE_TYPE in
     'compute'|'io')
 	# Compute nodes
-	nfs_server='prime'
-	while [ x$nfs_server != x ]; do
-	    printf 'Enter an NFS server to mount from, or press return to move on: '
-	    read nfs_server
-	    
-	    if [ 0$nfs_server != 0 ]; then
-		printf "Exported directory to mount? "
-		read export
-		# Add to fstab if not already there
-		auto-append-line "$export$num" \
-		    "${nfs_server}:$export\t$export\tnfs\trw,intr\t0\t0" \
-		    /etc/fstab nocomment
-		mkdir -p $export
-	    fi
-	done
-	 
+	script=/usr/local/cluster/add-shares
+	if [ -e $script ]; then
+	    printf "Automatically configuring shares with $script...\n"
+	    sh $script || true
+	else
+	    nfs_server='prime'
+	    while [ x$nfs_server != x ]; do
+		printf 'Enter an NFS server to mount from, or press return to move on: '
+		read nfs_server
+		
+		if [ 0$nfs_server != 0 ]; then
+		    printf "Exported directory to mount? "
+		    read export
+		    # Add to fstab if not already there
+		    auto-append-line "$export$num" \
+			"${nfs_server}:$export\t$export\tnfs\trw,intr\t0\t0" \
+			/etc/fstab nocomment
+		    mkdir -p $export
+		fi
+	    done
+	fi
+	
 	service rpcbind restart
 	service nfslock restart
 	service nfs restart
@@ -495,9 +501,7 @@ install_core_rpms()
     # No such package yum install -y impitool     # Remote management and LOM
     
     if [ $NODE_TYPE = compute ]; then
-	for pkg in openmpi-devel numactl numactl-devel; do
-	    yum install -y $pkg
-	done
+	yum install -y openmpi-devel numactl numactl-devel
     fi
 
     # Install compilers, etc.
@@ -810,13 +814,6 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-for file in /root/.ssh /etc/fstab; do
-    if [ ! -e $file.backup ]; then
-	printf 'Backing up $file...\n'
-	cp -R $file $file.backup
-    fi
-done
-
 NODE_TYPE=$1
 case $NODE_TYPE in
 'head'|'compute'|'io')
@@ -825,6 +822,21 @@ case $NODE_TYPE in
     usage $0
     ;;
 esac
+
+if [ -e /root/Save/anaconda-ks.cfg ]; then
+    printf "Node already configured.  Reconfigure? [n] "
+    read reconfig
+    if [ 0$reconfig != 0y ]; then
+	exit 0
+    fi
+fi
+
+for file in /root/.ssh /etc/fstab; do
+    if [ ! -e $file.backup ]; then
+	printf 'Backing up $file...\n'
+	cp -R $file $file.backup
+    fi
+done
 
 printf "Make sure /etc/hosts is up-to-date on all nodes.\n"
 pause
@@ -842,14 +854,6 @@ fi
 
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
-
-if [ -e /root/Save/anaconda-ks.cfg ]; then
-    printf "Node already configured.  Reconfigure? [n] "
-    read reconfig
-    if [ 0$reconfig != 0y ]; then
-	exit 0
-    fi
-fi
 
 START_DIR=`pwd`
 export PATH=${PATH}:$START_DIR
@@ -928,14 +932,14 @@ case $NODE_TYPE in
     ;;
 
 'compute')    # Compute nodes
-    authorize_ssh
+    # Do this in cluster-init-node authorize_ssh
     cluster-set-compute-memory-limits
     
     # Set default OMP threads to 1 for all jobs
     ;;
 
 'io')
-    authorize_ssh
+    # Do this in cluster-init-node authorize_ssh
     ;;
 
 esac
