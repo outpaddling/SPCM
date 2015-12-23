@@ -486,7 +486,7 @@ install_core_rpms()
 	nano \
 	sysstat \
 	bind-utils \
-	tcsh zsh ksh \
+	dash ksh tcsh zsh \
 	finger \
 	bc \
 	mailx \

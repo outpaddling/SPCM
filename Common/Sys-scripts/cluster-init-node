@@ -60,7 +60,7 @@ RHEL)
     fi
     ;;
 *)
-    printf "Not yet implemented for `uname`.\n" >> /dev/stderr
+    printf "Not yet implemented for `auto-ostype`.\n" >> /dev/stderr
     ;;
 esac
 

@@ -94,14 +94,14 @@ if [ `whoami` != "root" ]; then
     exit 1
 fi
 
-os_type=`uname`
+os_type=`auto-ostype`
 case $os_type in
 FreeBSD)
     ldap_conf=/usr/local/etc/ldap.conf
     ldap_flags=''
     default_shell="/bin/tcsh"
     ;;
-Linux)
+RHEL)
     ldap_conf=/etc/openldap/ldap.conf
     ldap_flags='-x'
     default_shell="/bin/bash"

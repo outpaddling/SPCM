@@ -23,7 +23,7 @@ for node in `cluster-compute-nodes`; do
     rsync -avR * ${node}:/
 done
 
-case `uname` in
+case `auto-ostype` in
 FreeBSD)
     # Assume login.conf was modified.  No harm in this.
     printf "Rebuilding login.conf db...\n"

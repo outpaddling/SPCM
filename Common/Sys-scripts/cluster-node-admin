@@ -34,6 +34,37 @@ pause()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-23  root        Begin
+##########################################################################
+
+get_host_info()
+{
+    printf "Digits in hostname #? [3] "
+    read host_digits
+    if [ 0$host_digits = 0 ]; then
+	host_digits=3
+    fi
+    printf "First host number? "
+    read first_num
+    printf "Last host number? "
+    read last_num
+    printf "Gateway IP? [10.1.1.1] "
+    read gateway
+    if [ 0$gateway = 0 ]; then
+	gateway=10.1.1.1
+    fi
+    return 0
+}
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -52,9 +83,8 @@ while true; do
 
 1.. PXE install new nodes
 2.. Initialize newly installed nodes
-3.. Configure a compute node
-4.. Configure an I/O node
-5.. Configure a head node
+3.. Synchronize compute nodes
+4.. Synchronize an I/O node
 Q.. Quit
 
 EOM
@@ -88,20 +118,7 @@ EOM
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix='compute-'
 	fi
-	printf "Digits in hostname #? [3] "
-	read host_digits
-	if [ 0$host_digits = 0 ]; then
-	    host_digits=3
-	fi
-	printf "First host number? "
-	read first_num
-	printf "Last host number? "
-	read last_num
-	printf "Gateway IP? [10.1.1.1] "
-	read gateway
-	if [ 0$gateway = 0 ]; then
-	    gateway=10.1.1.1
-	fi
+	get_host_info
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d' $host_prefix $host_digits $num`
@@ -112,9 +129,15 @@ EOM
 	done
 	;;
     3)
-	printf "Host number? "
-	read host_num
-	ssh compute-$host_num cluster-setup compute
+	get_host_info
+	num=$first_num
+	while [ $num -le $last_num ]; do
+	    node=`printf '%s%0*d' compute- $host_digits $num`
+	    printf "Synchronizing $node...\n"
+	    cluster-sync-node $node compute $gateway
+	    printf "Done with $node...\n"
+	    num=$((num + 1))
+	done
 	;;
     Q|q)
 	exit 0

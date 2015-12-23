@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname compute|io\n"
+    printf "Usage: $0 hostname compute|io gateway\n"
     exit 1
 }
 
@@ -23,12 +23,13 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
+if [ $# != 3 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
     usage
 fi
 
 node=$1
 node_type=$2
+gateway=$3
 
 if [ -z EDITOR ]; then
     EDITOR="vi"
@@ -36,12 +37,12 @@ fi
 
 conf_dir='/usr/local/cluster'
 
-case `uname` in
-Linux)
+case `auto-ostype` in
+RHEL)
     # Prevent node from being enabled in the scheduler
 
     if ! ssh $node test -e $conf_dir/init-done; then
-	cluster-init-node $node
+	cluster-init-node $node $gateway
     fi
     
     # Sync users
@@ -54,9 +55,6 @@ Linux)
     
     # Sync sys files
     cluster-sync-sysfiles $node
-    
-    # Should this be part of cluster-sync-sysfiles?
-    rsync -av /usr/local/cluster ${node}:/usr/local
     
     # Temporary
     rsync -av /usr/pkg-1/sbin/cluster-setup ${node}:/usr/pkg-1/sbin
@@ -79,7 +77,7 @@ Linux)
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 *)
-    printf "Not yet implemented for `uname`.\n"
+    printf "Not yet implemented for `auto-ostype`.\n"
     exit 1
     ;;
 esac

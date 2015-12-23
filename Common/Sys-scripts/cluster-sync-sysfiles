@@ -34,9 +34,9 @@ for node in $login_nodes; do
     rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
 done
 
-os_type=`uname`
+os_type=`auto-ostype`
 case $os_type in
-Linux)
+RHEL)
     printf "root home...\n"
     for node in $root_nodes; do
 	rsync /root/.bash_profile ${node}:/root
@@ -64,4 +64,13 @@ Linux)
     exit 1
     ;;
 esac
+
+conf_dir='/usr/local/cluster'
+cd $conf_dir
+ssh $node mkdir -p $conf_dir
+for file in add-shares *-packages; do
+    if [ -e $file ]; then
+	scp $file ${node}:$conf_dir
+    fi
+done
 

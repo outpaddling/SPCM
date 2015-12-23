@@ -11,7 +11,7 @@ Q.. Quit
 
 EOM
 
-    os_type=`uname`
+    os_type=`auto-ostype`
 
     printf "Selection? "
     read selection
@@ -24,7 +24,7 @@ EOM
 	FreeBSD)
 	    ssh $host_name iostat -w 1
 	    ;;
-	Linux)
+	RHEL)
 	    ssh $host_name iostat -p ALL -m 1
 	    ;;
 	*)
@@ -38,7 +38,7 @@ EOM
 	FreeBSD)
 	    ssh $host_name ifconfig | fgrep UP
 	    ;;
-	Linux)
+	RHEL)
 	    ssh $host_name ip link | fgrep UP
 	    ;;
 	*)

@@ -44,8 +44,8 @@ group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' /etc/gr
 #printf "$group_name\n"
 #printf "$node ${user_name}:$group_name...\n"
 
-case `uname` in
-Linux)
+case `auto-ostype` in
+RHEL)
     # -f = return success even if the group already exists
     ssh $node groupadd -f -g $group_id $group_name
 
@@ -63,7 +63,7 @@ FreeBSD)
 	-s $shell -u $user_id
     ;;
 *)
-    printf "$0: Invalid OS: `uname`"
+    printf "$0: Invalid OS: `auto-ostype`"
     exit 1
 esac
 

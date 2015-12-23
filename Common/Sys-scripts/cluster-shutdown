@@ -37,12 +37,12 @@ if [ `whoami` != 'root' ]; then
     exit 1
 fi
 
-os_type=`uname`
+os_type=`auto-ostype`
 case $os_type in
 FreeBSD)
     flag='-p'
     ;;
-Linux)
+RHEL)
     flag='-h'
     ;;
 *)
