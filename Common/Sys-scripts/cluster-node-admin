@@ -56,11 +56,11 @@ get_host_info()
     read first_num
     printf "Last host number? "
     read last_num
-    printf "Gateway IP? [10.1.1.1] "
-    read gateway
-    if [ 0$gateway = 0 ]; then
-	gateway=10.1.1.1
-    fi
+    #printf "Gateway IP? [10.1.1.1] "
+    #read gateway
+    #if [ 0$gateway = 0 ]; then
+    #    gateway=10.1.1.1
+    #fi
     return 0
 }
 
@@ -123,18 +123,26 @@ EOM
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d' $host_prefix $host_digits $num`
 	    printf "Initializing $node...\n"
-	    yes | cluster-init-node $node $gateway 2>&1 | tee init-$node.log
+	    yes | cluster-init-node $node 2>&1 | tee init-$node.log
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done
 	;;
     3)
+	# FIXME: Support other schedulers
+	sinfo
 	get_host_info
+	printf "Use all default settings? y/[n] "
+	read use_defaults
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d' compute- $host_digits $num`
 	    printf "Synchronizing $node...\n"
-	    cluster-sync-node $node compute $gateway
+	    if [ 0$use_defaults = 0y ]; then
+		yes '' | cluster-sync-node $node compute
+	    else
+		cluster-sync-node $node compute
+	    fi
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done

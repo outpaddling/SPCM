@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname gateway\n"
+    printf "Usage: $0 hostname\n"
     exit 1
 }
 
@@ -23,12 +23,15 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# != 1 ]; then
     usage
 fi
 
 node=$1
-gateway=$2      # Hack to get around missing feature in PXE installer
+# Hack to get around missing feature in PXE installer
+# Should be fixed now: Was apparently a dhcp.conf configuration problem on
+# login.mortimer
+# gateway=$2
 
 case `auto-ostype` in
 RHEL)
@@ -39,7 +42,7 @@ RHEL)
     ssh $node \
 	"sed -i -e 's|HOSTNAME=.*|HOSTNAME=$node|' /etc/sysconfig/network"
     
-    ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
     ssh $node yum install -y subversion rsync

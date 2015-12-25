@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname compute|io gateway\n"
+    printf "Usage: $0 hostname compute|io\n"
     exit 1
 }
 
@@ -23,13 +23,13 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 3 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
+if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
     usage
 fi
 
 node=$1
 node_type=$2
-gateway=$3
+# gateway=$3
 
 if [ -z EDITOR ]; then
     EDITOR="vi"
@@ -42,7 +42,7 @@ RHEL)
     # Prevent node from being enabled in the scheduler
 
     if ! ssh $node test -e $conf_dir/init-done; then
-	cluster-init-node $node $gateway
+	cluster-init-node $node
     fi
     
     # Sync users

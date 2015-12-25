@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 if [ `hostname -s` != 'login' ]; then
     printf "$0 can only be run on the primary login node.\n"
