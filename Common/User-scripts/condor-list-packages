@@ -45,7 +45,7 @@ cat << EOM > list-packages.sh
 #!/bin/sh -e
 
 hostname
-case \$(uname) in
+case $(uname) in
 FreeBSD)
     /usr/sbin/pkg info
     ;;
