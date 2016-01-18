@@ -113,19 +113,20 @@ while [ $success != 1 ]; do
 	fi
     done
     
-    errfile=cluster-passwd.stderr
+    outfile=/dev/null
+    errfile=$HOME/.cluster-passwd.stderr
 
     # Set local password
     if [ `whoami` != 'root' ]; then
 	if printf '%s\n%s\n%s\n' "$old_pw" "$new_pw" "$new_pw" | passwd \
-		> /dev/null 2> $errfile; then
+		> $outfile 2> $errfile; then
 	    success=1
 	else
 	    cat $errfile
 	fi
     else
 	if printf '%s\n%s\n' "$new_pw" "$new_pw" | passwd "$user_name" \
-		> /dev/null 2> $errfile; then
+		> $outfile 2> $errfile; then
 	    success=1
 	else
 	    cat $errfile
@@ -152,18 +153,16 @@ for node in $nodes; do
     # Redirect pw quality messages to null but allow errors
     if [ `whoami` != 'root' ]; then
 	if ! ssh $node "printf '%s\n%s\n%s\n' \"$old_pw\" \"$new_pw\" \"$new_pw\" | passwd" \
-		> /dev/null 2> $errfile; then
+		>> $outfile 2>> $errfile; then
 	    cat $errfile
 	    exit 1
 	fi
     else
 	if ! ssh $node "printf '%s\n%s\n' \"$new_pw\" \"$new_pw\" | passwd $user_name" \
-		> /dev/null 2> $errfile; then
+		>> $outfile 2>> $errfile; then
 	    cat $errfile
 	    exit 1
 	fi
     fi
 done
-
-rm -f $errfile
 
