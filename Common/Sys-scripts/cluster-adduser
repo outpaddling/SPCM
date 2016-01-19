@@ -190,7 +190,7 @@ build_gecos=/root/bin/adduser-build-gecos
 if [ -e $build_gecos ]; then
     if auto-file-secure $build_gecos; then
 	# Sets gecos_extension
-	source $build_gecos
+	. $build_gecos
     else
 	exit 1
     fi
