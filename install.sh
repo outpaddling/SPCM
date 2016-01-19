@@ -63,3 +63,9 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
 
+# FIXME: Update man pages and install them
+#for f in *.mdoc; do
+#    ${INSTALL_MAN} $${f}
+#        ${STAGEDIR}${PREFIX}/man/man1/$${f%.mdoc}.1
+#done
+

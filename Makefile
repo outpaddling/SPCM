@@ -7,4 +7,3 @@ realclean:  clean
 
 install:
 	./install.sh
-
