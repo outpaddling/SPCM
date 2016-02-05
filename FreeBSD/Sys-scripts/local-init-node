@@ -1,0 +1,64 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+if [ -d /home ]; then
+    mv /home /home.orig
+    ln -s /usr/home /
+fi
+
+host_name=`hostname`
+sed -i .bak "s|^hostname=.*|hostname=$host_name|" /etc/rc.conf|more
+if ! fgrep $host_name /etc/hosts; then
+    ip=`ifconfig | awk '$1 == "inet" { print $2 }' | grep -v 127.0.0`
+    printf "$ip\t$host_name\n" >> /etc/hosts
+fi
+
+# Mount /var/cache/pkg from master
+if ! fgrep /var/cache/pkg /etc/fstab; then
+    rm -rf /var/cache/pkg/*
+    printf "10.1.1.2:/var/cache/pkg\t/var/cache/pkg\tnfs\trw,intr\t0\t0\n" \
+	>> /etc/fstab
+    mount /var/cache/pkg
+fi
+df
+pause
+
+if [ ! -e /usr/local/bin/reinstall-wip-port ]; then
+    pkg install -y subversion
+    cd /usr/wip/ports-mgmt/update-wip-ports && make install distclean
+fi
+
+if [ ! -e /usr/local/bin/ape ]; then
+    cd /usr/wip/editors/ape && make install distclean
+fi
+
+cd /usr/wip/sysutils/cluster-admin
+make clean
+make deinstall
+make reinstall
+make distclean
+
+# Temporary hacks
+# pkg install -y cmake   # No package as of 2015-01-22
+
+# FIXME: Lock pkg cache?
+/root/auto-compute-node-populate
+
+ssh-keygen -R login || true
+auto-ssh-authorize login
+
+cd
+cluster-setup compute
+

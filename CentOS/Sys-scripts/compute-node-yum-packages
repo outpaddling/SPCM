@@ -1,5 +1,15 @@
 #!/bin/sh -e
 
-# Needed by Abaqus
-cluster-run 'yum install -y compat-libtermcap.i686' compute
+db=/usr/local/cluster/compute-node-yum-packages
+
+if [ ! -e $db ]; then
+    cat << EOM
+
+Missing $db.
+
+$db should contain a list of packages to be installed on every compute node,
+all on a single line.
+
+EOM
+cat $db
 

@@ -114,11 +114,13 @@ tar zcvf R-packages.tgz R
 
 cat << EOM
 
+In your HTCondor submit file:
+
+    Make sure R-packages.tgz is listed as an input
+
 In your HTCondor executable script:
 
-1)  Make sure R-packages.tgz is listed as an input
-
-2)  Add the following commands before your R/Rscript commands:
+    Add the following commands before your R/Rscript commands:
 
 tar zxvf R-packages.tgz
 release=\$(uname -r)
