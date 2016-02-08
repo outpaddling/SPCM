@@ -67,8 +67,13 @@ RHEL)
     # Other stuff
     
     # Sync software
-    printf "Installing local packages...\n"
-    ssh $node yum install -y `cat /usr/local/cluster/$node_type-node-yum-packages`
+    yum_list=/usr/local/cluster/$node_type-node-yum-packages
+    if [ -e $yum_list ]; then
+	printf "Installing local packages from $yum_list...\n"
+	ssh $node yum install -y `cat $yum_list`
+    else
+	printf "No $yum_list found.\n"
+    fi
     
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler

@@ -848,12 +848,6 @@ EOM
     pause
 fi
 
-printf "Run harden script? y/[n] "
-read harden
-if [ 0$harden = 0y ]; then
-    auto-harden
-fi
-
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
 
@@ -882,6 +876,13 @@ auto-enable-passwdqc
 
 # Configure firewall
 iptables-config
+
+# After core_rpms.  Requires gcc.
+printf "Run harden script? y/[n] "
+read harden
+if [ 0$harden = 0y ]; then
+    auto-harden
+fi
 
 ib=`auto-ask ib-config 'Configure Infiniband?' y`
 if [ $ib = y ]; then
