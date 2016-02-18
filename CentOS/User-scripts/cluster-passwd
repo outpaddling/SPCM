@@ -140,7 +140,7 @@ done
 old_pw=`echo $old_pw | sed -e 's|\\$|\\\\$|g'`
 new_pw=`echo $new_pw | sed -e 's|\\$|\\\\$|g'`
 
-nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
+nodes="`cluster-backup-login-nodes` `cluster-io-nodes` `cluster-vis-nodes`"
 if [ 0"$user_name" = 0root ]; then
     nodes="$nodes `cluster-compute-nodes`"
 fi
