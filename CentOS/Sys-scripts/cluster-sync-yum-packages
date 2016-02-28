@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-02-23  Jason Bacon - UITS - SysadminBegin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 master-node target-node [target-node ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+master=$1
+shift
+packages=`ssh $master yum list installed | awk 'NF == 3 && $3 ~ "@" { print $1 }'`
+packages=`echo $packages`
+for node in $@; do
+    ssh $node yum install -y "$packages"
+done
+
