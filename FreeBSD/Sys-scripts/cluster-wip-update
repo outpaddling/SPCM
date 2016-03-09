@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-update-wip-ports
+wip-update
 cd /usr/wip
 ./clean-all
 for node in `cluster-compute-nodes`; do
