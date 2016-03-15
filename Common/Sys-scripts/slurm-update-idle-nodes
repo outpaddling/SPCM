@@ -115,7 +115,7 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
-	    if ssh -t $node auto-update-system --defaults; then
+	    if ssh -t $node auto-update-system --defaults+reboot; then
 		scontrol update nodename=$node state=resume
 		echo $node >> "$updated_nodes_file"
 	    else
