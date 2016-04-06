@@ -16,6 +16,7 @@ fi
 # Find line number where rules will be placed prior to REJECT in the INPUT chain.
 INSERTLN=`iptables -L INPUT -n --line-numbers | grep REJECT | awk '{print $1}'`
 
+# FIXME: Remove hard-coded IPs
 if [ ! `iptables-save | grep -- "-j CLUSTER" | awk '{print $1}' | uniq` ]; then
     iptables -N CLUSTER
     iptables -I INPUT $INSERTLN -j CLUSTER

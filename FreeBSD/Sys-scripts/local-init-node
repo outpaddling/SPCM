@@ -13,6 +13,35 @@ pause()
     read junk
 }
 
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-04-06  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 head-node-IP\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+HEAD_IP=$1
+
 if [ -d /home ]; then
     mv /home /home.orig
     ln -s /usr/home /
@@ -28,7 +57,7 @@ fi
 # Mount /var/cache/pkg from master
 if ! fgrep /var/cache/pkg /etc/fstab; then
     rm -rf /var/cache/pkg/*
-    printf "10.1.1.2:/var/cache/pkg\t/var/cache/pkg\tnfs\trw,intr\t0\t0\n" \
+    printf "$HEAD_IP:/var/cache/pkg\t/var/cache/pkg\tnfs\trw,intr\t0\t0\n" \
 	>> /etc/fstab
     mount /var/cache/pkg
 fi

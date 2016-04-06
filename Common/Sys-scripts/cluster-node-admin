@@ -56,11 +56,6 @@ get_host_info()
     read first_num
     printf "Last host number? "
     read last_num
-    #printf "Gateway IP? [10.1.1.1] "
-    #read gateway
-    #if [ 0$gateway = 0 ]; then
-    #    gateway=10.1.1.1
-    #fi
     return 0
 }
 

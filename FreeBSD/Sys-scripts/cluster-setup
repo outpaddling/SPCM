@@ -516,7 +516,7 @@ EOM
 	# FIXME: Make sure NFS server is enabled in rc.conf first
 	# Does not work for multi-homed host
 	# ip=`fgrep $head_host /etc/hosts | awk ' { print $1 }' | uniq`
-	subnet=`auto-ask subnet "Subnet for NFS?" 10.1.0.0`
+	subnet=`auto-ask subnet "Subnet for NFS?" 192.168.0.0`
 	
 	share='x'
 	while [ 0$share != 0 ]; do
@@ -1230,10 +1230,10 @@ export EDITOR
 $EDITOR /etc/hosts.allow
 
 # Recommended layout for dedicated hardware:
-# Use netmask of 255.255.0.0.
-# Head node is 10.1.1.1 if it's a gateway or 10.1.1.2 with a separate router.
-# 10.1.1.3 - 10.1.1.254 are for extra head nodes, I/O nodes, etc.
-# Compute nodes begin at 10.1.2.1
+# Use netmask of 255.255.252.0.
+# Head node is 192.168.0.1 if it's a gateway or 192.168.0.2 with a separate router.
+# 192.168.0.x are for extra head nodes, I/O nodes, etc.
+# Compute nodes using DHCP begin at 192.168.1.x
 MAX_NODES=60000
 
 # Misc
@@ -1273,8 +1273,8 @@ if [ $NODE_TYPE = head ]; then
 fi
 
 verify_network
-HEAD_IP=`auto-ask head-ip 'IP address of head node LOCAL interface?' 10.1.1.2`
-NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.0.0`
+HEAD_IP=`auto-ask head-ip 'IP address of head node LOCAL interface?' 192.168.0.2`
+NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.252.0`
 
 ##########################################################################
 #   Begin setup

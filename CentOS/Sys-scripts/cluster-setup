@@ -283,7 +283,7 @@ ib_config()
     # FIXME
     hwaddr=`ip addr show ib0 | awk '$1 == "link/infiniband" { print $2 }'`
     # FIXME: Make this user input
-    netmask='255.255.0.0'
+    netmask='255.255.252.0'
     netmask=`auto-ask ib-netmask 'ib0 netmask?' $netmask`
     cat << EOM > $file-ib0
 DEVICE=ib0
@@ -394,7 +394,7 @@ nfs_config()
     # Configure shared directories
     case $NODE_TYPE in
     'head'|'io')
-	default_range='10.0.0.0/8'
+	default_range='192.168.0.0/22'
 	range=`auto-ask nfs-range 'NFS export range?' $default_range`
 	
 	printf '\nCurrent exports:\n\n'
