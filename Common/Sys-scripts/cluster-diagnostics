@@ -41,16 +41,21 @@ if [ $# != 0 ]; then
     usage
 fi
 
+os_type=`auto-ostype`
+
 while true; do
 
     clear
     cat << EOM
     
 			    **************************
-			     Cluster Diagnositcs Menu
+			    Diagnostics and Monitoring
 			    **************************
 				
 1.. Check for down nodes
+2.. Monitor load with netstat
+3.. Monitor load with iostat
+4.. Monitor load with iftop
 Q.. Quit
 
 EOM
@@ -61,6 +66,46 @@ EOM
     case $selection in
     1)
 	cluster-down-nodes
+	;;
+    2)
+	printf "Host name? "
+	read node
+	ssh -t $node netstat -i ib0 -c 1
+	;;
+    3)
+	printf "Hostname? "
+	read host_name
+	case $os_type in
+	FreeBSD)
+	    ssh -t $host_name iostat -w 1
+	    ;;
+	RHEL)
+	    ssh -t $host_name iostat -p ALL -m 1
+	    ;;
+	*)
+	    printf "$os_name is not yet supported.\n"
+	esac
+	;;
+    4)
+	printf "Host name? "
+	read host_name
+	case $os_type in
+	FreeBSD)
+	    ssh $host_name ifconfig | fgrep UP
+	    ;;
+	RHEL)
+	    ssh $host_name ip link | fgrep UP
+	    ;;
+	*)
+	    printf "$os_name is not yet supported.\n"
+	esac
+	printf "Network interface? "
+	read iface
+	if [ 0$iface = 0 ]; then
+	    ssh -t $host_name iftop
+	else
+	    ssh -t $host_name iftop -i $iface
+	fi
 	;;
     Q|q)
 	exit 0

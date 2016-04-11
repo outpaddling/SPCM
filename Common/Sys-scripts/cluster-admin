@@ -52,12 +52,10 @@ while true; do
 				
 1.. Shut down cluster
 2.. SLURM management
-3.. RAID management
-4.. Network management
-5.. User management
-6.. Restart Ganglia
-7.. Diagnostics
-8.. Node management
+3.. User management
+4.. Restart Ganglia
+5.. Diagnostics and Monitoring
+6.. Node management
 Q.. Quit
 
 EOM
@@ -73,24 +71,16 @@ EOM
 	slurm-admin
 	;;
     3)
-	cluster-raid-admin
+	cluster-user-admin
 	;;
     4)
-	cluster-net-admin
-	;;
-    5)
-	cluster-user-admin
-	pause
-	;;
-    6)
 	cluster-ganglia-restart
 	pause
 	;;
-    7)
+    5)
 	cluster-diagnostics
-	pause
 	;;
-    8)
+    6)
 	cluster-node-admin
 	;;
     Q|q)
@@ -100,6 +90,5 @@ EOM
 	printf "Invalid selection: '$selection'\n"
 	;;
     esac
-    pause
 done
 

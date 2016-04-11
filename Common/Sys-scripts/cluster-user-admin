@@ -33,7 +33,7 @@ while true; do
     cat << EOM
     
 			    **************************
-				Cluster Admin Menu
+			      Cluster User Management
 			    **************************
 				
 1.. Add user

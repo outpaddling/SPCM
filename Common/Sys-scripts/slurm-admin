@@ -17,6 +17,10 @@ resp=''
 while [ 0$resp != 0q ]; do
     clear
     cat << EOM
+    
+			     **********************
+				SLURM Admin Menu
+			     **********************
 
 1.. Restart scheduler daemons
 2.. Mark a node as down
@@ -24,8 +28,10 @@ while [ 0$resp != 0q ]; do
 4.. Show cores per user
 5.. Show cluster load
 Q.. Quit
+
 EOM
 
+    printf 'Selection? '
     read resp
     case $resp in
     1)
