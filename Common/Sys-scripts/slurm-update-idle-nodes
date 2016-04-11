@@ -116,6 +116,8 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
+	    # FIXME: Don't update ports on FreeBSD.  Do this using
+	    # cluster-portsnap
 	    if ssh -t $node auto-update-system --defaults+reboot; then
 		scontrol update nodename=$node state=resume
 		echo $node >> "$updated_nodes_file"
