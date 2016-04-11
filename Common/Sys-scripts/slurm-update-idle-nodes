@@ -101,7 +101,8 @@ for node in $nodes; do
 	'drained')
 	    ;;
 	*)
-	    scontrol update nodename=$node state=drain reason=Upgrading
+	    scontrol update nodename=$node state=drain \
+		reason=slurm-update-idle-nodes
 	    ;;
 	esac
     fi
@@ -120,13 +121,14 @@ for node in $nodes; do
 		echo $node >> "$updated_nodes_file"
 		# FIXME: Can SLURM be configured to resume nodes automatically
 		# after they reboot?
-		slurm-resume-down-nodes
+		slurm-resume-updated-nodes
 	    else
 		printf "Update failed.\n"
 	    fi
 	    ;;
 	*)
-	    scontrol update nodename=$node state=drain reason=Upgrading
+	    scontrol update nodename=$node state=drain \
+		reason=slurm-update-idle-nodes
 	    ;;
 	esac
     fi

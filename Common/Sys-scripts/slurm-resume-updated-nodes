@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "Upgrading" && $2 ~ "down" { print $3 }'`
+down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "slurm-update-idle-nodes" && $2 ~ "down" { print $3 }'`
 
 # For debugging
 #down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "none" && $2 ~ "idle" { print $3 }'`
