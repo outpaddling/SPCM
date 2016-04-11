@@ -1,8 +1,9 @@
 #!/bin/sh -e
 
-sinfo
+down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "Upgrading" && $2 ~ "down" { print $3 }'`
 
-down_nodes=`sinfo | awk '$5 ~ "down" { print $6 }'`
+# For debugging
+#down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "none" && $2 ~ "idle" { print $3 }'`
 
 for node in $down_nodes; do
     printf "Resuming $node...\n"
@@ -11,6 +12,4 @@ for node in $down_nodes; do
     scontrol update state=down nodename=$node
     scontrol update state=resume nodename=$node
 done
-
-sinfo
 

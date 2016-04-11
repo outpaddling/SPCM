@@ -81,7 +81,7 @@ EOM
 fi
 
 cd "$dir"
-sinfo -o '%n %T' | sort | uniq
+sinfo -o '%n %T'
 wc "$updated_nodes_file"
 updated=0
 
@@ -90,7 +90,7 @@ if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
     exit 1
 fi
 
-nodes=`sinfo -o %n -h | sort | uniq`
+nodes=`sinfo -o %n -h`
 # First pass simply drains as many nodes as possible to prevent more jobs
 # from allocating them.
 for node in $nodes; do
@@ -115,9 +115,12 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
-	    if ssh -t $node auto-update-system --defaults+reboot; then
+	    if ssh -t $node auto-update-system; then
 		scontrol update nodename=$node state=resume
 		echo $node >> "$updated_nodes_file"
+		# FIXME: Can SLURM be configured to resume nodes automatically
+		# after they reboot?
+		slurm-resume-down-nodes
 	    else
 		printf "Update failed.\n"
 	    fi
@@ -129,9 +132,5 @@ for node in $nodes; do
     fi
 done
 wc updated-nodes
-
-# FIXME: Can SLURM be configured to resume nodes automatically
-# after they reboot?
-slurm-resume-down-nodes > /dev/null 2>&1
 rm -f "$lock_file"
 
