@@ -27,6 +27,7 @@ while [ 0$resp != 0q ]; do
 3.. Mark a node as available
 4.. Show cores per user
 5.. Show cluster load
+6.. Resume all updated nodes currently marked down
 Q.. Quit
 
 EOM
@@ -39,6 +40,7 @@ EOM
 	pause
 	;;
     2)
+	sinfo
 	printf "Node number? (e.g. 1-01) "
 	read node
 	scontrol update State=down NodeName=compute-$node
@@ -47,6 +49,7 @@ EOM
 	pause
 	;;
     3)
+	sinfo
 	printf "Node number? (e.g. 1-01) "
 	read node
 	scontrol update State=resume NodeName=compute-$node
@@ -60,6 +63,11 @@ EOM
 	;;
     5)
 	slurm-cluster-load
+	pause
+	;;
+    6)
+	slurm-resume-updated-nodes
+	sinfo
 	pause
 	;;
     Q|q)
