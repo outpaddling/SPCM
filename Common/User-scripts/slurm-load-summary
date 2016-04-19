@@ -1,6 +1,10 @@
 #!/bin/sh
 
-partitions=`sinfo -h -o '%R'`
+if [ "0$1" = 0-a ]; then
+    partitions=`sinfo -h -o '%R'`
+else
+    partitions=`sinfo -h -o '%R' | grep -v -e -nice`
+fi
 
 for partition in $partitions; do
     allocated=`sinfo -h -p $partition -o '%C' | awk -F '/' ' { print $1 }'`
