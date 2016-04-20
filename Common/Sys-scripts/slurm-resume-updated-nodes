@@ -3,12 +3,11 @@
 # FIXME: This does not limit resume to updated nodes, but resumes
 # any node that was unexpectedly rebooted.
 # Reason set when draining is overwritten at reboot
-down_nodes=`sinfo -h -o '%n %T' | \
-    awk '$2 ~ "down" { print $1 }'`
+down_nodes=`sinfo -h -o '%n %T' | awk '$2 ~ "down" { print $1 }'`
 
 for node in $down_nodes; do
     reason="`sinfo -h -n $node -o '%E'`"
-    if [ "$reason" = slurm-update-idle-nodes ] || 
+    if [ "$reason" = slurm-update-idle-nodes ] || \
 	[ "$reason" = "Node unexpectedly rebooted" ]; then
 	if ping -c 1 -q $node > /dev/null 2>&1; then
 	    printf "Resuming $node, down for $reason...\n"
