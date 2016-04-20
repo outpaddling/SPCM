@@ -91,8 +91,9 @@ if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
 fi
 
 nodes=`sinfo -o %n -h | sort | uniq`
-# First pass simply drains as many nodes as possible to prevent more jobs
-# from allocating them.
+
+# First pass simply drains as many nodes as possible, as quickly as possible,
+# to prevent jobs from allocating them before they're updated.
 for node in $nodes; do
     # Update node if it's not in the updated list
     if ! fgrep -q $node "$updated_nodes_file"; then
@@ -100,6 +101,11 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    ;;
+	
+	'down')
+	    # Don't change state of down nodes!
+	    ;;
+	
 	*)
 	    scontrol update nodename=$node state=drain \
 		reason=slurm-update-idle-nodes
@@ -110,30 +116,46 @@ done
 
 # Second pass will update already drained nodes.
 for node in $nodes; do
-    # Update node if it's not in the updated list
+    # Update drained nodes not in the updated list
     if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
 	'drained')
-	    printf "Updating $node.   State = $state...\n"
+	    printf "Updating $node...\n"
 	    scontrol update nodename=$node state=down \
 		reason=slurm-update-idle-nodes
+	    
+	    # Install all available binary updates and reboot
 	    if ssh -t $node auto-update-system --binary+reboot; then
-		scontrol update nodename=$node state=resume
 		echo $node >> "$updated_nodes_file"
-		# FIXME: Can SLURM be configured to resume nodes automatically
-		# after they reboot?
-		slurm-resume-updated-nodes
+		
+		# shutdown may take some time to disable sshd
+		while ping -c 1 -q $node > /dev/null 2>&1; do
+		    printf "Verifying reboot of $node...\n"
+		    sleep 5
+		done
+		
+		# Should set to down state?
+		scontrol update nodename=$node state=undrain
 	    else
 		printf "Update failed.\n"
 	    fi
 	    ;;
+
+	'down')
+	    # Don't change state of down nodes!
+	    ;;
+	    
 	*)
+	    # If not updated and not drained, drain it now
 	    scontrol update nodename=$node state=drain \
 		reason=slurm-update-idle-nodes
 	    ;;
 	esac
     fi
+    
+    # Resume all nodes that have been updated but are still marked down
+    slurm-resume-updated-nodes
 done
 wc updated-nodes
 rm -f "$lock_file"
