@@ -116,6 +116,8 @@ for node in $nodes; do
 	case $state in
 	'drained')
 	    printf "Updating $node.   State = $state...\n"
+	    scontrol update nodename=$node state=down \
+		reason=slurm-update-idle-nodes
 	    if ssh -t $node auto-update-system --binary+reboot; then
 		scontrol update nodename=$node state=resume
 		echo $node >> "$updated_nodes_file"

@@ -1,12 +1,12 @@
 #!/bin/sh -e
 
-# sinfo -o '%E %T %n'
+sinfo -o '%n %T %E'
 
 # FIXME: This does not limit resume to updated nodes, but resumes
 # any node that was unexpectedly rebooted.
 # Reason set when draining is overwritten at reboot
-down_nodes=`sinfo -h -o '%E %T %n' | \
-    awk '$2 == "unexpectedly" && $4 ~ "down" { print $5 }'`
+down_nodes=`sinfo -h -o '%n %T %E' | \
+    awk '$3 == "slurm-update-idle-nodes" && $2 ~ "down" { print $1 }'`
 
 # For debugging
 #down_nodes=`sinfo -h -o '%E %T %n' | awk '$1 == "none" && $2 ~ "idle" { print $3 }'`
