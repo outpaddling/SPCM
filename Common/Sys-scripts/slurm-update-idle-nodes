@@ -130,12 +130,17 @@ for node in $nodes; do
 		echo $node >> "$updated_nodes_file"
 		
 		# shutdown may take some time to disable sshd
+		# This will prevent slurm-resume-down-nodes from
+		# resuming the node before the reboot.  It may also
+		# prevent reason from being set to "Node unexpectedly rebooted".
 		while ping -c 1 -q $node > /dev/null 2>&1; do
 		    printf "Verifying reboot of $node...\n"
 		    sleep 5
 		done
 		
-		# Should set to down state?
+		# This should cause the node to get set to down state
+		# without changing "reason", assuming the node is unreachable
+		# when this is run.
 		scontrol update nodename=$node state=undrain
 	    else
 		printf "Update failed.\n"
