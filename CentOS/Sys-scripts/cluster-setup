@@ -494,7 +494,8 @@ install_core_rpms()
 	lsof \
 	emacs \
 	words \
-	environment-modules
+	environment-modules \
+	yum-utils
     do
 	yum install -y $pkg
     done
