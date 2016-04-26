@@ -619,14 +619,16 @@ cluster_startup_scripts()
 {
     # Bourne shell
     cat << EOM > /etc/profile.d/cluster.sh
-PS1="[\u@$(hostname|awk -F . ' { printf("%s.%s",$1,$2); }') \W]\\$ "
+first_two=\`hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }'\`
+PS1="[\u@\$first_two \W] \\!: "
 alias f=finger
 alias dir='ls -als'
 EOM
     
     # C shell
     cat << EOM > /etc/profile.d/cluster.csh
-set prompt="[%n@$(hostname|awk -F . ' { printf("%s.%s",$1,$2); }') %c]$ "
+set first_two=\`hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }'\`
+set prompt="[%n@\$first_two %c] %h: "
 alias f finger
 alias dir 'ls -als'
 EOM
