@@ -23,8 +23,8 @@ while [ 0$resp != 0q ]; do
 			     **********************
 
 1.. Restart scheduler daemons
-2.. Mark a node as down
-3.. Mark a node as available
+2.. Drain a node
+3.. Resume a node
 4.. Show cores per user
 5.. Show cluster load
 6.. Resume all updated nodes currently marked down
@@ -42,9 +42,11 @@ EOM
 	;;
     2)
 	sinfo
-	printf "Node number? (e.g. 1-01) "
+	printf "Node number? (e.g. 001) "
 	read node
-	scontrol update State=down NodeName=compute-$node
+	prnitf "Reason? "
+	read reason
+	scontrol update State=drain NodeName=compute-$node reason="$reason"
 	sinfo
 	printf "Update slurm.conf if this is a long-term outage.\n"
 	pause

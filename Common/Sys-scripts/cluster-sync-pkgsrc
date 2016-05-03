@@ -2,11 +2,17 @@
 
 for node in `cluster-backup-login-nodes` `cluster-io-nodes`; do
     printf "$node...\n"
-    rsync -av --delete /usr/pkg-1 /usr/pkgsrc-1 ${node}:/usr
+    if ! rsync -av --delete /usr/pkg-1 /usr/pkgsrc-1 ${node}:/usr; then
+	failed_nodes="$failed_nodes $node"
+    fi
 done
 
 for node in `cluster-compute-nodes`; do
     printf "$node...\n"
-    rsync -av --delete --exclude pkg-1/var /usr/pkg-1 ${node}:/usr
+    if ! rsync -av --delete --exclude pkg-1/var /usr/pkg-1 ${node}:/usr; then
+	failed_nodes="$failed_nodes $node"
+    fi
 done
+
+printf "Unable to sync the following nodes: %s\n" "$failed_nodes"
 

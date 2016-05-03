@@ -142,6 +142,20 @@ EOM
 	    num=$((num + 1))
 	done
 	;;
+    4)
+	printf "Node name or IP? "
+	read node
+	printf "Use all default settings? y/[n] "
+	read use_defaults
+	printf "Synchronizing $node...\n"
+	if [ 0$use_defaults = 0y ]; then
+	    yes '' | cluster-sync-node $node io
+	else
+	    cluster-sync-node $node io
+	fi
+	printf "Done with $node...\n"
+	pause
+	;;
     Q|q)
 	exit 0
 	;;
