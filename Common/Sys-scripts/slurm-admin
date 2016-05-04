@@ -41,24 +41,30 @@ EOM
 	pause
 	;;
     2)
-	sinfo
-	printf "Node number? (e.g. 001) "
+	printf '\n'
+	sinfo -o '%T %u %E %N'
+	printf "\nNode number? (e.g. 001) "
 	read node
-	prnitf "Reason? "
-	read reason
-	scontrol update State=drain NodeName=compute-$node reason="$reason"
-	sinfo
-	printf "Update slurm.conf if this is a long-term outage.\n"
-	pause
+	if [ 0$node != 0 ]; then
+	    printf "Reason? "
+	    read reason
+	    scontrol update State=drain NodeName=compute-$node reason="$reason"
+	    sinfo -o '%T %u %E %N'
+	    printf "Update slurm.conf if this is a long-term outage.\n"
+	    pause
+	fi
 	;;
     3)
-	sinfo
-	printf "Node number? (e.g. 1-01) "
+	printf '\n'
+	sinfo -t down -o '%t %E %n' | sort | uniq
+	printf "\nNode number? (e.g. 1-01) "
 	read node
-	scontrol update State=resume NodeName=compute-$node
-	sinfo
-	printf "Update slurm.conf if necessary.\n"
-	pause
+	if [ 0$node != 0 ]; then
+	    scontrol update State=resume NodeName=compute-$node
+	    sinfo -t down -o '%t %E %n' | sort | uniq
+	    printf "Update slurm.conf if necessary.\n"
+	    pause
+	fi
 	;;
     4)
 	slurm-user-cores

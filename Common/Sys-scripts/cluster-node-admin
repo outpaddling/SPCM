@@ -80,6 +80,9 @@ while true; do
 2.. Initialize newly installed nodes
 3.. Synchronize compute nodes
 4.. Synchronize an I/O node
+5.. Install updates on login node
+6.. Install updaets on I/O nodes
+7.. Install updates on idle compute nodes
 Q.. Quit
 
 EOM
@@ -155,6 +158,35 @@ EOM
 	fi
 	printf "Done with $node...\n"
 	pause
+	;;
+    5)
+	if [ `auto-ostype` = FreeBSD ]; then
+	    printf "Update and sync ports tree to all nodes? y/[n] "
+	    read portsnap
+	    if [ 0$portsnap = 0y ]; then
+		cluster-portsnap
+	    fi
+	fi
+	auto-update-system
+	;;
+    6)
+	cluster-update-io-nodes
+	;;
+    7)
+	cat << EOM
+
+You can update all compute nodes, or just those that have not received the
+last round of updates.
+
+EOM
+	dir="/home/slurm/Compute-node-updates"
+	mkdir -p $dir
+	printf "Update all compute nodes? y/[n] "
+	read update_all
+	if [ 0$update_all = 0y ]; then
+	    rm -f $dir/updated-nodes
+	fi
+	slurm-update-idle-nodes $dir
 	;;
     Q|q)
 	exit 0
