@@ -141,7 +141,7 @@ for node in $nodes; do
 		# This should cause the node to get set to down state
 		# without changing "reason", assuming the node is unreachable
 		# when this is run.
-		scontrol update nodename=$node state=undrain
+		scontrol update nodename=$node state=resume
 	    else
 		printf "Update failed.\n"
 	    fi
