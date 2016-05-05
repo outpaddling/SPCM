@@ -495,7 +495,8 @@ install_core_rpms()
 	emacs \
 	words \
 	environment-modules \
-	yum-utils
+	yum-utils \
+	dmidecode
     do
 	yum install -y $pkg
     done

@@ -1023,7 +1023,8 @@ install_common_tools()
     # Quick-install some common tools
     line
     install_packages devel/gmake net/rsync converters/libiconv \
-	editors/nano ftp/wget devel/subversion
+	editors/nano ftp/wget devel/subversion \
+	shells/bash shells/dash
     yes | pkg install -y bsdstats
 }
 
