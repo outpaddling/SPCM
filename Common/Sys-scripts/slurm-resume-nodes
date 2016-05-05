@@ -2,7 +2,8 @@
 
 ##########################################################################
 #   Script description:
-#       
+#       Resume scheduling on one or more compute nodes.
+#
 #   Arguments:
 #       
 #   Returns:
@@ -20,12 +21,34 @@ usage()
 
 
 ##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# != 1 ]; then
     usage
 fi
+
+cat << EOM
+
+Make sure all nodes are up-to-date before resuming them.
+
+Run cluster-sync-node if necessary.
+
+EOM
+pause
 
 scontrol update state=resume nodename="$1"
 
