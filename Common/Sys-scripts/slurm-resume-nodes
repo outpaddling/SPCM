@@ -45,10 +45,15 @@ cat << EOM
 
 Make sure all nodes are up-to-date before resuming them.
 
-Run cluster-sync-node if necessary.
+o   Install all security updates
+
+o   Run cluster-sync-node if necessary.
 
 EOM
-pause
+printf "Proceed with resume? y/[n] "
+read proceed
 
-scontrol update state=resume nodename="$1"
+if [ 0$proceed = 0y ]; then
+    scontrol update state=resume nodename="$1"
+fi
 
