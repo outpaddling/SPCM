@@ -957,8 +957,8 @@ EOM
 	umask=`auto-ask umask "umask for the $NODE_TYPE node?" 027`
 	sed -i '' -e "s/maxproc=unlimited/maxproc=$maxproc/g" \
 		 -e "s/vmemoryuse=unlimited/vmemoryuse=$vmem/g" \
-		 -e "s|umask=022|umask=$umask|g" \
 		 /etc/login.conf
+	auto-set-umask $umask
 	$EDITOR /etc/login.conf
 	cap_mkdb /etc/login.conf
     fi

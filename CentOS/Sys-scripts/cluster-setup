@@ -930,6 +930,7 @@ case $NODE_TYPE in
 
     # Set per-process memory limits to a fraction of RAM
     auto-set-memory-limits 16777216
+    auto-set-umask 027
     
     kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
     if [ $kickstart = 'y' ]; then
