@@ -1,16 +1,71 @@
 #!/bin/sh -e
 
-for node in `cluster-backup-login-nodes` `cluster-io-nodes`; do
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-05-06  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [backup|compute|io node [... node]]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+0)
+    compute_nodes=`cluster-compute-nodes`
+    other_nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
+    ;;
+1)
+    usage
+    ;;
+*)
+    case $1 in
+    io|backup)
+	shift
+	other_nodes="$@"
+	compute_nodes=""
+	;;
+    compute)
+	shift
+	compute_nodes="$@"
+	other_nodes=""
+	;;
+    *)
+	usage
+	;;
+    esac
+esac
+
+for node in $other_nodes; do
     printf "$node...\n"
     if ! rsync -av --delete /usr/pkg-1 /usr/pkgsrc-1 ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
+    else
+	ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
+	ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
     fi
 done
 
-for node in `cluster-compute-nodes`; do
+for node in $compute_nodes; do
     printf "$node...\n"
     if ! rsync -av --delete --exclude pkg-1/var /usr/pkg-1 ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
+    else
+	ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
+	ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
     fi
 done
 

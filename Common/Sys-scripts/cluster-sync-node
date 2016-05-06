@@ -29,7 +29,13 @@ fi
 
 node=$1
 node_type=$2
-# gateway=$3
+
+case $node_type in
+backup|compute|io)
+    ;;
+*)
+    usage
+esac
 
 if [ -z EDITOR ]; then
     EDITOR="vi"
@@ -39,11 +45,10 @@ conf_dir='/usr/local/cluster'
 
 case `auto-ostype` in
 RHEL)
-    # Prevent node from being enabled in the scheduler
+    # FIXME: Prevent node from being enabled in the scheduler
 
-    if ! ssh $node test -e $conf_dir/init-done; then
-	cluster-init-node $node
-    fi
+    # Install basic tools and updates
+    cluster-init-node $node $node_type
     
     # Sync users
     # FIXME: Don't assume slurm

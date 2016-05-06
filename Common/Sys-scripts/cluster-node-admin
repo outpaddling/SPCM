@@ -77,12 +77,11 @@ while true; do
 			    **************************
 
 1.. PXE install new nodes
-2.. Initialize newly installed nodes
-3.. Synchronize compute nodes
-4.. Synchronize an I/O node
-5.. Install updates on login node
-6.. Install updaets on I/O nodes
-7.. Install updates on idle compute nodes
+2.. Synchronize compute nodes
+3.. Synchronize an I/O node
+4.. Install updates on login node
+5.. Install updates on I/O nodes
+6.. Install updates on idle compute nodes
 Q.. Quit
 
 EOM
@@ -111,22 +110,6 @@ EOM
 	pause
 	;;
     2)
-	printf "Host name prefix? [compute-] "
-	read host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
-	fi
-	get_host_info
-	num=$first_num
-	while [ $num -le $last_num ]; do
-	    node=`printf '%s%0*d' $host_prefix $host_digits $num`
-	    printf "Initializing $node...\n"
-	    yes | cluster-init-node $node 2>&1 | tee init-$node.log
-	    printf "Done with $node...\n"
-	    num=$((num + 1))
-	done
-	;;
-    3)
 	# FIXME: Support other schedulers
 	sinfo
 	get_host_info
@@ -145,8 +128,8 @@ EOM
 	    num=$((num + 1))
 	done
 	;;
-    4)
-	printf "Node name or IP? "
+    3)
+	printf "Node name? "
 	read node
 	printf "Use all default settings? y/[n] "
 	read use_defaults
@@ -159,7 +142,7 @@ EOM
 	printf "Done with $node...\n"
 	pause
 	;;
-    5)
+    4)
 	if [ `auto-ostype` = FreeBSD ]; then
 	    printf "Update and sync ports tree to all nodes? y/[n] "
 	    read portsnap
@@ -169,10 +152,10 @@ EOM
 	fi
 	auto-update-system
 	;;
-    6)
+    5)
 	cluster-update-io-nodes
 	;;
-    7)
+    6)
 	cat << EOM
 
 You can update all compute nodes, or just those that have not received the

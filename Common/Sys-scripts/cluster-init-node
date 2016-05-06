@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname\n"
+    printf "Usage: $0 hostname backup|compute|io\n"
     exit 1
 }
 
@@ -23,11 +23,20 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
     usage
 fi
 
 node=$1
+node_type=$2
+
+case $node_type in
+backup|compute|io)
+    ;;
+*)
+    usage
+esac
+
 # Hack to get around missing feature in PXE installer
 # Should be fixed now: Was apparently a dhcp.conf configuration problem on
 # login.mortimer
@@ -47,11 +56,8 @@ RHEL)
     printf "Installing basic tools...\n"
     ssh $node yum install -y subversion rsync
     
-    rsync -av /usr/pkg-1 ${node}:/usr
-    ssh $node mkdir -p /usr/pkgsrc-1
-    rsync -av /usr/pkgsrc-1/packages ${node}:/usr/pkgsrc-1
-    ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
-    ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
+    printf "Syncing pkgsrc...\n"
+    cluster-sync-pkgsrc $node_type $node
     
     printf "Installing yum updates...\n"
     ssh $node yum update -y

@@ -847,6 +847,7 @@ if [ $NODE_TYPE != head ]; then
 
 1)  Make sure /etc/hosts is up-to-date on all nodes.
 2)  Run cluster-sync-pkgsrc on the head node if `hostname` is out of date.
+    This is done automatically by cluster-init-node.
 
 EOM
     pause
