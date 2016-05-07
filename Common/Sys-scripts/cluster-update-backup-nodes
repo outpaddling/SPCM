@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+for node in `cluster-backup-login-nodes`; do
+    echo $node
+    ssh $node uptime
+    pause
+    ssh -t $node iftop
+    ssh -t $node iftop -i ib0 || true
+    printf "Update? y/[n] "
+    read update
+    if [ 0$update = 0y ]; then
+	ssh -t $node 'yes | auto-update-system'
+    fi
+done
+

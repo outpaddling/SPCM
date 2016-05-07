@@ -80,8 +80,9 @@ while true; do
 2.. Synchronize compute nodes
 3.. Synchronize an I/O node
 4.. Install updates on login node
-5.. Install updates on I/O nodes
-6.. Install updates on idle compute nodes
+5.. Install updates on backup login node
+6.. Install updates on I/O nodes
+7.. Install updates on idle compute nodes
 Q.. Quit
 
 EOM
@@ -153,9 +154,12 @@ EOM
 	auto-update-system
 	;;
     5)
-	cluster-update-io-nodes
+	cluster-update-backup-nodes
 	;;
     6)
+	cluster-update-io-nodes
+	;;
+    7)
 	cat << EOM
 
 You can update all compute nodes, or just those that have not received the
