@@ -59,6 +59,7 @@ get_host_info()
     return 0
 }
 
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -86,6 +87,7 @@ while true; do
 6.. Install updates on I/O nodes
 7.. Install updates on idle compute nodes
 8.. Restart cron updates on idle compute nodes
+9.. Distribute system files
 Q.. Quit
 
 EOM
@@ -111,7 +113,6 @@ EOM
 	    domain='local'
 	fi
 	auto-pxe-node-discover $host_prefix $host_digits $domain
-	pause
 	;;
     2)
 	# FIXME: Support other schedulers
@@ -144,7 +145,6 @@ EOM
 	    cluster-sync-node $node io
 	fi
 	printf "Done with $node...\n"
-	pause
 	;;
     4)
 	if [ `auto-ostype` = FreeBSD ]; then
@@ -200,6 +200,22 @@ EOM
 	read proceed
 	if [ 0"$proceed" = 0y ]; then
 	    rm -f $updates_dir/updated-nodes
+	fi
+	;;
+    9)
+	cat << EOM
+
+This will distribute common system files such as
+
+    /etc/hosts
+    /etc/ssh/ssh_config
+    Local plugins for cluster-adduser
+    
+EOM
+	printf "Proceed? y/[n] "
+	read proceed
+	if [ 0"$proceed" = 0y ]; then
+	    cluster-sync-sysfiles
 	fi
 	;;
     Q|q)
