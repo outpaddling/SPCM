@@ -23,7 +23,7 @@ if [ 0$sure != 0yes ]; then
     exit 0
 fi
 
-cluster-sync-slurm.conf
+slurm-sync-config
 
 printf 'Compute and backup nodes...\n'
 cluster-run -c 'service munge restart && service slurm restart' compute backup

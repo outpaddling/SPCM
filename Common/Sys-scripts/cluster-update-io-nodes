@@ -23,7 +23,7 @@ for node in `cluster-io-nodes`; do
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
-	ssh -t $node 'yes | auto-update-system'
+	ssh -t $node auto-update-system
     fi
 done
 
