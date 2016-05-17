@@ -4,8 +4,8 @@ Strategy for cluster local network:
 Divide 192.168.0.0/16 into 4 blocks of 16,384 addresses each.
 
 
-Local Ethernet
---------------
+Block 1: Local Ethernet
+-----------------------
 192         168         0           0
 			0x0         0x0
 			0b00000000  0b00000000
@@ -21,8 +21,8 @@ Static = 192.168.0.2 - 192.168.0.255
 DHCP =   192.168.1.1 - 192.168.63.255
 
 
-iDRAC
------
+Block 2: LOM
+------------
 192         168         64          0
 			0x40        0x00
 			0b01000000  0b00000000
@@ -33,13 +33,13 @@ iDRAC
 
 192.168.64.0/18
 
-iDRAC address = Eth address | 0x4000
+LOM address = Eth address | 0x4000
 
-Ethernet and iDRAC in same network using netmask /17 = FFFF8000 = 255.255.128.0
+Ethernet and LOM in same network using 192.168.0.0/17, netmask FFFF8000 = 255.255.128.0
 
 
-Infiniband
-----------
+Block 3: Infiniband
+-------------------
 192         168         128         0
 			0b10000000  0b00000000
 			0x80        0x00
@@ -48,11 +48,15 @@ Infiniband
 			0b10111111  0b11111111
 			0xBF        0xFF
 
-IB address = Eth addres | 0x8000
+192.168.128.0/18
+
+IB address = Eth address | 0x8000
+
+Separated from Eth and LOM networks.
 
 
-Other
------
+Block 4: Other
+--------------
 192         168         192         0
 			0xC0        0x00
 			0b11000000  0b00000000
