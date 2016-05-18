@@ -20,6 +20,19 @@ usage()
 
 
 ##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -38,8 +51,9 @@ while true; do
 				
 1.. Add user
 2.. Change user's password
-3.. Add group
-4.. Add user to another group
+3.. Sync a user's password
+4.. Add group
+5.. Add user to another group
 Q.. Quit
 
 EOM
@@ -57,11 +71,16 @@ EOM
 	cluster-passwd $user_name
 	;;
     3)
+	printf "Username? "
+	read user_name
+	cluster-sync-pw $user_name
+	;;
+    4)
 	printf "New group name? "
 	read group
 	cluster-add-group $group
 	;;
-    4)
+    5)
 	printf "Username? "
 	read user_name
 	printf "Group name? "
@@ -70,6 +89,7 @@ EOM
 	;;
     Q|q)
 	exit 0
+	;;
     esac
     pause
 done
