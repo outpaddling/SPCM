@@ -56,13 +56,18 @@ cp $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
+
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
 
-# FIXME: Update man pages and install them
-#for f in *.mdoc; do
-#    ${INSTALL_MAN} $${f}
-#        ${STAGEDIR}${PREFIX}/man/man1/$${f%.mdoc}.1
-#done
+for script in `fgrep -l '%%PREFIX%%' */Sys-scripts/*`; do
+    sed -e "s|%%PREFIX%%|${PREFIX}|g" $script \
+    > ${DESTDIR}${PREFIX}/sbin/`basename $script`
+done
+
+for script in `fgrep -l '%%PREFIX%%' */User-scripts/*`; do
+    sed -e "s|%%PREFIX%%|${PREFIX}|g" $script \
+    > ${DESTDIR}${PREFIX}/bin/`basename $script`
+done
 
