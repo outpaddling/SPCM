@@ -36,7 +36,7 @@ done
 rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
 cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin
+cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin || true
 cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 chmod 750 ${DESTDIR}${PREFIX}/sbin/*
