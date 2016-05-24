@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+# Backup controller needs to save state info to the same location as
+# primary controller
+sed -e 's|StateSaveLocation=/home/slurm/slurmctld|StateSaveLocation=/head_home/slurm/slurmctld|' \
+    /usr/pkg-1/etc/slurm.conf > /usr/pkg-1/etc/slurm.conf.backup-node
+for node in `cluster-backup-login-nodes`; do
+    printf "Syncing slurm.conf to $node...\n"
+    rsync -pog /usr/pkg-1/etc/slurm.conf.backup-node ${node}:/usr/pkg-1/etc/slurm.conf
+done
+

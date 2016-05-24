@@ -21,3 +21,5 @@ for node in `cluster-backup-login-nodes`; do
     # ssh ${node} yum install $pkgs
 done
 
+slurm-sync-backup-login
+

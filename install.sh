@@ -1,12 +1,13 @@
 #!/bin/sh -e
 
+if [ -z $PREFIX ]; then
+    PREFIX=/usr/local/cluster-admin
+fi
+
 case `uname` in
     FreeBSD)
 	os='FreeBSD'
 
-	if [ -z $PREFIX ]; then
-	    PREFIX=/usr/local/cluster-admin
-	fi
 	;;
     Linux)
 	#
@@ -17,9 +18,6 @@ case `uname` in
 	    exit 1
 	fi
 
-	if [ -z $PREFIX ]; then
-	    PREFIX=/usr/local
-	fi
 	DATADIR=$PREFIX/share/cluster-admin
 	mkdir -p $DATADIR
 	cp CentOS/WWW/* $DATADIR
