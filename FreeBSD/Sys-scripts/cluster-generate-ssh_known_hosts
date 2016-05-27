@@ -10,6 +10,6 @@ for host in `hostname -s` `cluster-compute-nodes`; do
     awk '$3 == "'$host'" { printf("%s %s %s\n", $3, $2, $1) }' /etc/hosts >> ssh_host_list
     # printf "%s %s %s\n" $host $host.local
 done
-ssh-keyscan -t dsa -f ssh_host_list > /etc/ssh/ssh_known_hosts
+ssh-keyscan -f ssh_host_list > /etc/ssh/ssh_known_hosts
 cluster-cp /etc/ssh/ssh_known_hosts /etc/ssh
 

@@ -852,12 +852,12 @@ ssh_authorize()
     #
     # If a key hasn't been generated then do it.
     #
-    if [ ! -f .ssh/id_dsa.pub ] ; then
-	printf "Error: ssh_authorize must be called AFTER id_dsa is installed.\n"
+    if [ ! -f .ssh/id_rsa.pub ] ; then
+	printf "Error: ssh_authorize must be called AFTER id_rsa is installed.\n"
 	exit 1
     fi
     
-    key=`cat .ssh/id_dsa.pub`
+    key=`cat .ssh/id_rsa.pub`
     ssh $remotehost "echo $key >> .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
 }
 
