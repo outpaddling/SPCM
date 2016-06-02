@@ -154,7 +154,12 @@ EOM
 		cluster-portsnap
 	    fi
 	fi
-	auto-update-system
+	w
+	printf 'Continue? y/[n] '
+	read continue
+	if [ 0$continue = 0y ]; then
+	    auto-update-system
+	fi
 	;;
     5)
 	cluster-update-backup-nodes
