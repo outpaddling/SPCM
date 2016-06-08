@@ -50,8 +50,14 @@ RHEL)
     ssh $node groupadd -f -g $group_id $group_name
 
     # Create user
-    ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
-	-s $shell -u $user_id $user_name
+    groups="`groups $user_name | awk -F ': ' '{print $2}' | cut -s -d ' ' -f 2- | tr ' ' ','`"
+    if [ -z "$groups" ]; then
+	ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
+	    -s $shell -u $user_id $user_name
+    else
+	ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
+	    -s $shell -u $user_id -G "$groups" $user_name
+    fi
     ;;
 FreeBSD)
     if ! ssh $node pw groupadd $group_name -g $group_id; then
@@ -59,8 +65,14 @@ FreeBSD)
     fi
 
     # Create user
-    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g $group_id \
-	-s $shell -u $user_id
+    groups="`groups $user_name | cut -s -d ' ' -f 2- | tr ' ' ','`"
+    if [ -z "$groups" ]; then
+	ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
+	    $group_id -s $shell -u $user_id
+    else
+	ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
+	    $group_id -s $shell -u $user_id -G "$groups"
+    fi
     ;;
 *)
     printf "$0: Invalid OS: `auto-ostype`"

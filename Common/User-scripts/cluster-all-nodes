@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+cluster-backup-login-nodes
+cluster-io-nodes
+cluster-vis-nodes
+cluster-compute-nodes
+
