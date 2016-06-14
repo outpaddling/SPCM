@@ -39,6 +39,12 @@ arch=$2
 shift
 shift
 
+printf "Remove and replace old R packages? y/[n] "
+read remove
+if [ 0$remove = 0y ]; then
+    rm -rf R R-packages.log
+fi
+
 ##########################################################################
 #   Generate HTCondor executable file
 ##########################################################################
@@ -107,7 +113,6 @@ when_to_transfer_output = on_exit
 queue 1
 EOM
 
-# rm -rf R R-packages.log
 condor_submit R-packages.condor
 condor_wait R-packages.log
 tar zcvf R-packages.tgz R
