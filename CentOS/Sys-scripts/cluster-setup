@@ -756,12 +756,17 @@ ganglia_install()
 disable_overcommit()
 {
     # Tighten memory allocation to prevent overcommits from crashing nodes
+    # Memory limits are controlled primarily by the scheduler, but
+    # this is done on a sampling basis and overcommits could happen
+    # between samples.
     # vm.memory_overcommit
     #   0 = Default: Heuristic, overcommit_ration, and OOM killer
     #   1 = Unlimited overcommit (all mallocs succeed)
     #   2 = No overcommit.  Configure enough swap to allow some slack.
     auto-append-line 'vm.overcommit_memory = 2' /etc/sysctl.conf $0
     sysctl vm.overcommit_memory='2'
+    auto-append-line 'vm.overcommit_ratio = 100' /etc/sysctl.conf $0
+    sysctl vm.overcommit_ratio='100'
 }
 
 
