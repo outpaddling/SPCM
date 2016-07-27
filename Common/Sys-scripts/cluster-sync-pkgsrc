@@ -61,7 +61,7 @@ done
 
 for node in $compute_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete --exclude pkg-1/var /usr/pkg-1 ${node}:/usr; then
+    if ! rsync -av --delete /usr/pkg-1 ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
 	ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
