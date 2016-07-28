@@ -80,7 +80,10 @@ chmod 755 /var/run/munge
 
 # RHEL init script
 rm -f /etc/init.d/munge
-ln -s $pkgsrc_prefix/pkg-1/share/examples/rc.d/init.d/munge /etc/init.d/munge
+init_script=$pkgsrc_prefix/pkg-1/share/examples/rc.d/init.d/munge
+if [ -e $init_script ]; then
+    ln -s $init_script /etc/init.d/munge
+fi
 chkconfig munge on
 service munge restart
 
