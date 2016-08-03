@@ -52,11 +52,11 @@ RHEL)
     
     # Sync users
     # FIXME: Don't assume slurm
-    if ! ssh $node test -e $conf_dir/user-sync-done; then
+    #if ! ssh $node test -e $conf_dir/user-sync-done; then
 	node-sync-user $node slurm || true
 	node-sync-all-users $node || true
-	ssh $node touch $conf_dir/user-sync-done
-    fi
+    #    ssh $node touch $conf_dir/user-sync-done
+    #fi
     
     # Sync sys files
     cluster-sync-sysfiles $node
