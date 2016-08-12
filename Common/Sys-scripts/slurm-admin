@@ -13,6 +13,7 @@ pause()
     read junk
 }
 
+sinfo_format='%T %u %E %N'
 resp=''
 while [ 0$resp != 0q ]; do
     clear
@@ -41,27 +42,29 @@ EOM
 	pause
 	;;
     2)
-	printf '\n'
-	sinfo -o '%T %u %E %N'
+	clear
+	printf "Current node status:\n\n"
+	sinfo -o "$sinfo_format"
 	printf "\nNode number? (e.g. 001) "
 	read node
 	if [ 0$node != 0 ]; then
 	    printf "Reason? "
 	    read reason
 	    scontrol update State=drain NodeName=compute-$node reason="$reason"
-	    sinfo -o '%T %u %E %N'
+	    sinfo -o "$sinfo_format"
 	    printf "Update slurm.conf if this is a long-term outage.\n"
 	    pause
 	fi
 	;;
     3)
-	printf '\n'
-	sinfo -t down -o '%t %E %n' | sort | uniq
+	clear
+	printf "Nodes currently down:\n\n"
+	sinfo -t down,drained,draining -o "$sinfo_format"
 	printf "\nNode number? (e.g. 1-01) "
 	read node
 	if [ 0$node != 0 ]; then
 	    scontrol update State=resume NodeName=compute-$node
-	    sinfo -t down -o '%t %E %n' | sort | uniq
+	    sinfo -o "$sinfo_format" | sort | uniq
 	    printf "Update slurm.conf if necessary.\n"
 	    pause
 	fi
