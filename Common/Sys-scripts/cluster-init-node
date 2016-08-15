@@ -28,6 +28,13 @@ if [ $# != 2 ]; then
 fi
 
 node=$1
+if ! echo $node | fgrep -q '.'; then
+    printf "No domain name in $node.  Continue? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit 1
+    fi
+fi
 node_type=$2
 
 case $node_type in
