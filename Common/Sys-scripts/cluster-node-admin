@@ -122,7 +122,7 @@ EOM
 	# FIXME: Support other schedulers
 	sinfo
 	get_host_info
-	printf "Use all default settings? y/[n] "
+	printf "Answer yes to all prompts? y/[n] "
 	read use_defaults
 	num=$first_num
 	while [ $num -le $last_num ]; do

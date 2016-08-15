@@ -1,5 +1,34 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-08-15  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [node ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# = 0 ]; then
+    nodes=$(cluster-compute-nodes)
+else
+    nodes="$@"
+fi
+
 repo=/usr/local/cluster/sync-files
 if [ ! -d $repo ]; then
     printf "$0: No files to sync.\n"
@@ -8,7 +37,7 @@ fi
 
 cat << EOM
 
-This will distribute current files to all compute nodes.
+This will distribute $repo to all specified compute nodes.
 EOM
 
 printf "Are you sure you want to proceed? y/[n] "
@@ -19,7 +48,7 @@ fi
 
 cd $repo
 set +e  # Rsync may return non-zero status
-for node in `cluster-compute-nodes`; do
+for node in $nodes; do
     rsync -avR * ${node}:/
 done
 

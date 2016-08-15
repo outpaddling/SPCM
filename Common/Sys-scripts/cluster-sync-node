@@ -30,7 +30,7 @@ fi
 long_node_name=$1
 node_type=$2
 
-node=${node%%.*}
+node=${long_node_name%%.*}
 
 case $node_type in
 backup|compute|io)
@@ -50,10 +50,18 @@ RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
 
     # Install basic tools and updates
-    cluster-init-node $long_node_name $node_type
+    # cluster-init-node $long_node_name $node_type
+    if ! ssh $node stat $conf_dir/init-done; then
+	printf "You must run cluster-init-node $long_node_name first.\n"
+	exit 1
+    fi
     
     # Sync users
-    node-sync-all-users $node || true
+    printf "Sync users? [y]/n "
+    read sync_users
+    if [ 0$sync_users != 0n ]; then
+	node-sync-all-users $node || true
+    fi
     
     # Not in the UID range for normal cluster users, so node-sync-all-users
     # will skip it.
@@ -63,10 +71,10 @@ RHEL)
     # Sync sys files
     cluster-sync-sysfiles $node
     
-    cluster-sync-files
+    cluster-sync-files $node
     
     # hosts.allow
-    rsync -av /etc/hosts.allow $node:/etc
+    rsync -av /etc/hosts.allow ${node}:/etc
     
     # Other stuff
     
