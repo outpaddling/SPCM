@@ -61,9 +61,6 @@ RHEL)
     # Sync sys files
     cluster-sync-sysfiles $node
     
-    # Temporary
-    rsync -av /usr/pkg-1/sbin/cluster-setup ${node}:/usr/pkg-1/sbin
-    
     cluster-sync-files
     
     # hosts.allow

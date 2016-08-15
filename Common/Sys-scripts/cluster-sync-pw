@@ -27,12 +27,16 @@ if [ $# != 1 ]; then
     usage
 fi
 
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
+
 # This script is called from cluster-passwd, which runs suid root.
 # Prevent malicious users from running imposter programs.
-PATH=%%PREFIX%%/sbin:%%PREFIX%%/bin:/bin:/sbin:/usr/bin:/usr/sbin
+PATH=$prefix/sbin:$prefix/bin:/bin:/sbin:/usr/bin:/usr/sbin
 
 user_name=$1
-os_type=`%%PREFIX%%/sbin/auto-ostype`
+os_type=`$prefix/sbin/auto-ostype`
 case $os_type in
 FreeBSD)
     master_pw=/etc/master.passwd
@@ -46,5 +50,5 @@ RHEL)
     ;;
 esac
 
-%%PREFIX%%/sbin/cluster-restore-pw $user_name $master_pw
+$prefix/sbin/cluster-restore-pw $user_name $master_pw
 

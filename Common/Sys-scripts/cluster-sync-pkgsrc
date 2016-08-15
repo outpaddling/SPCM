@@ -49,23 +49,28 @@ case $# in
     esac
 esac
 
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
+src_prefix=%%SRC_PREFIX%%
+
 for node in $other_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete /usr/pkg-1 /usr/pkgsrc-1 ${node}:/usr; then
+    if ! rsync -av --delete $prefix $src_prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
-	ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
-	ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
+	ssh $node cp $prefix/etc/cshrc /etc/profile.d/pkgsrc.csh
+	ssh $node cp $prefix/etc/shrc /etc/profile.d/pkgsrc.sh
     fi
 done
 
 for node in $compute_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete /usr/pkg-1 ${node}:/usr; then
+    if ! rsync -av --delete $prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
-	ssh $node cp /usr/pkg-1/etc/cshrc /etc/profile.d/pkgsrc.csh
-	ssh $node cp /usr/pkg-1/etc/shrc /etc/profile.d/pkgsrc.sh
+	ssh $node cp $prefix/etc/cshrc /etc/profile.d/pkgsrc.csh
+	ssh $node cp $prefix/etc/shrc /etc/profile.d/pkgsrc.sh
     fi
 done
 

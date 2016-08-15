@@ -62,8 +62,12 @@ export R_LIBS="\$(pwd)/R/lib/\$os"
 echo \$R_LIBS
 mkdir -p \$R_LIBS
 
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
+
 # Help script find Rscript
-export PATH=\${PATH}:/usr/local/bin:/usr/pkg-1/bin
+export PATH=\${PATH}:/usr/local/bin:$prefix/bin
 
 # HTCondor process IDs begin at 0. 
 Rscript R-packages.r

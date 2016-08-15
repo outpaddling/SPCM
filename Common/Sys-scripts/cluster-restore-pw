@@ -30,15 +30,19 @@ fi
 user_name="$1"
 old_shadow_pw="$2"
 
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
+
 pw="`awk -F : '$1 == "'$user_name'" { print $0 }' $old_shadow_pw`"
 if [ "0$pw" = 0 ]; then
     printf "No such user: $user_name\n"
     exit 1
 fi
-%%PREFIX%%/sbin/auto-restore-pw $user_name "$pw"
+$prefix/sbin/auto-restore-pw $user_name "$pw"
 if [ $user_name = root ]; then
-    %%PREFIX%%/sbin/cluster-run "auto-restore-pw $user_name '$pw'" all
+    $prefix/sbin/cluster-run "auto-restore-pw $user_name '$pw'" all
 else
-    %%PREFIX%%/sbin/cluster-run "auto-restore-pw $user_name '$pw'" backup io vis
+    $prefix/sbin/cluster-run "auto-restore-pw $user_name '$pw'" backup io vis
 fi
 
