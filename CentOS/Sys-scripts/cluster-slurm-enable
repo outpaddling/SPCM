@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 pkgsrc-prefix\n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -37,14 +37,16 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# != 0 ]; then
     usage
 fi
 
-pkgsrc_prefix=$1
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
 
 rm -f /etc/init.d/slurm
-ln -s $pkgsrc_prefix/pkg-1/share/examples/slurm/init.d.slurm /etc/init.d/slurm
+ln -s $prefix/share/examples/slurm/init.d.slurm /etc/init.d/slurm
 chmod 755 /etc/init.d/slurm
 
 mkdir -p /var/log/slurm /home/slurm

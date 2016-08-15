@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 node-type pkgsrc-prefix\n"
+    printf "Usage: $0 node-type\n"
     exit 1
 }
 
@@ -37,13 +37,17 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# != 1 ]; then
     usage
 fi
 
 node_type=$1
-pkgsrc_prefix=$2
-munge_etc="$pkgsrc_prefix/pkg-1/etc/munge"
+
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
+
+munge_etc="$prefix/etc/munge"
 mkdir -p -m 0700 $munge_etc
 
 case $node_type in
@@ -80,7 +84,7 @@ chmod 755 /var/run/munge
 
 # RHEL init script
 rm -f /etc/init.d/munge
-init_script=$pkgsrc_prefix/pkg-1/share/examples/rc.d/init.d/munge
+init_script=$prefix/share/examples/rc.d/init.d/munge
 if [ -e $init_script ]; then
     ln -s $init_script /etc/init.d/munge
 fi

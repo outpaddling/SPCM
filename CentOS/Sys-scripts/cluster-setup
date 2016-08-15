@@ -114,7 +114,7 @@ pkgsrc_install_packages()
 	exit 1
     fi
 
-    pkgsrc_prefix=$1
+    local pkgsrc_prefix=$1
     shift
     for pkg in $@; do
 	line
@@ -123,9 +123,9 @@ pkgsrc_install_packages()
 	else
 	    printf "Installing $pkg...\n"
 	    pkg_name=`echo $pkg | cut -d '/' -f 2`
-	    pkg_path=$pkgsrc_prefix/pkgsrc-1/packages/All/$pkg_name*.tgz
+	    pkg_path=$pkgsrc_prefix/pkgsrc/packages/All/$pkg_name*.tgz
 	    save_cwd=`pwd`
-	    cd $pkgsrc_prefix/pkgsrc-1/$pkg
+	    cd $pkgsrc_prefix/pkgsrc/$pkg
 	    if [ -e "$pkg_path" ]; then
 		printf "Using binary package $pkg_path...\n"
 		bmake bin-install
@@ -161,9 +161,9 @@ pkgsrc_setup()
     fi
     
     line
-    pkgsrc_prefix=$1
+    local pkgsrc_prefix=$1
 
-    if [ ! -e $pkgsrc_prefix/pkg-1 ]; then
+    if [ ! -e $pkgsrc_prefix/pkg ]; then
 	printf "Installing pkgsrc in $pkgsrc_prefix...\n"
 	auto-pkgsrc-setup $pkgsrc_prefix
     fi
@@ -171,7 +171,7 @@ pkgsrc_setup()
     # FIXME: restore PATH after install in case this function is
     # executed more than once.
     # old_path=$PATH
-    export PATH=${PATH}:$pkgsrc_prefix/pkg-1/bin:$pkgsrc_prefix/pkg-1/sbin
+    export PATH=${PATH}:$pkgsrc_prefix/pkg/bin:$pkgsrc_prefix/pkg/sbin
     # export PATH=$old_path
 }
 
@@ -197,12 +197,12 @@ pkgsrc_append_default_path()
     
     # Add Pkgsrc binaries to path
     line
-    pkgsrc_prefix=$1
+    local pkgsrc_prefix=$1
     printf "Installing startup scripts...\n"
     shrc=/etc/profile.d/pkgsrc.sh
     cshrc=/etc/profile.d/pkgsrc.csh
-    cp $pkgsrc_prefix/pkg-1/etc/shrc $shrc
-    cp $pkgsrc_prefix/pkg-1/etc/cshrc $cshrc
+    cp $pkgsrc_prefix/pkg/etc/shrc $shrc
+    cp $pkgsrc_prefix/pkg/etc/cshrc $cshrc
     chmod +x $shrc
     chmod +x $cshrc
     . /etc/profile
@@ -621,7 +621,7 @@ cluster_startup_scripts()
 {
     # Bourne shell
     cat << EOM > /etc/profile.d/cluster.sh
-first_two=\`hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }'\`
+first_two=\$(hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }')
 PS1="[\u@\$first_two \W] \\!: "
 alias f=finger
 alias dir='ls -als'
@@ -629,7 +629,7 @@ EOM
     
     # C shell
     cat << EOM > /etc/profile.d/cluster.csh
-set first_two=\`hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }'\`
+set first_two=\$(hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }')
 set prompt="[%n@\$first_two %c] %h: "
 alias f finger
 alias dir 'ls -als'
@@ -693,8 +693,8 @@ slurm_install()
 		pause
 	    fi
 	fi
-	cluster-munge-enable $NODE_TYPE $pkgsrc_prefix
-	cluster-slurm-enable $pkgsrc_prefix
+	cluster-munge-enable $NODE_TYPE
+	cluster-slurm-enable
 	;;
     'io')
 	;;
@@ -720,7 +720,7 @@ ganglia_install()
 	printf "Usage: $0 pkgsrc-prefix\n"
 	exit 1
     fi
-    pkgsrc_prefix=$1
+    local pkgsrc_prefix=$1
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
@@ -728,7 +728,7 @@ ganglia_install()
     fi
 
     # Required for "service gmond"
-    ln -sf $pkgsrc_prefix/pkg-1/share/examples/ganglia-monitor-core/gmond.init.linux \
+    ln -sf $pkgsrc_prefix/pkg/share/examples/ganglia-monitor-core/gmond.init.linux \
 	/etc/init.d/gmond
     chkconfig --add gmond
     chkconfig gmond on
@@ -789,7 +789,7 @@ authorize_ssh()
     cat << EOM
     
 You may now specify other hosts in the cluster to and from which
-`hostname` should not require a password for ssh.
+$(hostname) should not require a password for ssh.
     
 EOM
     
@@ -822,6 +822,10 @@ fi
 if [ $# != 1 ]; then
     usage $0
 fi
+
+# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
+# prefix from an installed script.
+prefix=%%PREFIX%%
 
 NODE_TYPE=$1
 case $NODE_TYPE in
