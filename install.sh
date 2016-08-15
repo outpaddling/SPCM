@@ -59,7 +59,7 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
 
-src_prefix=$(dirname $(dirname $(dirname $(pwd))))
+src_prefix=$(dirname $(dirname $(dirname $(dirname $(pwd)))))
 printf "src_prefix = $src_prefix\n"
 for script in `fgrep -l '%%PREFIX%%' */Sys-scripts/*`; do
     sed -e "s|%%PREFIX%%|${PREFIX}|g" \
