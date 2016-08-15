@@ -55,10 +55,13 @@ RHEL)
 	ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
 	    -s $shell -u $user_id $user_name
     else
+	# Sync supplementary groups first
+	node-sync-groups $node $groups
 	ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
 	    -s $shell -u $user_id -G "$groups" $user_name
     fi
     ;;
+
 FreeBSD)
     if ! ssh $node pw groupadd $group_name -g $group_id; then
 	printf 'Group add failed.\n'
@@ -70,10 +73,13 @@ FreeBSD)
 	ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
 	    $group_id -s $shell -u $user_id
     else
+	# Sync supplementary groups first
+	node-sync-groups $node $groups
 	ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
 	    $group_id -s $shell -u $user_id -G "$groups"
     fi
     ;;
+
 *)
     printf "$0: Invalid OS: `auto-ostype`"
     exit 1

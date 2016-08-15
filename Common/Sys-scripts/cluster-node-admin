@@ -52,10 +52,14 @@ get_host_info()
     if [ 0$host_digits = 0 ]; then
 	host_digits=3
     fi
+    
+    # Remove leading zeros so printf doesn't interpret it as octal
     printf "First host number? "
     read first_num
+    first_num=`echo $first_num | sed -E 's|^0+||'`
     printf "Last host number? "
     read last_num
+    last_num=`echo $last_num | sed -E 's|^0+||'`
     return 0
 }
 

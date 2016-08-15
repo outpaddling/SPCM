@@ -1,0 +1,48 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-07-27  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hostname\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if [ `whoami` != root ]; then
+    printf "Only root can run $0.\n"
+    exit 1
+fi
+
+host=$1
+set +e
+
+# For root user
+ssh-keygen -R $host
+cd /home
+for user in *; do
+    file=$user/.ssh/known_hosts
+    if [ -e $file ]; then
+	echo $file
+	ssh-keygen -R $host -f $file
+    fi
+done
+
