@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-for dir in /var/log/munge /var/run/munge /var/lib/munge; do
-    mkdir -p $dir
-    chown daemon:daemon $dir
-done
-
