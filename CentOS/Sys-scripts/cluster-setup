@@ -825,11 +825,12 @@ EOM
 
 iptables_config()
 {
-    if [ ! `iptables-save | grep -- "-j CLUSTER" | awk '{print $1}' | uniq` ]; then
+    if ! iptables-save | grep -- "-j CLUSTER"; then
 	iptables -N CLUSTER
 	iptables -I INPUT $INSERTLN -j CLUSTER
 	iptables -I CLUSTER -p udp -s 192.168.0.0/22 -j ACCEPT
 	iptables -I CLUSTER -p tcp -s 192.168.0.0/22 -j ACCEPT
+	/etc/init.d/iptables save
     fi
 }
 
