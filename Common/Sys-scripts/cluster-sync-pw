@@ -27,8 +27,9 @@ if [ $# != 1 ]; then
     usage
 fi
 
-# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
-# prefix from an installed script.
+# Caution: 
+# The line below is modified by install.sh. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
 prefix=%%PREFIX%%
 
 # This script is called from cluster-passwd, which runs suid root.

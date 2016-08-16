@@ -43,8 +43,9 @@ fi
 
 node_type=$1
 
-# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
-# prefix from an installed script.
+# Caution: 
+# The line below is modified by install.sh. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
 prefix=%%PREFIX%%
 
 munge_etc="$prefix/etc/munge"
@@ -55,7 +56,6 @@ case $node_type in
     if [ ! -e $munge_etc/munge.key ]; then
 	printf "Generating munge key...\n"
 	dd if=/dev/urandom bs=1 count=1024 > $munge_etc/munge.key
-	chmod 400 $munge_etc/munge.key
     fi
     ;;
 
@@ -65,7 +65,6 @@ case $node_type in
 	read head_node
 	scp ${head_node}:$munge_etc/munge.key $munge_etc
     fi
-    chmod 400 $munge_etc/munge.key
     ;;
 
 *)
@@ -74,13 +73,15 @@ case $node_type in
     ;;
 esac
 
+chmod 400 $munge_etc/munge.key
+
 mkdir -p /var/log/munge /var/run/munge /var/lib/munge
-chown -Rh daemon:daemon \
-    /var/log/munge \
-    /var/run/munge \
-    /var/lib/munge \
+chown -Rh munge:munge \
+    $prefix/var/log/munge \
+    $prefix/var/run/munge \
+    $prefix/var/lib/munge \
     $munge_etc
-chmod 755 /var/run/munge
+chmod 755 $prefix/var/run/munge
 
 # RHEL init script
 rm -f /etc/init.d/munge

@@ -49,8 +49,9 @@ case $# in
     esac
 esac
 
-# Caution: Be careful not to replace %%PREFIX%% with a hard-coded
-# prefix from an installed script.
+# Caution: 
+# The line below is modified by install.sh. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
 prefix=%%PREFIX%%
 src_prefix=%%SRC_PREFIX%%
 
