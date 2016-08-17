@@ -73,15 +73,13 @@ case $node_type in
     ;;
 esac
 
-chmod 400 $munge_etc/munge.key
-
-mkdir -p /var/log/munge /var/run/munge /var/lib/munge
-chown -Rh munge:munge \
+chown -Rh daemon:daemon \
     $prefix/var/log/munge \
     $prefix/var/run/munge \
     $prefix/var/lib/munge \
     $munge_etc
 chmod 755 $prefix/var/run/munge
+chmod 400 $munge_etc/munge.key
 
 # RHEL init script
 rm -f /etc/init.d/munge
