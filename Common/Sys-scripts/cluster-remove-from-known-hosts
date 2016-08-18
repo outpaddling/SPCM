@@ -43,6 +43,7 @@ for user in *; do
     if [ -e $file ]; then
 	echo $file
 	ssh-keygen -R $host -f $file
+	chown $user $file
     fi
 done
 
