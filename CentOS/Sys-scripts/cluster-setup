@@ -181,10 +181,7 @@ pkgsrc_setup()
 
 ##########################################################################
 #   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Source new env script to add pkgsrc bins to PATH, etc.
 #       
 #   History:
 #   Date        Name        Modification
@@ -203,20 +200,20 @@ pkgsrc_append_default_path()
     local pkgsrc_prefix=$1
     local pkgsrc_suffix=$2
     
-    printf "Installing startup scripts...\n"
-    cp $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/pkgsrc.*sh /etc/profile.d
-    chmod +x /etc/profile.d/pkgsrc.*sh
-    . /etc/profile
+    # Done by auto-pkgsrc-setup
+    # printf "Installing startup scripts...\n"
+    # cp $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/pkgsrc.*sh /etc/profile.d
+    # chmod +x /etc/profile.d/pkgsrc.*sh
+    # . /etc/profile
+    
+    . $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/pkgsrc.sh
     return 0
 }
 
 
 ##########################################################################
 #   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Install Infiniband packages and configure interface
 #       
 #   History:
 #   Date        Name        Modification
