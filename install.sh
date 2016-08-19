@@ -61,13 +61,13 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
 
 src_prefix=$(dirname $(dirname $(dirname $(dirname $(pwd)))))
 printf "src_prefix = $src_prefix\n"
-for script in `fgrep -l '%%PREFIX%%' */Sys-scripts/*`; do
+for script in `fgrep -l '%%PREFIX%%' {$os,Common}/Sys-scripts/*`; do
     sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
 	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
     > ${DESTDIR}${PREFIX}/sbin/`basename $script`
 done
 
-for script in `fgrep -l '%%PREFIX%%' */User-scripts/*`; do
+for script in `fgrep -l '%%PREFIX%%' {$os,Common}/User-scripts/*`; do
     sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
 	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
     > ${DESTDIR}${PREFIX}/bin/`basename $script`
