@@ -18,11 +18,8 @@ case `uname` in
 	    exit 1
 	fi
 
-	DATADIR=$PREFIX/share/cluster-admin
-	mkdir -p $DATADIR
-	cp CentOS/WWW/* $DATADIR
-	mkdir -p $PREFIX/etc/profile.d
-	cp CentOS/profile.d/* $PREFIX/etc/profile.d
+	mkdir -p ${DESTDIR}${PREFIX}/etc/profile.d
+	cp CentOS/profile.d/* ${DESTDIR}${PREFIX}/etc/profile.d
 	;;
     *)
 	printf "Unsupported OS: `uname`\n"
