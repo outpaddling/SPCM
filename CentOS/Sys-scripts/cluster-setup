@@ -614,21 +614,7 @@ ldap_config()
 
 cluster_startup_scripts()
 {
-    # Bourne shell
-    cat << EOM > /etc/profile.d/cluster.sh
-first_two=\$(hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }')
-PS1="[\u@\$first_two \W] \\!: "
-alias f=finger
-alias dir='ls -als'
-EOM
-    
-    # C shell
-    cat << EOM > /etc/profile.d/cluster.csh
-set first_two=\`hostname|awk -F '.' ' { printf("%s.%s",\$1,\$2); }'\`
-set prompt="[%n@\$first_two %c] %h: "
-alias f finger
-alias dir 'ls -als'
-EOM
+    ln -sf $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/profile.d/* /etc/profile.d
 }
 
 
@@ -897,7 +883,6 @@ export PATH=${PATH}:$START_DIR
 #########################################
 # Basic tasks that do not require pkgsrc
 
-cluster_startup_scripts
 boot_block_backup
 ntp_config
 install_core_rpms
@@ -948,6 +933,8 @@ fi
 
 # Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit
+
+cluster_startup_scripts
 
 ganglia_install $pkgsrc_prefix "$pkgsrc_suffix"
 
