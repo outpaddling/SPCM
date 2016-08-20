@@ -20,7 +20,7 @@ case `uname` in
 
 	DATADIR=$PREFIX/share/cluster-admin
 	mkdir -p $DATADIR
-	cp CentOS/WWW/* $DATADIR
+	cp CentOS/WWW/* CentOS/Share/* $DATADIR
 	;;
     *)
 	printf "Unsupported OS: `uname`\n"
