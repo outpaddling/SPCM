@@ -56,7 +56,7 @@ esac
 prefix=%%PREFIX%%
 src_prefix=%%SRC_PREFIX%%
 
-auto-clean-pkgsrc $prefix
+auto-clean-pkgsrc $src_prefix
 
 for node in $other_nodes; do
     printf "$node...\n"
