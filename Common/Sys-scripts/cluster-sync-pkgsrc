@@ -63,7 +63,7 @@ for node in $other_nodes; do
     if ! rsync -av --delete $prefix $src_prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
-	ssh $node cp $prefix/etc/pkgsrc.\*sh /etc/profile.d
+	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
     fi
 done
 
@@ -72,7 +72,7 @@ for node in $compute_nodes; do
     if ! rsync -av --delete $prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
-	ssh $node cp $prefix/etc/pkgsrc.\*sh /etc/profile.d
+	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
     fi
 done
 
