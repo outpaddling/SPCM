@@ -56,7 +56,7 @@ case `auto-ostype` in
 FreeBSD)
     # Assume login.conf was modified.  No harm in this.
     printf "Rebuilding login.conf db...\n"
-    cluster-run 'cap_mkdb /etc/login.conf' all
+    cluster-run 'cap_mkdb /etc/login.conf' compute
     ;;
 *)
     ;;

@@ -59,6 +59,31 @@ RHEL)
 	printf '\n'
     done
     ;;
+
+FreeBSD)
+    printf "root home...\n"
+    for node in $root_nodes; do
+	rsync /root/.bash_profile ${node}:/root
+	rsync -av /root/bin ${node}:/root
+    done
+    
+    for node in $all_nodes; do
+	# /etc/hosts
+	printf "$node: hosts "
+	rsync -pog /etc/hosts ${node}:/etc
+	
+	# Do not sync sshd_config.  Public-facing servers are different than
+	# compute nodes.
+	printf "ssh_config "
+	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+	
+	printf "system-auth"
+	rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d
+	
+	printf '\n'
+    done
+    ;;
+
 *)
     printf "Not yet implemented for $os_type.\n"
     exit 1
