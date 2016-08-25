@@ -99,10 +99,10 @@ for node in $nodes; do
     if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
-	'drained')
+	'drained'|'drained*')
 	    ;;
 	
-	'down')
+	'down'|'down*')
 	    # Don't change state of down nodes!
 	    ;;
 	
@@ -120,7 +120,7 @@ for node in $nodes; do
     if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`sinfo -n $node -o %T -h`
 	case $state in
-	'drained')
+	'drained'|'drained*')
 	    printf "Updating $node...\n"
 	    # Why was this here?
 	    #scontrol update nodename=$node state=down \
