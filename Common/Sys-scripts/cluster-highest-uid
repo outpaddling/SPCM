@@ -2,7 +2,7 @@
 
 # ${PREFIX} is prepended by install script
 if ! fgrep -q highest-uid cluster-admin.conf; then
-    printf "Highest UID for regular users on this cluster? [1000] " >> `tty`
+    printf "Highest UID for regular users on this cluster? [20000] " >> `tty`
     read highest_uid
     if [ 0$highest_uid = 0 ]; then
 	highest_uid=20000
