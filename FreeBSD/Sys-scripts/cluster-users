@@ -1,4 +1,0 @@
-#!/bin/sh
-
-awk -F ':' '$3 >= 4000 && $3 <= 20000 { print $1 }' /etc/passwd
-

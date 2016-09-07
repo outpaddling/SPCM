@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+# ${PREFIX} is prepended by install script
+if ! fgrep -q highest-uid cluster-admin.conf; then
+    printf "Highest UID for regular users on this cluster? [1000] " >> `tty`
+    read highest_uid
+    if [ 0$highest_uid = 0 ]; then
+	highest_uid=20000
+    fi
+    printf "highest-uid $highest_uid\n" >> cluster-admin.conf
+fi
+
+awk '$1 == "highest-uid" { print $2 }' cluster-admin.conf
+
