@@ -60,7 +60,8 @@ auto-clean-pkgsrc $src_prefix
 
 for node in $other_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete $prefix $src_prefix ${node}:/usr; then
+    if ! rsync -av --delete --exclude $prefix/var/\*/munge \
+	$prefix $src_prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
 	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
@@ -69,7 +70,8 @@ done
 
 for node in $compute_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete $prefix ${node}:/usr; then
+    if ! rsync -av --delete --exclude $prefix/var/\*/munge \
+	$prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
 	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
