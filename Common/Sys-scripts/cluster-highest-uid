@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # ${PREFIX} is prepended by install script
-if ! fgrep -q highest-uid /usr/pkg/etc/cluster-admin.conf; then
+if ! fgrep -q highest-uid cluster-admin.conf; then
     cat << EOM
 
 You must indicate the highest UID for a regular cluster user on this
@@ -20,8 +20,8 @@ EOM
     if [ 0$highest_uid = 0 ]; then
 	highest_uid=20000
     fi
-    printf "highest-uid $highest_uid\n" >> /usr/pkg/etc/cluster-admin.conf
+    printf "highest-uid $highest_uid\n" >> cluster-admin.conf
 fi
 
-awk '$1 == "highest-uid" { print $2 }' /usr/pkg/etc/cluster-admin.conf
+awk '$1 == "highest-uid" { print $2 }' cluster-admin.conf
 

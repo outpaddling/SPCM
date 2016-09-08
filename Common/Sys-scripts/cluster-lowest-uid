@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # ${PREFIX} is prepended by install script
-if ! fgrep -q lowest-uid /usr/pkg/etc/cluster-admin.conf 2> /dev/null; then
+if ! fgrep -q lowest-uid cluster-admin.conf 2> /dev/null; then
     cat << EOM
 
 You must indicate the lowest UID for a regular cluster user on this
@@ -20,8 +20,8 @@ EOM
     if [ 0$lowest_uid = 0 ]; then
 	lowest_uid=1000
     fi
-    printf "lowest-uid $lowest_uid\n" >> /usr/pkg/etc/cluster-admin.conf
+    printf "lowest-uid $lowest_uid\n" >> cluster-admin.conf
 fi
 
-awk '$1 == "lowest-uid" { print $2 }' /usr/pkg/etc/cluster-admin.conf
+awk '$1 == "lowest-uid" { print $2 }' cluster-admin.conf
 
