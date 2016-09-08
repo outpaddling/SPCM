@@ -41,7 +41,7 @@ next_uid()
     uid=`cluster-lowest-uid`
     while uid_taken $uid; do
 	uid=$((uid + 1))
-	if [ $uid > `cluster-highest-uid` ]; then
+	if [ $uid -gt `cluster-highest-uid` ]; then
 	    printf "Out of user IDs.\n"
 	    exit 1
 	fi

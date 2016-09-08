@@ -1317,6 +1317,10 @@ if ! fgrep -q clusteradmin /etc/passwd; then
     cluster-adduser cluster-admin
 fi
 
+printf "Checking/setting UID limits...\n"
+cluster-lowest-uid
+cluster-highest-uid
+
 # Reboot to test new config after initial setup
 reboot_maybe
 

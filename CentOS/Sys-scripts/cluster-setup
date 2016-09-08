@@ -990,6 +990,10 @@ if ! fgrep -q clusteradmin /etc/passwd; then
     cluster-adduser cluster-admin
 fi
 
+printf "Checking/setting UID limits...\n"
+cluster-lowest-uid
+cluster-highest-uid
+
 printf 'Reboot? [y]/n '
 read reboot
 if [ 0$reboot != 0n ]; then
