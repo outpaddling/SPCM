@@ -80,7 +80,7 @@ while true; do
     cat << EOM
     
 			    **************************
-				Cluster Admin Menu
+				  Node Admin Menu
 			    **************************
 
 1.. PXE install new nodes
@@ -91,7 +91,9 @@ while true; do
 6.. Install updates on I/O nodes
 7.. Install updates on idle compute nodes
 8.. Restart cron updates on idle compute nodes
-9.. Distribute system files
+9.. Drain all nodes
+10. Shut down idle nodes
+11. Distribute system files
 Q.. Quit
 
 EOM
@@ -211,7 +213,20 @@ EOM
 	    rm -f $updates_dir/updated-nodes
 	fi
 	;;
+
     9)
+	printf "Reason for draining all nodes? "
+	read reason
+	all_nodes=`sinfo -ho '%N'`
+	scontrol update state=drain nodename="$all_nodes" reason="$reason"
+	sinfo
+	;;
+
+    10)
+	slurm-shutdown-idle-nodes
+	;;
+
+    11)
 	cat << EOM
 
 This will distribute common system files such as
