@@ -65,6 +65,41 @@ get_host_info()
 
 
 ##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-10-27  root        Begin
+##########################################################################
+
+update_warning()
+{
+    cat << EOM
+
+================================ WARNING ===================================
+
+Rebooting the login node while slurm-update-idle-nodes is running may leave
+a compute node partially updated and orphan
+
+    $updates_dir/lockfile
+
+It is best to update and reboot the login node before running
+slurm-update-idle-nodes unless you really know what you are doing.
+
+If you have already started updating idle compute nodes, it would be best
+to allow the updates to finish before updating the login node.
+
+============================================================================
+EOM
+    pause
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -153,6 +188,7 @@ EOM
 	printf "Done with $node...\n"
 	;;
     4)
+	update_warning
 	if [ `auto-ostype` = FreeBSD ]; then
 	    printf "Update and sync ports tree to all nodes? y/[n] "
 	    read portsnap
@@ -174,6 +210,7 @@ EOM
 	cluster-update-io-nodes
 	;;
     7)
+	update_warning
 	cat << EOM
 
 You can update all compute nodes, or just those that have not received the
@@ -190,6 +227,7 @@ EOM
 	;;
     8)
 	clear
+	update_warning
 	cat << EOM
 
 This will clear the updated-nodes list from the last round of cron updates.

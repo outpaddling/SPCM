@@ -2,7 +2,7 @@
 
 # ${PREFIX} is prepended by install script
 if ! fgrep -q highest-uid cluster-admin.conf; then
-    cat << EOM
+    cat << EOM >> /dev/stderr
 
 You must indicate the highest UID for a regular cluster user on this
 system.  This setting is used by the cluster-users script to identify

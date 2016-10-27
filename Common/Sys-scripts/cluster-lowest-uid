@@ -2,7 +2,7 @@
 
 # ${PREFIX} is prepended by install script
 if ! fgrep -q lowest-uid cluster-admin.conf 2> /dev/null; then
-    cat << EOM
+    cat << EOM >> /dev/stderr
 
 You must indicate the lowest UID for a regular cluster user on this
 system.  This setting is used by the cluster-users script to identify
