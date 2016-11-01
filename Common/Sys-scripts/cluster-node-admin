@@ -190,9 +190,9 @@ EOM
     4)
 	update_warning
 	if [ `auto-ostype` = FreeBSD ]; then
-	    printf "Update and sync ports tree to all nodes? y/[n] "
+	    printf "Update and sync ports tree to all nodes? [y]/n "
 	    read portsnap
-	    if [ 0$portsnap = 0y ]; then
+	    if [ 0$portsnap != 0n ]; then
 		cluster-portsnap
 	    fi
 	fi
