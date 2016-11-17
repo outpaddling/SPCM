@@ -248,7 +248,7 @@ EOM
 	printf "Proceed? y/[n] "
 	read proceed
 	if [ 0"$proceed" = 0y ]; then
-	    rm -f $updates_dir/updated-nodes
+	    rm -f $updates_dir/updated-nodes $updates_dir/updates.log
 	fi
 	;;
 
