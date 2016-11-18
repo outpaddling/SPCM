@@ -16,7 +16,7 @@ pause()
 
 for node in `cluster-io-nodes`; do
     echo $node
-    ssh $node uptime
+    ssh $node w
     pause
     ssh -t $node iftop
     ssh -t $node iftop -i ib0 || true

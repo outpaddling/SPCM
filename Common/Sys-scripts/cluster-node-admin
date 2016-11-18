@@ -121,14 +121,15 @@ while true; do
 1.. PXE install new nodes
 2.. Synchronize compute nodes
 3.. Synchronize an I/O node
-4.. Install updates on login node
-5.. Install updates on backup login node
-6.. Install updates on I/O nodes
-7.. Install updates on idle compute nodes
-8.. Restart cron updates on idle compute nodes
-9.. Drain all nodes
-10. Shut down idle nodes
-11. Distribute system files
+4.. Install updates on backup login node
+5.. Install updates on login node
+6.. Install updates on visualization nodes
+7.. Install updates on I/O nodes
+8.. Install updates on idle compute nodes
+9.. Restart cron updates on idle compute nodes
+10. Drain all nodes
+11. Shut down idle nodes
+12. Distribute system files
 Q.. Quit
 
 EOM
@@ -188,6 +189,9 @@ EOM
 	printf "Done with $node...\n"
 	;;
     4)
+	cluster-update-backup-nodes
+	;;
+    5)
 	update_warning
 	if [ `auto-ostype` = FreeBSD ]; then
 	    printf "Update and sync ports tree to all nodes? [y]/n "
@@ -203,13 +207,13 @@ EOM
 	    auto-update-system
 	fi
 	;;
-    5)
-	cluster-update-backup-nodes
-	;;
     6)
-	cluster-update-io-nodes
+	cluster-update-vis-nodes
 	;;
     7)
+	cluster-update-io-nodes
+	;;
+    8)
 	update_warning
 	cat << EOM
 
@@ -225,7 +229,7 @@ EOM
 	fi
 	slurm-update-idle-nodes $updates_dir
 	;;
-    8)
+    9)
 	clear
 	update_warning
 	cat << EOM
@@ -252,7 +256,7 @@ EOM
 	fi
 	;;
 
-    9)
+    10)
 	printf "Reason for draining all nodes? "
 	read reason
 	all_nodes=`sinfo -ho '%N'`
@@ -260,11 +264,11 @@ EOM
 	sinfo
 	;;
 
-    10)
+    11)
 	slurm-shutdown-idle-nodes
 	;;
 
-    11)
+    12)
 	cat << EOM
 
 This will distribute common system files such as

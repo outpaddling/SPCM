@@ -14,7 +14,7 @@ pause()
     read junk
 }
 
-for node in `cluster-backup-login-nodes`; do
+for node in `cluster-vis-nodes`; do
     echo $node
     ssh $node w
     pause
