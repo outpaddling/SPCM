@@ -40,6 +40,8 @@ chmod 750 ${DESTDIR}${PREFIX}/sbin/*
 chmod 755 ${DESTDIR}${PREFIX}/bin/*
 
 cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
+cp cluster-passwd ${DESTDIR}${PREFIX}/bin
+chmod 6755 ${DESTDIR}${PREFIX}/bin/cluster-passwd
 
 # FIXME: Create and install man pages
 
