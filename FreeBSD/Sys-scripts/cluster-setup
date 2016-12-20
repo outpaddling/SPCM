@@ -272,6 +272,8 @@ slurm_config()
     # FIXME: creating these directories should not be necessary
     # --syslog?
     mkdir -p /var/log/munge /var/run/munge /var/lib/munge
+    mkdir -p /var/log/slurm /var/run/slurm
+    chown slurm:slurm /var/log/slurm /var/run/slurm
     
     # Generate munge.key
     $LOCALBASE/etc/rc.d/munged stop > /dev/null 2>&1 || true
@@ -328,6 +330,7 @@ EOM
 	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
 	service slurmd restart
     fi
+    pause
 }
 
 

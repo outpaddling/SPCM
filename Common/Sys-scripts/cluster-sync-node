@@ -28,6 +28,13 @@ if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
 fi
 
 long_node_name=$1
+if ! echo $long_node_name | fgrep -q '.'; then
+    printf "No domain name in $long_node_name.  Continue? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit 1
+    fi
+fi
 node_type=$2
 
 node=${long_node_name%%.*}
@@ -94,8 +101,43 @@ RHEL)
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 *)
-    printf "Not yet implemented for `auto-ostype`.\n"
-    exit 1
+    # Install basic tools and updates
+    # cluster-init-node $long_node_name $node_type
+    if ! ssh $node stat $conf_dir/init-done; then
+	printf "You must run cluster-init-node $long_node_name first.\n"
+	exit 1
+    fi
+    
+    # Sync users
+    printf "Sync users? [y]/n "
+    read sync_users
+    if [ 0$sync_users != 0n ]; then
+	node-sync-all-users $node || true
+    fi
+    
+    # Not in the UID range for normal cluster users, so node-sync-all-users
+    # will skip it.
+    # FIXME: Don't assume slurm
+    node-sync-user $node slurm || true
+    
+    # Sync sys files
+    cluster-sync-sysfiles $node
+    
+    cluster-sync-files $node
+    
+    # hosts.allow
+    rsync -av /etc/hosts.allow ${node}:/etc
+    
+    # Other stuff
+    
+    # Sync software
+    # FIXME: Implement for FreeBSD
+    
+    # Run cluster-setup compute
+    # Do this last, since it enables the scheduler
+    ssh -t $node cluster-setup $node_type
+    
+    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 esac
 

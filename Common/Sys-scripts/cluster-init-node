@@ -66,6 +66,14 @@ RHEL)
     printf "Syncing pkgsrc...\n"
     cluster-sync-pkgsrc $node_type $node
     
+    # Pull ssh keys from node
+    # FIXME: Should not be needed and security risk if compute nodes
+    # behind on updates can access login node
+    # auto-ssh-reverse-authorize $node
+    
+    conf_dir='/usr/local/cluster'
+    ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
+
     printf "Installing yum updates...\n"
     ssh $node yum update -y
     
@@ -75,14 +83,31 @@ RHEL)
 	ssh $node shutdown -r now
     fi
     ;;
+
 *)
-    printf "Not yet implemented for `auto-ostype`.\n" >> /dev/stderr
+    scp /etc/hosts ${node}:/etc
+    
+    # FIXME: Should this be handled by DHCP?
+    ssh $node hostname $node
+    ssh $node \
+	"sed -i '' -e 's|hostname=.*|hostname="$node"|' /etc/rc.conf"
+    
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    
+    printf "Installing basic tools...\n"
+    ssh $node pkg install -y subversion rsync auto-admin
+    
+    # Pull ssh keys from node
+    # FIXME: Should not be needed and security risk if compute nodes
+    # behind on updates can access login node
+    # auto-ssh-reverse-authorize $node
+    
+    conf_dir='/usr/local/cluster'
+    ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
+
+    printf "Installing updates...\n"
+    ssh $node auto-update-system
     ;;
 esac
 
-# Pull ssh keys from node
-auto-ssh-reverse-authorize $node
-
-conf_dir='/usr/local/cluster'
-ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
 
