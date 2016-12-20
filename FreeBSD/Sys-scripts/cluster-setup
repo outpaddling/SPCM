@@ -111,7 +111,7 @@ install_packages()
 	    mkdir $LOG_DIR
 	fi
 	log_file=$LOG_DIR/`echo $pkg | tr / -`
-	if ! auto-install-packages $pkg > $log_file 2>&1; then
+	if ! auto-install-packages -l $pkg > $log_file 2>&1; then
 	    more $log_file
 	    exit 1
 	fi
@@ -211,7 +211,7 @@ EOM
 	    ;;
 	3)
 	    # Install dependencies
-	    pkg install -y slurm-wlm
+	    install_packages sysutils/slurm-wlm
 	    
 	    # Reinstall with custom options
 	    reinstall=`auto-ask reinstall-slurm "Rebuild slurm with custom options?" n`
@@ -302,6 +302,8 @@ slurm_config()
 	line
 	cat << EOM
 
+If you have a slurm.conf file prepared, restore it to $LOCALBASE/etc now.
+
 After you press return, slurm.conf will be opened in $EDITOR.
 
 You can also generate a SLURM config file using the web wizard at:
@@ -343,7 +345,14 @@ scheduler_config()
 	if [ ! -e $LOCALBASE/etc/condor_config.local ]; then
 	    cp $LOCALBASE/etc/condor/condor_config.local $LOCALBASE/etc
 	fi
-	$EDITOR /usr/local/etc/condor_config*
+	cat << EOM
+
+If you have condor_config and condor_config.local files prepared, restore
+them to $LOCALBASE/etc now.
+
+EOM
+	pause
+	$EDITOR $LOCALBASE/etc/condor_config*
     fi
     
     # SGE is reinstalled as a dependency of openmpi
@@ -496,7 +505,6 @@ Some other directories you may want to share include:
 
     /usr/home (or /home)
     /var/cache/pkg
-    /usr/ports/packages
 
 EOM
 
@@ -773,7 +781,7 @@ ganglia_config()
 	cat << EOM
 If your head node is serving as a gateway, you may need to add
 $(hostname -s) to the data_source line in 
-${head_host}:/usr/local/etc/gmetad.conf.
+${head_host}:$LOCALBASE/etc/gmetad.conf.
 EOM
 	pause
     fi
@@ -948,7 +956,8 @@ Usually, something like 10 + the number of cores is a good limit for compute
 nodes.
 
 EOM
-	default_maxproc=$(( `sysctl -n kern.smp.cpus` * 2 ))
+	# default_maxproc=$(( `sysctl -n kern.smp.cpus` * 2 ))
+	default_maxproc=32
 	maxproc=`auto-ask max-proc "Max processes for the $NODE_TYPE node?" $default_maxproc`
 	
 	default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
@@ -988,20 +997,9 @@ update_system()
     ntpdate -u pool.ntp.org
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
     service ntpd restart
-    
-    freebsd_update=`auto-ask freebsd-update 'Update system base?' n`
-    if [ $freebsd_update = y ]; then
-	freebsd-update fetch install
-    fi
-    
-    portsnap=`auto-ask portsnap 'Update ports tree?' n`
-    if [ $portsnap = y ]; then
-	portsnap fetch
-	if [ -e /usr/ports ]; then
-	    portsnap update
-	else
-	    portsnap extract
-	fi
+    local update=`auto-ask update-system 'Update system?' y`
+    if [ $update = y ]; then
+	auto-update-system
     fi
 }
 
@@ -1215,8 +1213,8 @@ if [ `whoami` != root ]; then
 fi
 
 for file in /root/ssh /etc/fstab; do
-    if [ ! -e $file.backup ]; then
-	printf 'Backing up $file...\n'
+    if [ -e $file ] && [ ! -e $file.backup ]; then
+	printf "Backing up $file...\n"
 	cp -R $file $file.backup
     fi
 done
@@ -1228,13 +1226,12 @@ done
 EDITOR=`auto-ask editor 'What is your preferred editor?' $EDITOR`
 export EDITOR
 
+printf 'If you have an old /etc/hosts.allow to restore, do it now.\n'
+pause
 $EDITOR /etc/hosts.allow
 
 # Recommended layout for dedicated hardware:
-# Use netmask of 255.255.252.0.
-# Head node is 192.168.0.1 if it's a gateway or 192.168.0.2 with a separate router.
-# 192.168.0.x are for extra head nodes, I/O nodes, etc.
-# Compute nodes using DHCP begin at 192.168.1.x
+# Use netmask of 255.255.128.0.
 MAX_NODES=60000
 
 # Misc
@@ -1275,7 +1272,7 @@ fi
 
 verify_network
 HEAD_IP=`auto-ask head-ip 'IP address of head node LOCAL interface?' 192.168.0.2`
-NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.252.0`
+NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
 
 ##########################################################################
 #   Begin setup
@@ -1313,13 +1310,22 @@ case $NODE_TYPE in
     ;;
 esac
 
-if ! fgrep -q clusteradmin /etc/passwd; then
-    cluster-adduser cluster-admin
-fi
-
 printf "Checking/setting UID limits...\n"
 cluster-lowest-uid
 cluster-highest-uid
+
+# Required by cluster-ssh-keygen, called from cluster-adduser
+install_packages security/sudo
+
+if ! fgrep -q clusteradmin /etc/passwd; then
+    cat << EOM
+
+Adding clusteradmin user...
+
+EOM
+    cluster-groupadd clusteradmin -g 1000
+    cluster-useradd clusteradmin 1000 clusteradmin 'Cluster Administrator' /bin/tcsh
+fi
 
 # Reboot to test new config after initial setup
 reboot_maybe
