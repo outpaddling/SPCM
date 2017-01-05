@@ -119,17 +119,18 @@ while true; do
 			    **************************
 
 1.. PXE install new nodes
-2.. Synchronize compute nodes
-3.. Synchronize an I/O node
-4.. Install updates on backup login node
-5.. Install updates on login node
-6.. Install updates on visualization nodes
-7.. Install updates on I/O nodes
-8.. Install updates on idle compute nodes
-9.. Restart cron updates on idle compute nodes
-10. Drain all nodes
-11. Shut down idle nodes
-12. Distribute system files
+2.. Initialize new nodes
+3.. Synchronize compute nodes
+4.. Synchronize an I/O node
+5.. Install updates on backup login node
+6.. Install updates on login node
+7.. Install updates on visualization nodes
+8.. Install updates on I/O nodes
+9.. Install updates on idle compute nodes
+10. Restart cron updates on idle compute nodes
+11. Drain all nodes
+12. Shut down idle nodes
+13. Distribute system files
 Q.. Quit
 
 EOM
@@ -157,6 +158,56 @@ EOM
 	auto-pxe-node-discover $host_prefix $host_digits $domain
 	;;
     2)
+	printf "Host name prefix? (e.g. compute-) "
+	read host_prefix
+	printf "Domain? [local] "
+	read domain
+	if [ 0$domain = 0 ]; then
+	    domain='local'
+	fi
+	node_type=none
+	while [ $node_type = none ]; do
+	    cat << EOM
+
+1.. Backup login nodes
+2.. Compute nodes
+3.. I/O nodes
+4.. Visualization nodes
+
+EOM
+	    read node_type
+	    case $node_type in
+	    1)
+		node_type=backup
+		;;
+	    2)
+		node_type=compute
+		;;
+	    3)
+		node_type=io
+		;;
+	    4)
+		node_type=vis
+		;;
+	    *)
+		printf "Invalid selection.\n"
+		pause
+	    esac
+	done
+	get_host_info
+	num=$first_num
+	while [ $num -le $last_num ]; do
+	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+	    printf "Initializing $node.  Are you sure? y/[n] "
+	    read sure
+	    if [ 0$sure = 0y ]; then
+		cluster-init-node $node $node_type
+	    fi
+	    printf "Done with $node...\n"
+	    num=$((num + 1))
+	done
+	;;
+    3)
 	# FIXME: Support other schedulers
 	sinfo
 	get_host_info
@@ -175,7 +226,7 @@ EOM
 	    num=$((num + 1))
 	done
 	;;
-    3)
+    4)
 	printf "Node name? "
 	read node
 	printf "Use all default settings? y/[n] "
@@ -188,10 +239,18 @@ EOM
 	fi
 	printf "Done with $node...\n"
 	;;
-    4)
-	cluster-update-backup-nodes
-	;;
     5)
+	cluster-update-backup-nodes
+	
+	cat << EOM
+	
+Verify that the backup login node is rebooted and fully functional before
+updating the primary login node.
+
+EOM
+	pause
+	;;
+    6)
 	update_warning
 	if [ `auto-ostype` = FreeBSD ]; then
 	    printf "Update and sync ports tree to all nodes? [y]/n "
@@ -204,16 +263,22 @@ EOM
 	printf 'Continue? y/[n] '
 	read continue
 	if [ 0$continue = 0y ]; then
+	    cat << EOM | wall
+
+The login node will be rebooted shortly to complete the installation of
+important security updates.  It should be available again in a few minutes.
+
+EOM
 	    auto-update-system
 	fi
 	;;
-    6)
+    7)
 	cluster-update-vis-nodes
 	;;
-    7)
+    8)
 	cluster-update-io-nodes
 	;;
-    8)
+    9)
 	update_warning
 	cat << EOM
 
@@ -229,7 +294,7 @@ EOM
 	fi
 	slurm-update-idle-nodes $updates_dir
 	;;
-    9)
+    10)
 	clear
 	update_warning
 	cat << EOM
@@ -256,7 +321,7 @@ EOM
 	fi
 	;;
 
-    10)
+    11)
 	printf "Reason for draining all nodes? "
 	read reason
 	all_nodes=`sinfo -ho '%N'`
@@ -264,11 +329,11 @@ EOM
 	sinfo
 	;;
 
-    11)
+    12)
 	slurm-shutdown-idle-nodes
 	;;
 
-    12)
+    13)
 	cat << EOM
 
 This will distribute common system files such as

@@ -837,7 +837,7 @@ fi
 # Caution: 
 # The line below is modified by install.sh. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+prefix=/usr/pkg-1
 
 NODE_TYPE=$1
 case $NODE_TYPE in
@@ -906,37 +906,36 @@ fi
 nfs_config
 ssh_config
 
-###################################################################
-# Install user software independent of RPMS so that it will not be
-# broken by yum updates.
-
-# Pkgsrc base
-pkgsrc_prefix='/usr'
-cat << EOM
+if [ $NODE_TYPE = head ]; then
+    ###################################################################
+    # Install user software independent of RPMS so that it will not be
+    # broken by yum updates.
+    
+    # Pkgsrc base
+    pkgsrc_prefix='/usr'
+    cat << EOM
 
 You may add a suffix on your local pkgsrc installation, such as -2016Q1.
 You *MUST* choose the same suffix when doing the pkgsrc installation.
 
 EOM
-printf "Suffix on $pkgsrc_prefix/pkg[src]: [none] "
-read pkgsrc_suffix
+    printf "Suffix on $pkgsrc_prefix/pkg[src]: [none] "
+    read pkgsrc_suffix
+    
+    pkgsrc_setup $pkgsrc_prefix "$pkgsrc_suffix"
+    pkgsrc_append_default_path $pkgsrc_prefix "$pkgsrc_suffix"
 
-pkgsrc_setup $pkgsrc_prefix "$pkgsrc_suffix"
-pkgsrc_append_default_path $pkgsrc_prefix "$pkgsrc_suffix"
-
-# Common packages
-if [ $NODE_TYPE = head ]; then
+    # Common packages
     for pkg in wip/auto-admin net/iperf; do
 	pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" $pkg
     done
+    ganglia_install $pkgsrc_prefix "$pkgsrc_suffix"
 fi
 
 # Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit
 
 cluster_startup_scripts
-
-ganglia_install $pkgsrc_prefix "$pkgsrc_suffix"
 
 case $NODE_TYPE in
 'head')

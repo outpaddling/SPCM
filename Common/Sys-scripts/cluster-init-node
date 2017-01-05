@@ -84,7 +84,7 @@ RHEL)
     fi
     ;;
 
-*)
+FreeBSD)
     scp /etc/hosts ${node}:/etc
     
     # FIXME: Should this be handled by DHCP?
@@ -108,6 +108,9 @@ RHEL)
     printf "Installing updates...\n"
     ssh $node auto-update-system
     ;;
-esac
 
+*)
+    printf "Not yet implemented for `auto-ostype`.\n" >> /dev/stderr
+    ;;
+esac
 

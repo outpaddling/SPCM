@@ -100,7 +100,8 @@ RHEL)
     
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
-*)
+
+FreeBSD)
     # Install basic tools and updates
     # cluster-init-node $long_node_name $node_type
     if ! ssh $node stat $conf_dir/init-done; then
@@ -139,6 +140,12 @@ RHEL)
     
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
+
+*)
+    printf "Not yet implemented for `auto-ostype`.\n"
+    exit 1
+    ;;
+
 esac
 
 # FIXME: Support other schedulers
