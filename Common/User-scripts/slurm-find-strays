@@ -63,8 +63,22 @@ set +e
 for node in `cluster-compute-nodes`; do
     printf "."
 
-    processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
-	awk '$1 != "PID" && $4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'`
+    case `uname` in
+    FreeBSD)
+	# -Y silences xauth warnings and should not pose a security risk here
+	processes=`ssh -Y -o ConnectTimeout=30 $node ps -U $user_name | \
+	    awk '$1 != "PID" && $5 != "ps" && $5 != "awk" && $5 != "sshd:" && $5 != "tcsh"'`
+	;;
+
+    Linux)
+	processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
+	    awk '$1 != "PID" && $4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'`
+	;;
+    
+    *)
+	printf "$0: `uname` is not yet supported.\n"
+	exit 1
+    esac
     if [ -n "$processes" ]; then
 	
 	# Check for valid jobs AFTER spotting processes, since a job
@@ -80,7 +94,7 @@ for node in `cluster-compute-nodes`; do
 	    printf "\nUser $user_name has jobs running on $node.  Check for strays manually.\n"
 	else
 	    printf "\nStray processes found on $node:\n"
-	    ssh -o ConnectTimeout=30 $node ps --no-heading -u $user_name | \
+	    ssh -Y -o ConnectTimeout=30 $node ps -U $user_name | \
 		awk '$4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'
 	fi
     fi
