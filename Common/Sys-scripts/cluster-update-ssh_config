@@ -23,7 +23,7 @@ cat << EOM > $ssh_config
 #
 EOM
 
-for host in `cluster-head-node` `cluster-compute-nodes`; do
+for host in `cluster-all-nodes`; do
     # Need short name for code that follows
     host=`echo $host | cut -d '.' -f 1`
     
