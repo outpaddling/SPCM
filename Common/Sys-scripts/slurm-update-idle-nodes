@@ -45,9 +45,9 @@ case $# in
     ;;
 esac
 
-dir="$1"
+log_dir="$1"
 
-readonly lock_file="$dir/lockfile"
+readonly lock_file="$log_dir/lockfile"
 if [ -e "$lock_file" ]; then
     printf "Another instance of $0 is currently running.\n"
     printf "Remove $lock_file to override.\n"
@@ -55,10 +55,14 @@ if [ -e "$lock_file" ]; then
 fi
 touch "$lock_file"
 
-readonly updated_nodes_file="$dir/updated-nodes"
+readonly updated_nodes_file="$log_dir/updated-nodes"
 if [ ! -e "$updated_nodes_file" ]; then
     touch "$updated_nodes_file"
 fi
+
+# Don't advertise which nodes are behind on updates.  Directory should
+# not be world-readable either.
+chmod 640 "$updated_nodes_file" `dirname "$updated_nodes_file"`
 
 if test -t 0; then
     cat << EOM
@@ -80,10 +84,11 @@ EOM
     pause
 fi
 
-cd "$dir"
-sinfo -o '%n %T' | sort | uniq
-wc "$updated_nodes_file"
+cd "$log_dir"
+sinfo -o '%n %T %E' -h | sort | uniq
+wc -l "$updated_nodes_file"
 updated=0
+rm -f "$lock_file"
 
 if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
     printf "There are suspended jobs.  It is not safe to run updates.\n"
@@ -121,30 +126,39 @@ for node in $nodes; do
 	state=`sinfo -n $node -o %T -h`
 	case $state in
 	'drained'|'drained*')
-	    printf "Updating $node...\n"
-	    # Why was this here?
-	    #scontrol update nodename=$node state=down \
-	    #    reason=slurm-update-idle-nodes
-	    
-	    # Install all available binary updates and reboot
-	    if ssh -t $node auto-update-system --binary+reboot; then
-		echo $node >> "$updated_nodes_file"
+	    reason=`sinfo -o %E -h --nodes=$node`
+	    if [ $reason = slurm-update-idle-nodes ]; then
+		printf "Updating $node...\n"
+		# Why was this here?
+		#scontrol update nodename=$node state=down \
+		#    reason=slurm-update-idle-nodes
 		
-		# shutdown may take some time to disable sshd
-		# This will prevent slurm-resume-down-nodes from
-		# resuming the node before the reboot.  It may also
-		# prevent reason from being set to "Node unexpectedly rebooted".
-		while ping -c 1 -q $node > /dev/null 2>&1; do
-		    printf "Verifying reboot of $node...\n"
-		    sleep 5
-		done
-		
-		# This should cause the node to get set to down state
-		# without changing "reason", assuming the node is unreachable
-		# when this is run.
-		scontrol update nodename=$node state=resume
+		# Install all available binary updates and reboot
+		if ssh -t $node auto-update-system --binary+reboot; then
+		    # shutdown may take some time to disable sshd
+		    # This will prevent slurm-resume-updated-nodes from
+		    # resuming the node before the reboot.
+		    while ping -c 1 -q $node > /dev/null 2>&1; do
+			printf "Verifying reboot of $node...\n"
+			sleep 5
+		    done
+		    
+		    # Checked by slurm-resume-updated-nodes.  Node should
+		    # be unresponsive to ssh before adding to
+		    # updated_nodes_file as slurm-resume-updated-nodes will
+		    # resume it if it responds to ssh and is listed here.
+		    printf "$node `date`\n" >> "$updated_nodes_file"
+		    
+		    # This should cause the node to get set to down state
+		    # without changing "reason", assuming the node is unreachable
+		    # when this is run.
+		    # Not functioning as expected on Mortimer
+		    # scontrol update nodename=$node state=resume
+		else
+		    printf "Update failed.\n"
+		fi
 	    else
-		printf "Update failed.\n"
+		printf "Skipping $node, down for $reason.\n"
 	    fi
 	    ;;
 
@@ -161,8 +175,8 @@ for node in $nodes; do
     fi
     
     # Resume all nodes that have been updated but are still marked down
-    slurm-resume-updated-nodes
+    # or drained, but respond to ssh.
+    slurm-resume-updated-nodes "$log_dir"
 done
-wc updated-nodes
+wc -l $updated_nodes_file
 rm -f "$lock_file"
-

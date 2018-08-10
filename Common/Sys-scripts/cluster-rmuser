@@ -49,5 +49,6 @@ if [ 0$resp = 0'yes' ]; then
     
     # Group should be removed by rmuser, but it isn't!
     cluster-run -c "$cmd $user_name" all
+    
+    echo $user_name >> /usr/local/cluster/removed-users
 fi
-

@@ -123,14 +123,15 @@ while true; do
 3.. Synchronize compute nodes
 4.. Synchronize an I/O node
 5.. Install updates on backup login node
-6.. Install updates on login node
-7.. Install updates on visualization nodes
-8.. Install updates on I/O nodes
-9.. Install updates on idle compute nodes
-10. Restart cron updates on idle compute nodes
-11. Drain all nodes
-12. Shut down idle nodes
-13. Distribute system files
+6.. Verify scheduler restart on backup login node
+7.. Install updates on login node
+8.. Install updates on visualization nodes
+9.. Install updates on I/O nodes
+10. Install updates on idle compute nodes
+11. Restart cron updates on idle compute nodes
+12. Drain all nodes
+13. Shut down idle nodes
+14. Distribute system files
 Q.. Quit
 
 EOM
@@ -210,12 +211,19 @@ EOM
     3)
 	# FIXME: Support other schedulers
 	sinfo
+	printf "Host name prefix? (e.g. compute-) "
+	read host_prefix
+	printf "Domain? [local] "
+	read domain
+	if [ 0$domain = 0 ]; then
+	    domain='local'
+	fi
 	get_host_info
 	printf "Answer yes to all prompts? y/[n] "
 	read use_defaults
 	num=$first_num
 	while [ $num -le $last_num ]; do
-	    node=`printf '%s%0*d' compute- $host_digits $num`
+	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
 	    printf "Synchronizing $node...\n"
 	    if [ 0$use_defaults = 0y ]; then
 		yes '' | cluster-sync-node $node compute
@@ -227,7 +235,7 @@ EOM
 	done
 	;;
     4)
-	printf "Node name? "
+	printf "Full qualified host name? "
 	read node
 	printf "Use all default settings? y/[n] "
 	read use_defaults
@@ -251,34 +259,58 @@ EOM
 	pause
 	;;
     6)
+	ssh login-2 tail /var/log/slurm/slurmctld || true
+	;;
+    7)
 	update_warning
-	if [ `auto-ostype` = FreeBSD ]; then
-	    printf "Update and sync ports tree to all nodes? [y]/n "
-	    read portsnap
-	    if [ 0$portsnap != 0n ]; then
-		cluster-portsnap
-	    fi
-	fi
 	w
 	printf 'Continue? y/[n] '
 	read continue
 	if [ 0$continue = 0y ]; then
-	    cat << EOM | wall
+		cat << EOM | wall
+
+The login node may need to be rebooted shortly to complete the installation of
+important security updates.  An additional notice will follow if a reboot
+is necessary.
+
+EOM
+	    auto-update-system --binary
+	    if [ `auto-ostype` = FreeBSD ]; then
+		printf "Update and sync ports tree to all nodes? [y]/n "
+		read portsnap
+		if [ 0$portsnap != 0n ]; then
+		    cluster-portsnap
+		    if [ -e /usr/local/sbin/wip-update ]; then
+			cluster-wip-update
+		    fi
+		fi
+	    fi
+	    w
+	    printf "Reboot? [y]/n "
+	    read reboot
+	    if [ 0$reboot != 0n ]; then
+		printf "Minutes before reboot? [2] "
+		read minutes
+		if [ 0$minutes = 0 ]; then
+		    minutes=2
+		fi
+		cat << EOM | wall
 
 The login node will be rebooted shortly to complete the installation of
 important security updates.  It should be available again in a few minutes.
 
 EOM
-	    auto-update-system
+		shutdown -r +$minutes
+	    fi
 	fi
 	;;
-    7)
+    8)
 	cluster-update-vis-nodes
 	;;
-    8)
+    9)
 	cluster-update-io-nodes
 	;;
-    9)
+    10)
 	update_warning
 	cat << EOM
 
@@ -294,7 +326,7 @@ EOM
 	fi
 	slurm-update-idle-nodes $updates_dir
 	;;
-    10)
+    11)
 	clear
 	update_warning
 	cat << EOM
@@ -321,7 +353,7 @@ EOM
 	fi
 	;;
 
-    11)
+    12)
 	printf "Reason for draining all nodes? "
 	read reason
 	all_nodes=`sinfo -ho '%N'`
@@ -329,11 +361,11 @@ EOM
 	sinfo
 	;;
 
-    12)
+    13)
 	slurm-shutdown-idle-nodes
 	;;
 
-    13)
+    14)
 	cat << EOM
 
 This will distribute common system files such as

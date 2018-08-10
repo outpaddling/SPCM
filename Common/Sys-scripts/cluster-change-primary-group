@@ -9,12 +9,12 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-07-27  root        Begin
+#   2017-03-31  Jason Bacon Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 hostname\n"
+    printf "Usage: $0 username new_group|new-gid [directory ...]\n"
     exit 1
 }
 
@@ -23,30 +23,28 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
-    usage
-fi
-
-if [ `whoami` != root ]; then
+if [ `whoami` != 'root' ]; then
     printf "Only root can run $0.\n"
     exit 1
 fi
 
-host=$1
-short_host=${host%%.*}
+if [ $# -lt 2 ]; then
+    usage
+fi
 
-set +e
+user_name=$1
+new_group=$2
+shift
+shift
 
-# For root user
-ssh-keygen -R $host
-ssh-keygen -R $short_host
-cd /home
-for user in *; do
-    file=$user/.ssh/known_hosts
-    if [ -e $file ]; then
-	echo $file
-	ssh-keygen -R $host -f $file
-	ssh-keygen -R $short_host -f $file
-	chown $user $file
+# Verify that all dirs exits before changing anything!
+dirs="$@"
+for dir in $dirs; do
+    if [ ! -e $dir ]; then
+	printf "$0: ${dir}: No such file or directory.\n"
+	exit 1
     fi
 done
+
+auto-change-primary-group $user_name $new_group $dirs
+cluster-run "auto-change-primary-group $user_name $new_group" all

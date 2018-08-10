@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-
 ##########################################################################
 #   Function description:
 #       Pause until user presses return
@@ -15,10 +14,18 @@ pause()
 }
 
 # Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
-yum install httpd php
+if which pkg_add > /dev/null 2>&1; then
+    pkg_add=`which pkg_add`
+    prefix=`echo ${pkg_add%/sbin/pkg_add}`
+else
+    printf "Cannot determine pkgsrc prefix.\n"
+    exit 1
+fi
+
+# yum install httpd php
+printf "Ganglia setup is currently disabled.\n"
+printf "Replace yum httpd with pkgsrc apache in $0.\n"
+exit
 
 ganglia=/var/lib/ganglia
 mkdir -p $ganglia/rrds
@@ -36,7 +43,7 @@ chmod -R u+rwX,g-w $ganglia_web
 #restorecon -R -v $ganglia_web
 #setsebool -P allow_httpd_anon_write=1
 # FIXME: Temporary hack
-echo 0 > /selinux/enforce
+setenforce Permissive
 
 DATADIR=$prefix/share/cluster-admin
 cp $DATADIR/WWW/global_styles.css $DATADIR/WWW/centos-power.jpg /var/www/html

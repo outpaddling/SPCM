@@ -27,6 +27,11 @@ if [ $# != 1 ]; then
     usage
 fi
 
+if [ `hostname -s` != login ]; then
+    printf "$0 can only be run from the login node.\n"
+    exit 1
+fi
+
 # Caution: 
 # The line below is modified by install.sh. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.

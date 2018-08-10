@@ -41,17 +41,19 @@ if [ $# != 1 ]; then
     usage
 fi
 
-node_type=$1
+NODE_TYPE=$1
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+if fgrep 'release 6' /etc/redhat-release; then
+    RHEL_VERSION=6
+else
+    RHEL_VERSION=7
+fi
 
+prefix=/usr/pkg
 munge_etc="$prefix/etc/munge"
 mkdir -p -m 0700 $munge_etc
 
-case $node_type in
+case $NODE_TYPE in
 'head')
     if [ ! -e $munge_etc/munge.key ]; then
 	printf "Generating munge key...\n"
@@ -73,20 +75,43 @@ case $node_type in
     ;;
 esac
 
+# https://github.com/dun/munge/wiki/Installation-Guide
+# FIXME: Move this to munge pkg?
+mkdir -p -m 711 $prefix/var/lib/munge
+mkdir -p -m 700 $prefix/var/log/munge
+mkdir -p -m 755 $prefix/var/run/munge
+mkdir -p -m 400 $munge_etc
+
 chown -Rh daemon:daemon \
     $prefix/var/log/munge \
     $prefix/var/run/munge \
     $prefix/var/lib/munge \
     $munge_etc
-chmod 755 $prefix/var/run/munge
-chmod 400 $munge_etc/munge.key
 
 # RHEL init script
-rm -f /etc/init.d/munge
-init_script=$prefix/share/examples/rc.d/init.d/munge
-if [ -e $init_script ]; then
-    ln -s $init_script /etc/init.d/munge
-fi
-chkconfig munge on
-service munge restart
+case $RHEL_VERSION in
+6)
+    rm -f /etc/init.d/munge
+    init_script=$prefix/share/examples/munge/rc.d/init.d/munge
+    if [ -e $init_script ]; then
+	ln -s $init_script /etc/init.d/munge
+    fi
+    chkconfig munge on
+    service munge restart
+    ;;
 
+7)
+    init_script=$prefix/lib/systemd/system/munge.service
+    # FIXME: Move this to munge pkg?
+    sed -i'' 's|=munge|=daemon|g' $init_script
+    vi $init_script
+    systemctl disable munge.service || true
+    systemctl enable $init_script || true
+    systemctl daemon-reload
+    systemctl restart munge.service
+    ;;
+
+*)
+    printf "Unsupported RHEL version: $RHEL_VERSION\n"
+    exit 1
+esac

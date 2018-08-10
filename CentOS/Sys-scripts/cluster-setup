@@ -93,58 +93,6 @@ line()
 
 ##########################################################################
 #   Function description:
-#       Convenience pkgsrc installer
-#
-#   Arguments:
-#       1)  category
-#       2)  package
-#
-#   Returns:
-#       NA: Whole script terminates on first failed command
-#
-#   History:
-#   Date        Name        Modification
-#   2013-02-15  Jason Bacon Begin
-##########################################################################
-
-pkgsrc_install_packages()
-{
-    if [ $# -lt 3 ]; then
-	printf "Usage: pkgsrc_install_packages pkgsrc-prefix pkgsrc-suffix category/package [category/package ...]\n"
-	exit 1
-    fi
-
-    local pkgsrc_prefix=$1
-    local pkgsrc_suffix=$2
-
-    shift
-    for pkg in $@; do
-	line
-	if pkg_info `basename $pkg`; then
-	    printf "$pkg is already installed.\n"
-	else
-	    printf "Installing $pkg...\n"
-	    pkg_name=`echo $pkg | cut -d '/' -f 2`
-	    pkg_path=$pkgsrc_prefix/pkgsrc${pkgsrc_suffix}/packages/All/$pkg_name*.tgz
-	    save_cwd=`pwd`
-	    cd $pkgsrc_prefix/pkgsrc${pkgsrc_suffix}/$pkg
-	    if [ -e "$pkg_path" ]; then
-		printf "Using binary package $pkg_path...\n"
-		bmake bin-install
-	    else
-		printf "Building $pkg from source...\n"
-		env ALLOW_VULNERABLE_PACKAGES=yes bmake install
-	    fi
-	    #bmake clean
-	    #bmake clean-depends
-	    cd $save_cwd
-	fi
-    done
-}
-
-
-##########################################################################
-#   Function description:
 #       
 #   Arguments:
 #       
@@ -154,60 +102,20 @@ pkgsrc_install_packages()
 #   Date        Name        Modification
 #   2013-12-10  bacon        Begin
 ##########################################################################
+
 
 pkgsrc_setup()
 {
-    if [ $# != 2 ]; then
-	printf "Usage: pkgsrc_setup prefix suffix\n"
-	exit 1
-    fi
-    
     line
-    local pkgsrc_prefix=$1
-    local pkgsrc_prefix=$2
+    auto-binary-pkgsrc-setup /usr/pkg gcc-5.0
 
-    if [ ! -e $pkgsrc_prefix/pkg ]; then
-	printf "Installing pkgsrc in $pkgsrc_prefix...\n"
-	auto-pkgsrc-setup $pkgsrc_prefix
+    # Add pkgsrc to default path, non-exclusive
+    if [ -e /etc/profile.d ]; then
+	ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d
     fi
     
-    # FIXME: restore PATH after install in case this function is
-    # executed more than once.
-    # old_path=$PATH
-    export PATH=${PATH}:$pkgsrc_prefix/pkg${pkgsrc_suffix}/bin:$pkgsrc_prefix/pkg${pkgsrc_suffix}/sbin
-    # export PATH=$old_path
-}
-
-
-##########################################################################
-#   Function description:
-#       Source new env script to add pkgsrc bins to PATH, etc.
-#       
-#   History:
-#   Date        Name        Modification
-#   2013-12-10  bacon        Begin
-##########################################################################
-
-pkgsrc_append_default_path()
-{
-    if [ $# != 2 ]; then
-	printf "Usage: pkgsrc_append_default_path prefix suffix\n"
-	exit 1
-    fi
-    
-    # Add Pkgsrc binaries to path
-    line
-    local pkgsrc_prefix=$1
-    local pkgsrc_suffix=$2
-    
-    # Done by auto-pkgsrc-setup
-    # printf "Installing startup scripts...\n"
-    # cp $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/pkgsrc.*sh /etc/profile.d
-    # chmod +x /etc/profile.d/pkgsrc.*sh
-    # . /etc/profile
-    
-    . $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/pkgsrc.sh
-    return 0
+    # Add pkgsrc to current path, exclusive
+    . /usr/pkg/etc/pkgsrc.sh
 }
 
 
@@ -224,11 +132,12 @@ ib_config()
 {
     # Can we avoid using a groupinstall and just install the essential packages?
     # Are these necessary, or do we just need to enable rdma?
+    # Obsolete: libibmad-devel
     yum groupinstall -y "Infiniband Support"
     yum install -y \
 	libibverbs-devel \
 	libibcommon-devel \
-	libibmad-devel \
+	infiniband-diags-devel \
 	libibcm-devel \
 	librdmacm-devel \
 	infiniband-diags \
@@ -238,11 +147,28 @@ ib_config()
     # yum install -y srptools rdma
     
     # Required for ib
-    chkconfig ibacm on
-    chkconfig rdma on
-    service ibacm stop
-    service rdma restart
-    service ibacm start
+    case $OS_RELEASE in
+    RHEL6)
+	chkconfig ibacm on
+	chkconfig rdma on
+	service ibacm stop
+	service rdma restart
+	service ibacm start
+	;;
+    RHEL7)
+	systemctl enable ibacm.service
+	systemctl enable rdma.service
+	systemctl stop ibacm.service
+	# Failed to restart rdma.service: Operation refused, unit rdma.service
+	# may be requested by dependency only (it is configured to refuse
+	# manual start/stop).
+	# systemctl restart rdma.service
+	systemctl start ibacm.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
     
     # SCSI RDMA protocol
     # Set SRP_LOAD=yes in /etc/rdma/rdma.conf
@@ -261,7 +187,7 @@ ib_config()
     interface=`auto-ask eth-int 'Local Ethernet interface?' $default_if`
     current_ip=`ip addr show $interface | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
     # FIXME: Specific to x.y.1.z networks
-    ib_ip=`printf "$current_ip" | awk -F '.' ' { printf("%d.2.%d.%d",$1,$3,$4); }'`
+    ib_ip=`printf "$current_ip" | awk -F '.' ' { printf("%d.%d.%d.%d",$1,$2,$3+128,$4); }'`
     ib_ip=`auto-ask ib-ip 'ib0 IP address?' $ib_ip`
     
     # FIXME: Unmount NFS shares on ib0 first
@@ -277,11 +203,8 @@ ib_config()
     #if egrep 'DEVICE|HWADDR|TYPE|UUID' $file-ib0 > temp-ib0; then
     #    printf "Preserving existing ib0 settings.\n"
     #fi
-    #mv temp-ib0 $file-ib0
-    # FIXME
     hwaddr=`ip addr show ib0 | awk '$1 == "link/infiniband" { print $2 }'`
-    # FIXME: Make this user input
-    netmask='255.255.252.0'
+    netmask='255.255.192.0'
     netmask=`auto-ask ib-netmask 'ib0 netmask?' $netmask`
     cat << EOM > $file-ib0
 DEVICE=ib0
@@ -295,9 +218,20 @@ CONNECTED_MODE=yes
 EOM
     # Causes network to hang if done remotely
     # Start ib0 by other means
-    # service network restart
     ip link set ib0 up
-    service network restart
+    
+    case $OS_RELEASE in
+    RHEL6)
+	service network restart
+	;;
+    RHEL7)
+	systemctl restart network.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
+    
     ip addr show ib0
     
     # Add ib interface to /etc/hosts
@@ -327,9 +261,21 @@ ntp_config()
     # Start with correct date
     yum install -y ntp ntpdate
     ntpdate -u pool.ntp.org
-    chkconfig ntpd on
-    service ntpd stop
-    service ntpd start
+    case $OS_RELEASE in
+    RHEL6)
+	chkconfig ntpd on
+	# FIXME: Why not restart?
+	service ntpd stop
+	service ntpd start
+	;;
+    RHEL7)
+	systemctl enable ntpd
+	systemctl restart ntpd.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
 }
 
 
@@ -383,17 +329,43 @@ nfs_config()
     
     idmapd_domain=`auto-ask idmapd-domain 'IDMAPD domain for NFS4?' cluster`
     sed -i "s|.*Domain = .*|Domain = $idmapd_domain|" /etc/idmapd.conf
-    service rpcidmapd restart
+    
+    case $OS_RELEASE in
+    RHEL6)
+	service rpcidmapd restart
+	;;
+    RHEL7)
+	systemctl restart rpcidmapd.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
 
-    chkconfig rpcbind on
-    chkconfig nfslock on
-    chkconfig nfs on
+    case $OS_RELEASE in
+    RHEL6)
+	chkconfig rpcbind on
+	chkconfig nfslock on
+	chkconfig nfs on
+	;;
+    RHEL7)
+	systemctl enable rpcbind
+	systemctl enable nfslock
+	systemctl enable nfs
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
 
     # Configure shared directories
     case $NODE_TYPE in
     'head'|'io')
-	default_range='192.168.0.0/22'
+	default_range='192.168.0.0/16'
 	range=`auto-ask nfs-range 'NFS export range?' $default_range`
+	
+	printf '\nCurrent local mounts:\n\n'
+	df -l
 	
 	printf '\nCurrent exports:\n\n'
 	cat /etc/exports
@@ -410,9 +382,21 @@ nfs_config()
 		/etc/exports $0
 	done
 	    
-	service rpcbind restart
-	service nfslock restart
-	service nfs restart
+	case $OS_RELEASE in
+	RHEL6)
+	    service rpcbind restart
+	    service nfslock restart
+	    service nfs restart
+	    ;;
+	RHEL7)
+	    systemctl restart rpcbind.service
+	    systemctl restart nfslock.service
+	    systemctl restart nfs
+	    ;;
+	*)
+	    printf "Unsupported RHEL version: $OS_RELEASE\n"
+	    exit 1
+	esac
     
 	# Signal NFS daemon to update exports
 	# Unnecessary after restarting daemons?
@@ -448,10 +432,22 @@ nfs_config()
 	    done
 	fi
 	
-	service rpcbind restart
-	service nfslock restart
-	service nfs restart
-    
+	case $OS_RELEASE in
+	RHEL6)
+	    service rpcbind restart
+	    service nfslock restart
+	    service nfs restart
+	    ;;
+	RHEL7)
+	    systemctl restart rpcbind.service
+	    systemctl restart nfslock.service
+	    systemctl restart nfs
+	    ;;
+	*)
+	    printf "Unsupported RHEL version: $OS_RELEASE\n"
+	    exit 1
+	esac
+
 	# mount and test
 	mount -a
 	df
@@ -484,7 +480,7 @@ install_core_rpms()
 	nano \
 	sysstat \
 	bind-utils \
-	dash ksh tcsh zsh \
+	ksh tcsh zsh \
 	finger \
 	bc \
 	mailx \
@@ -505,7 +501,7 @@ install_core_rpms()
     line
     printf "Installing base development tools...\n"
     # gcc-* and cvs required for pkgsrc
-    yum install -y gcc gcc-c++ gcc-gfortran cvs subversion
+    yum install -y gcc gcc-c++ gcc-gfortran cvs gdb
 
     # Enable X11 apps without installing a desktop system like KDE
     line
@@ -531,9 +527,21 @@ ssh_config()
     # Enable incoming ssh
     line
     printf 'Configuring sshd...\n'
-    chkconfig sshd on
-    service sshd restart
     
+    case $OS_RELEASE in
+    RHEL6)
+	chkconfig sshd on
+	service sshd restart
+	;;
+    RHEL7)
+	systemctl enable sshd.service
+	systemctl restart sshd.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
+
     # Enable passwordless ssh so we can distribute hosts entries below
     if [ ! -e /root/.ssh/id_rsa ]; then
 	printf "Setting up public key...\n"
@@ -577,72 +585,12 @@ EOM
 #       
 #   History:
 #   Date        Name        Modification
-#   2013-12-11  bacon        Begin
-##########################################################################
-
-ldap_config()
-{
-    # Enable ldap authentication for ssh.  OS and dist dependent!
-    # Add to auto-admin Linux tools
-    # http://www.centos.org/docs/5/html/Deployment_Guide-en-US/s1-ldap-pam.html
-
-    # Redhat/CentOS
-    yum install -y openldap-clients.x86_64
-
-    # Edit /etc/ldap.conf, /etc/openldap/ldap.conf, etc.
-    ldap=`auto-ask ldap 'Enable LDAP authentication?' y`
-    if [ $ldap = 'y' ]; then
-	server=`auto-ask ldap-server 'LDAP server?' ldap://ldap.my.domain`
-	ou=`auto-ask ldap-ou 'Organization info?' ou=people,o=my.domain`
-	cert_file=`auto-ask cert 'Name of CERT file?' ./cacert.crt`
-	auto-ldap-client-setup $server $ou $cert_file
-    fi
-}
-
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
 #   2014-05-02  bacon        Begin
 ##########################################################################
 
 cluster_startup_scripts()
 {
-    ln -sf $pkgsrc_prefix/pkg${pkgsrc_suffix}/etc/profile.d/* /etc/profile.d
-}
-
-
-##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2014-05-02  bacon        Begin
-##########################################################################
-
-apache_install()
-{
-    if [ $# != 2 ]; then
-	printf "Usage: apache_install pkgsrc-prefix\n"
-	exit 1
-    fi
-    
-    local pkgsrc_prefix=$1
-    local pkgsrc_suffix=$2
-
-    pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" www/apache24
-    
-    # FIXME: Install proper init script
+    ln -sf /usr/pkg/etc/profile.d/* /etc/profile.d
 }
 
 
@@ -660,18 +608,10 @@ apache_install()
 
 slurm_install()
 {
-    if [ $# != 2 ]; then
-	printf "Usage: slurm_install pkgsrc-prefix pkgsrc-suffix\n"
-	exit 1
-    fi
-    
-    local pkgsrc_prefix=$1
-    local pkgsrc_suffix=$2
-    
     case $NODE_TYPE in
     'head'|'compute')
 	if ! pkg_info -e slurm; then
-	    pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" wip/slurm
+	    pkgin install -y slurm-wlm
 	else
 	    if ! fgrep slurm /etc/passwd; then
 		printf "Run node-sync-user `hostname` slurm from the head node\n"
@@ -679,7 +619,7 @@ slurm_install()
 	    fi
 	fi
 	cluster-munge-enable $NODE_TYPE
-	cluster-slurm-enable
+	cluster-slurm-enable $NODE_TYPE
 	;;
     'io')
 	;;
@@ -701,28 +641,42 @@ slurm_install()
 
 ganglia_install()
 {
-    if [ $# != 2 ]; then
-	printf "Usage: ganglia_install pkgsrc-prefix pkgsrc-suffix\n"
+    if [ $# != 0 ]; then
+	printf "Usage: ganglia_install\n"
 	exit 1
     fi
-    local pkgsrc_prefix=$1
-    local pkgsrc_suffix=$2
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
-	pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" \
-	    wip/ganglia-monitor-core
+	pkgin install -y ganglia-monitor-core
     fi
 
-    # Required for "service gmond"
-    ln -sf $pkgsrc_prefix/pkg${pkgsrc_suffix}/share/examples/ganglia-monitor-core/gmond.init.linux \
-	/etc/init.d/gmond
-    chkconfig --add gmond
-    chkconfig gmond on
-    service gmond restart
-    
+    case $OS_RELEASE in
+    RHEL6)
+	ln -sf /usr/pkg/share/examples/ganglia/gmond.init.linux \
+	    /etc/init.d/gmond
+	chkconfig --add gmond
+	chkconfig gmond on
+	service gmond restart
+	;;
+    RHEL7)
+	# FIXME: Is there a systemctl service script?
+	# FIXME: ganglia pkg should create this
+	mkdir -p /usr/pkg/var/run/
+	systemctl disable gmond.service || true
+	systemctl enable /usr/pkg/share/examples/ganglia/gmond.service
+	systemctl daemon-reload
+	systemctl restart gmond.service
+	;;
+    *)
+	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	exit 1
+    esac
+
     if [ $NODE_TYPE = head ]; then
-	pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" wip/ganglia-web
+	# FIXME: Commit ganglia and just install that
+    
+	pkgin install -y ganglia-webfrontend
 	ganglia-web-setup
     fi
 }
@@ -795,30 +749,6 @@ EOM
 
 
 ##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2016-08-15  root        Begin
-##########################################################################
-
-iptables_config()
-{
-    if ! iptables-save | grep -- "-j CLUSTER"; then
-	iptables -N CLUSTER
-	iptables -I INPUT $INSERTLN -j CLUSTER
-	iptables -I CLUSTER -p udp -s 192.168.0.0/22 -j ACCEPT
-	iptables -I CLUSTER -p tcp -s 192.168.0.0/22 -j ACCEPT
-	/etc/init.d/iptables save
-    fi
-}
-
-
-##########################################################################
 #   Main
 ##########################################################################
 
@@ -834,12 +764,25 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
+cat << EOM
+
+This is a new cluster-setup script, heavily modified from the original.
+It has not been tested on CentOS 6.  Use cluster-setup.old to ensure
+compatibiliity.
+
+Proceed with caution and watch for issues!
+
+EOM
+pause
+
 # Caution: 
 # The line below is modified by install.sh. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/pkg-1
+prefix=/usr/pkg
 
 NODE_TYPE=$1
+OS_RELEASE=`auto-os-release`
+
 case $NODE_TYPE in
 'head'|'compute'|'io')
     ;;
@@ -848,7 +791,7 @@ case $NODE_TYPE in
     ;;
 esac
 
-if [ -e /root/Save/anaconda-ks.cfg ]; then
+if [ -e /root/Save/node-configured ]; then
     printf "Node already configured.  Reconfigure? [n] "
     read reconfig
     if [ 0$reconfig != 0y ]; then
@@ -886,10 +829,25 @@ export PATH=${PATH}:$START_DIR
 boot_block_backup
 ntp_config
 install_core_rpms
-auto-enable-passwdqc
+pkgsrc_setup
+
+# Install cluster-admin and other wip packages
+pkgin install -y subversion
+cd /usr/pkgsrc
+svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk \
+	uwm-pkgsrc-wip
+for pkg in cluster-admin ape; do
+    cd /usr/pkgsrc/uwm-pkgsrc-wip/$pkg
+    bmake install
+done
+for pkg in denyhosts; do
+    cd /usr/pkgsrc/wip/$pkg
+    bmake install
+done
 
 # Configure firewall
-iptables_config
+auto-enable-passwdqc
+cluster-iptables-config
 
 # After core_rpms.  Requires gcc.
 printf "Run harden script? y/[n] "
@@ -906,33 +864,12 @@ fi
 nfs_config
 ssh_config
 
-if [ $NODE_TYPE = head ]; then
-    ###################################################################
-    # Install user software independent of RPMS so that it will not be
-    # broken by yum updates.
-    
-    # Pkgsrc base
-    pkgsrc_prefix='/usr'
-    cat << EOM
+# Common packages
+for pkg in iperf; do
+    pkgin install -y $pkg
+done
+ganglia_install
 
-You may add a suffix on your local pkgsrc installation, such as -2016Q1.
-You *MUST* choose the same suffix when doing the pkgsrc installation.
-
-EOM
-    printf "Suffix on $pkgsrc_prefix/pkg[src]: [none] "
-    read pkgsrc_suffix
-    
-    pkgsrc_setup $pkgsrc_prefix "$pkgsrc_suffix"
-    pkgsrc_append_default_path $pkgsrc_prefix "$pkgsrc_suffix"
-
-    # Common packages
-    for pkg in wip/auto-admin net/iperf; do
-	pkgsrc_install_packages $pkgsrc_prefix "$pkgsrc_suffix" $pkg
-    done
-    ganglia_install $pkgsrc_prefix "$pkgsrc_suffix"
-fi
-
-# Requires auto-admin: Do after pkgsrc_setup
 disable_overcommit
 
 cluster_startup_scripts
@@ -944,9 +881,6 @@ case $NODE_TYPE in
     
     # Set up cluster-run env to allow running a command on all nodes
     # ( Initially for updating /etc/hosts )
-
-    # Enable authentication via outside LDAP server
-    # ldap_config
 
     # Set per-process memory limits to a fraction of RAM
     auto-set-memory-limits 16777216
@@ -975,7 +909,7 @@ esac
 # Do this LAST to ensure node is fully operational before going live
 case $NODE_TYPE in
 'head'|'compute')
-    slurm_install $pkgsrc_prefix "$pkgsrc_suffix"
+    slurm_install
     ;;
 *)
     ;;
@@ -986,7 +920,8 @@ mkdir -p /root/Save
 backup_file ~/anaconda-ks.cfg /root/Save
 
 if ! fgrep -q clusteradmin /etc/passwd; then
-    cluster-adduser cluster-admin
+    printf "Adding cluster-admin user...\n"
+    cluster-adduser clusteradmin
 fi
 
 printf "Checking/setting UID limits...\n"
@@ -999,3 +934,4 @@ if [ 0$reboot != 0n ]; then
     shutdown -r now
 fi
 
+touch /root/Save/node-configured

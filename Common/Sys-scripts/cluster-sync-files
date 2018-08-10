@@ -35,17 +35,6 @@ if [ ! -d $repo ]; then
     exit 0
 fi
 
-cat << EOM
-
-This will distribute $repo to all specified compute nodes.
-EOM
-
-printf "Are you sure you want to proceed? y/[n] "
-read resp
-if [ 0$resp != 0y ]; then
-    exit 0
-fi
-
 cd $repo
 set +e  # Rsync may return non-zero status
 for node in $nodes; do

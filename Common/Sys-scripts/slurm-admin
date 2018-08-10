@@ -51,7 +51,7 @@ EOM
 	    printf "Reason? "
 	    read reason
 	    scontrol update State=drain NodeName=compute-$node reason="$reason"
-	    sinfo -o "$sinfo_format"
+	    sinfo --list-reasons
 	    printf "Update slurm.conf if this is a long-term outage.\n"
 	    pause
 	fi
@@ -59,13 +59,12 @@ EOM
     3)
 	clear
 	printf "Nodes currently down:\n\n"
-	sinfo -t down,drained,draining -o "$sinfo_format"
+	sinfo --list-reasons
 	printf "\nNode number? (e.g. 1-01) "
 	read node
 	if [ 0$node != 0 ]; then
-	    scontrol update State=resume NodeName=compute-$node
-	    sinfo -o "$sinfo_format" | sort | uniq
-	    printf "Update slurm.conf if necessary.\n"
+	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
+	    slurm-resume-nodes $full_name
 	    pause
 	fi
 	;;

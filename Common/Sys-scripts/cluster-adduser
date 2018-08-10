@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
+
+# Need bash for read -s
 
 pause()
 {
@@ -89,6 +91,8 @@ group_exists()
 #   Main
 ##########################################################################
 
+set -e
+
 if [ $# -gt 1 ]; then
     usage
 fi
@@ -114,6 +118,18 @@ RHEL)
     printf "Unsupported os: $os_type\n"
     exit 1
 esac
+
+cat << EOM
+
+***************************************************************************
+
+Be sure to IMMEDIATELY add this user with the same UID and GID on any other
+systems that might share files with this one.
+
+***************************************************************************
+
+EOM
+pause
 
 case $# in
 0)
@@ -166,20 +182,75 @@ if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/passwd` = 0$uid ]; the
     exit 1
 fi
 
-if [ -e $ldap_conf ]; then
-    # Flag usernames not in LDAP
-    ldap_verified_uid=`ldapsearch $ldap_flags uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+while [ 0$gecos_source != 01 ] && [ 0$gecos_source != 02 ] && [ 0$gecos_source != 03 ]; do
+    cat << EOM
+
+Get user information from:
+
+1.. LDAP
+2.. Active Directory
+3.. Direct input
+
+EOM
+    printf "Selection: "
+    read gecos_source
+done
+
+case $gecos_source in
+1)
+    if [ -e $ldap_conf ]; then
+	# Flag usernames not in LDAP
+	ldap_verified_uid=`ldapsearch $ldap_flags uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+	if [ 0$ldap_verified_uid != 0$user_name ]; then
+	    printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	    read resp
+	    if [ 0$resp != 0'y' ]; then
+		exit 0
+	    fi
+	fi
+	default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    else
+	default_gecos=''
+    fi
+    ;;
+
+2)
+    this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
+    default_server=ad.${this_domain}:3268
+    printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
+    read server
+    if [ 0$server = 0 ]; then
+	server=$default_server
+    fi
+    
+    default_ad_user=$USER
+    printf "YOUR AD Username for user query? [$default_ad_user] "
+    read ad_user_name
+    if [ 0$ad_user_name = 0 ]; then
+	ad_user_name=$default_ad_user
+    fi
+    
+    printf "AD password? "
+    read -s ad_pw
+
+    ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
+    echo $ldap_verified_uid
     if [ 0$ldap_verified_uid != 0$user_name ]; then
-	printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	printf "User $user_name is not in the AD directory.  Continue? y/[n] "
 	read resp
 	if [ 0$resp != 0'y' ]; then
 	    exit 0
 	fi
     fi
-    default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
-else
-    default_gecos=''
-fi
+    default_gecos=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name |
+	awk '$1 == "displayName:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    ;;
+
+3)
+    default_gecos="no default"
+    ;;
+
+esac
 
 printf "Full name? [$default_gecos] "
 read gecos

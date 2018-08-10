@@ -23,6 +23,7 @@ for node in `cluster-vis-nodes`; do
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
+	ssh $node "wall 'The visualization node will be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.'"
 	ssh -t $node auto-update-system
     fi
 done

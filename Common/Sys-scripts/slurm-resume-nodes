@@ -47,13 +47,44 @@ Make sure all nodes are up-to-date before resuming them.
 
 o   Install all security updates
 
-o   Run cluster-sync-node if necessary.
+o   Run cluster-sync-node if system changes were made while the node was offline
+
+o   If hardware was replaced, be sure to configure it to match the rest
+    of the cluster (disable hyperthreading, etc.)
 
 EOM
-printf "Proceed with resume? y/[n] "
-read proceed
 
-if [ 0$proceed = 0y ]; then
-    scontrol update state=resume nodename="$1"
-fi
-
+for node in $*; do
+    printf "Update $node? [y]/n "
+    read update
+    if [ 0$update != 0n ]; then
+	ssh $node auto-update-system --defaults
+	printf "Reboot? [y]/n "
+	read reboot
+	if [ 0$reboot != 0n ]; then
+	    ssh $node shutdown -r now
+	    printf "Waiting for $node to reboot...\n"
+	    sleep 20
+	    while ! ssh $node "hostname > /dev/null"; do
+		printf "Waiting for $node to reboot...\n"
+		sleep 10
+	    done
+	fi
+    fi
+    
+    printf "Run cluster-sync-node $node? [y]/n "
+    read sync
+    if [ 0$sync != 0n ]; then
+	cluster-sync-node $node compute
+    fi
+    
+    printf "Resume $node? y/[n] "
+    read proceed
+    if [ 0$proceed = 0y ]; then
+	short_node=`echo $node | cut -d . -f 1`
+	scontrol update state=resume nodename="$short_node"
+	printf "\nUpdated state:\n\n"
+	sinfo --list-reasons
+	printf "Update slurm.conf if necessary.\n"
+    fi
+done

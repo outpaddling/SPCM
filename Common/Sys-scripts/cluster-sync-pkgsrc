@@ -26,23 +26,35 @@ usage()
 case $# in
 0)
     compute_nodes=`cluster-compute-nodes`
-    other_nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
+    backup_nodes="`cluster-backup-login-nodes`"
+    other_nodes="`cluster-io-nodes` `cluster-vis-nodes`"
     ;;
 1)
     usage
     ;;
 *)
     case $1 in
-    io|backup)
+    backup)
 	shift
-	other_nodes="$@"
+	backup_nodes="$@"
 	compute_nodes=""
+	other_nodes=""
 	;;
+    
+    io|vis)
+	shift
+	backup_nodes=""
+	compute_nodes=""
+	other_nodes="$@"
+	;;
+    
     compute)
 	shift
+	backup_nodes=""
 	compute_nodes="$@"
 	other_nodes=""
 	;;
+    
     *)
 	usage
 	;;
@@ -58,9 +70,14 @@ src_prefix=%%SRC_PREFIX%%
 
 auto-clean-pkgsrc $src_prefix
 
-for node in $other_nodes; do
+# Use wildcards in --exclude patterns, as full prefix does not work and this
+# keeps things simple.
+
+# Backup login nodes get everything except logs
+for node in $backup_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete --exclude $prefix/var/\*/munge \
+    if ! rsync -av --delete \
+	--exclude '*/var/*/munge' \
 	$prefix $src_prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
@@ -68,9 +85,25 @@ for node in $other_nodes; do
     fi
 done
 
+# cluster-passwd can only be run on the login node
+for node in $other_nodes; do
+    printf "$node...\n"
+    if ! rsync -av --delete \
+	--exclude '*/var/*/munge' \
+	--exclude '*/bin/cluster-passwd' \
+	$prefix $src_prefix ${node}:/usr; then
+	failed_nodes="$failed_nodes $node"
+    else
+	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
+    fi
+done
+
+# cluster-passwd can only be run on the login node
 for node in $compute_nodes; do
     printf "$node...\n"
-    if ! rsync -av --delete --exclude $prefix/var/\*/munge \
+    if ! rsync -av --delete \
+	--exclude '*/var/*/munge' \
+	--exclude '*/bin/cluster-passwd' \
 	$prefix ${node}:/usr; then
 	failed_nodes="$failed_nodes $node"
     else
@@ -78,7 +111,6 @@ for node in $compute_nodes; do
     fi
 done
 
-if [ ! -z $failed_nodes ]; then
+if [ ! -z "$failed_nodes" ]; then
     printf "Unable to sync the following nodes: %s\n" "$failed_nodes"
 fi
-

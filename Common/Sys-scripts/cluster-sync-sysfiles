@@ -15,7 +15,7 @@ fi
 
 login_nodes="`cluster-backup-login-nodes`"
 root_nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
-all_nodes="`cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`"
+all_nodes="`cluster-all-nodes`"
 
 # Select nodes of each category from list
 if [ $# -gt 0 ]; then
@@ -48,6 +48,9 @@ RHEL)
 	printf "$node: hosts "
 	rsync -pog /etc/hosts ${node}:/etc
 	
+	printf "hosts.allow "
+	rsync -pog /etc/hosts.allow ${node}:/etc
+	
 	# Do not sync sshd_config.  Public-facing servers are different than
 	# compute nodes.
 	printf "ssh_config "
@@ -71,6 +74,9 @@ FreeBSD)
 	# /etc/hosts
 	printf "$node: hosts "
 	rsync -pog /etc/hosts ${node}:/etc
+
+	printf "$node: hosts.allow "
+	rsync -pog /etc/hosts.allow ${node}:/etc
 	
 	# Do not sync sshd_config.  Public-facing servers are different than
 	# compute nodes.

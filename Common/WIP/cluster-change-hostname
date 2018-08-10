@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+# /etc/hosts
+
+# /etc/ssh/ssh_config
+
+# sysconfig
+
+# /etc/rdma
+

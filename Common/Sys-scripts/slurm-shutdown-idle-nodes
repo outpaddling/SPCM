@@ -57,8 +57,11 @@ for node in $nodes; do
     # printf "$node = $state\n"
     case $state in
     'drained'|'drained*'|'idle'|'idle*'|'down'|'down*')
-	printf "Shutting down $node...\n"
-	ssh $node shutdown $power_off now || true
+	printf "$node\n"
+	if ping -c 1 -q $node > /dev/null 2>&1; then
+	    printf "Shutting down $node...\n"
+	    ssh $node shutdown $power_off now || true
+	fi
 	;;
     *)
 	;;

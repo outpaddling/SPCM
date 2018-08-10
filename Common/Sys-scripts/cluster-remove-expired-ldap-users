@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+for user in `cluster-users`; do
+    comment=`ldapsearch -x uid=$user | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+    if [ 0"$comment" = 0 ]; then
+	printf '\n'
+	finger $user
+	printf '\n'
+	ls /home/$user /home/$user/Data
+	du -sh /home/$user /home/$user/Data
+	printf '\n'
+	printf "$user is not listed in LDAP.  Remove account? yes/[no] "
+	read remove
+	if [ 0$remove = 0yes ]; then
+	    cluster-rmuser $user
+	    rm -rf /share1/*/$user
+	    auto-append-line $user /usr/local/cluster/removed-users nocomment
+	    pause
+	fi
+    else
+	printf "Found $user = $comment.\n"
+    fi                                                                          
+done

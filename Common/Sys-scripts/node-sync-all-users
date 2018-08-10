@@ -31,6 +31,6 @@ node=$1
 
 for user in `cluster-users`; do
     echo $user
-    node-sync-user $node $user
+    node-sync-users $node $user
 done
 

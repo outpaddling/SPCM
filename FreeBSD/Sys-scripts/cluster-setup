@@ -46,29 +46,6 @@ pause()
 }
 
 
-# FIXME: Base this on stop_service
-stop_pbs()
-{
-    printf "Stopping PBS daemons...\n"
-    if fgrep -q pbs_sched_enable $RC_CONF; then
-	service pbs_sched stop > /dev/null 2>&1 || true
-	sleep 2
-    fi
-    if fgrep -q pbs_server_enable $RC_CONF; then
-	service pbs_server stop > /dev/null 2>&1 || true
-	sleep 2
-    fi
-    if killall pbs_sched > /dev/null 2>&1; then
-	printf "Rogue pbs_sched terminated.\n"
-	sleep 2
-    fi
-    if killall pbs_server > /dev/null 2>&1; then
-	printf "Rogue pbs_server terminated.\n"
-	sleep 2
-    fi
-}
-
-
 ##########################################################################
 #   Function description:
 #       
@@ -87,7 +64,10 @@ stop_service()
 	printf "Usage: stop_service service\n"
     fi
     service $1 stop > /dev/null 2>&1 || true
+    sleep 2
     killall $1 > /dev/null 2>&1 || true
+    sleep 1
+    killall -9 $1 > /dev/null 2>&1 || true
 }
 
 
@@ -167,82 +147,8 @@ add_node_name()
 install_scheduler()
 {
     line
-    # Patch bug in openmpi run_depends
-    sed -i '.bak' 's|${SGE_ROOT}/fbsd-${ARCH}/qrsh|${SGE_ROOT}/bin/fbsd-${ARCH}/qrsh|g' \
-	/usr/ports/net/openmpi/Makefile
-    
-    cat << EOM
-Please choose a scheduler:
-
-1.. HTCondor
-2.. SGE (Requires X11)
-3.. SLURM
-4.. Torque PBS
-
-EOM
-
-    resp=' '
-    while [ 0$resp != 01 ] && [ 0$resp != 02 ] && [ 0$resp != 03 ] && [ 0$resp != 04 ]; do
-	resp=`auto-ask scheduler "Scheduler selection?" unknown`
-	case $resp in
-	1)
-	    install_packages sysutils/condor
-	    pause
-	    ;;
-	2)
-	    if ! auto-package-installed sysutils/sge62; then
-		install_packages sysutils/sge62
-	    
-		line
-		printf "You can ignore the post-install messages above.\n"
-		printf "The services will be configured automatically.\n"
-		pause
-		
-		# Source $LOCALBASE/sge/default/common/settings.csh
-		# All execution hosts must be administrative hosts during the installation.
-		# All hosts which you added to the list of administrative hosts during this
-		# installation procedure can now be installed.
-		line
-		printf "\nAll users should source $LOCALBASE/sge/<cell>/common/settings.[c]sh\n\n"
-		pause
-	    else
-		printf "SGE is already installed.\n"
-	    fi
-	    ;;
-	3)
-	    # Install dependencies
-	    install_packages sysutils/slurm-wlm
-	    
-	    # Reinstall with custom options
-	    reinstall=`auto-ask reinstall-slurm "Rebuild slurm with custom options?" n`
-	    if [ $reinstall = 'y' ]; then
-		install_port sysutils slurm-wlm
-	    fi
-	    ;;
-	4)
-	    if ! auto-package-installed sysutils/torque; then
-		line
-		install_packages sysutils/torque
-		# Package does not set permissions on spool directories
-		# Also, users are encouraged to update sysutils/torque
-		# to the latest version instead of using the package
-		#pkg_delete /var/db/pkg/torque*
-		#install_packages lang/perl devel/libtool
-		#printf "Reinstalling torque from port to ...\n"
-		#install_port sysutils torque
-	    
-		line
-		printf "You can ignore the post-install messages above.\n"
-		printf "The services will be configured automatically.\n"
-		pause
-	    fi
-	    ;;
-	*)
-	    printf "\nInvalid selection.\n\n"
-	    pause
-	    ;;
-	esac
-    done
+    install_packages sysutils/slurm-wlm
+    pw usermod slurm -d /home/slurm -m
 }
 
 
@@ -251,18 +157,8 @@ install_mpi()
     line
     # Install OpenMPI from source so we can choose build options
     if ! auto-package-installed net/openmpi; then
-	#if [ $AUTO_BUILD_FROM_SOURCE = 0 ]; then
-	    printf "\nInstalling openmpi dependencies from packages...\n"
-	    install_packages net/openmpi
-	    # FIXME: use auto-delete-packages
-	    # pkg_delete /var/db/pkg/openmpi*
-	#fi
-	
-	reinstall_mpi=`auto-ask rebuild-mpi "Reinstall openmpi from port to customize build?" y`
-	if [ $reinstall_mpi = 'y' ]; then
-	    pkg delete openmpi
-	    install_port net openmpi
-	fi
+	printf "\nInstalling openmpi...\n"
+	install_packages net/openmpi
     fi
 }
 
@@ -285,13 +181,6 @@ slurm_config()
 	    chmod 400 $munge_dir/munge.key
 	    printf "Generating munge key...\n"
 	    dd if=/dev/random bs=1 count=1024 > $munge_dir/munge.key
-	fi
-    else
-	# Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
-	if [ ! -e $munge_dir/munge.key ]; then
-	    mkdir -p -m 0700 $munge_dir
-	    scp -p ${head_host}:$munge_dir/munge.key $munge_dir
-	    pause
 	fi
     fi
     
@@ -325,12 +214,10 @@ EOM
 	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
 	service slurmctld restart
     else
-	scp ${head_host}:$slurm_conf $slurm_conf
-	service slurmd stop > /dev/null 2>&1 || true
+	stop_service slurmd
 	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
 	service slurmd restart
     fi
-    pause
 }
 
 
@@ -340,6 +227,7 @@ scheduler_config()
     if auto-package-installed sysutils/slurm-wlm; then
 	slurm_config
     fi
+    printf "Done with slurm_config.\n"
     
     if auto-package-installed sysutils/condor; then
 	if [ ! -e $LOCALBASE/etc/condor_config ]; then
@@ -357,147 +245,11 @@ EOM
 	pause
 	$EDITOR $LOCALBASE/etc/condor_config*
     fi
-    
-    # SGE is reinstalled as a dependency of openmpi
-    if auto-package-installed sysutils/sge62; then
-	sge_config      # Run SGE setup tools
-	
-	printf "\nUpdating /etc/services for SGE...\n"
-	# Check /etc/services
-	if ! fgrep -q sge_qmaster /etc/services; then
-	    printf "sge_qmaster     6444/tcp   #Grid Engine Qmaster Service\n" >> /etc/services
-	    printf "sge_qmaster     6444/udp   #Grid Engine Qmaster Service\n" >> /etc/services
-	fi
-	if ! fgrep -q sge_qmaster /etc/services; then
-	    printf "sge_execd       6445/tcp   #Grid Engine Execution Service\n" >> /etc/services
-	    printf "sge_execd       6445/udp   #Grid Engine Execution Service\n" >> /etc/services
-	fi
-    fi
-    
-    if auto-package-installed sysutils/torque; then
-	if [ ! -e $TSPOOL ]; then
-	    cp -Rp $LOCALBASE/share/examples/torque$TSPOOL $TSPOOL
-	    chmod 1777 $TSPOOL/checkpoint $TSPOOL/spool $TSPOOL/undelivered
-	fi
-	
-	# Package missing arrays dir
-	mkdir -p $TSPOOL/server_priv/arrays
-	
-	# On compute nodes, put '$pbsserver ip.address.of.server' into
-	# $TSPOOL/mom_priv/config
-	
-	##################################################################
-	# Head node (torque server) only
-	#
-	
-	if [ $NODE_TYPE = "head" ]; then
-	    # Use main interface address on server if there are multiple
-	    # interfaces, not the local interface!  Torque will get
-	    # confused otherwise.
-	    # Also use short hostname, which must be in /etc/hosts.
-	    # If someone messes up /etc/hosts, we prefer a clear lookup
-	    # failure over getting the wrong address from DNS.
-	    hostname -s > $TSPOOL/server_name
-    
-	    # Cited as useful for dual nic servers, but not needed
-	    #printf "SERVERHOST\t$head_host\n" > $TSPOOL/torque.cfg
-	    #$EDITOR $TSPOOL/torque.cfg
-    
-	    # To configure queues on server, execute
-	    # $LOCALBASE/share/examples/torque/torque.setup <admin>
-	    stop_pbs
-
-	    # Annihilates server_priv/nodes.  Edit nodes AFTER this!
-	    #if [ ! -e $TSPOOL ]; then
-		printf "Running torque.setup...\n"
-		printf "y\n" | $LOCALBASE/share/examples/torque/torque.setup root \
-		    > $LOG_DIR/torque.setup
-		sleep 5
-		stop_pbs
-	    #fi
-    
-	    line
-	    nodes_file=$TSPOOL/server_priv/nodes
-	    nodes_backup=$LOCALBASE/cluster/server_priv-nodes
-	    if [ -e $nodes_backup ]; then
-		cp $nodes_backup $nodes_file
-	    fi
-	    cat << EOM
-
-Editing $nodes_file...
-
-Add names of existing compute nodes and options.  Compute nodes that are
-not yet operational should not be added at this time.
-
-EOM
-	    printf "Press enter when ready to enter the editor..."
-	    read junk
-	    $EDITOR $nodes_file
-	    cp $nodes_file $nodes_backup
-
-	    # auto-enable-service doesn't start services that are already
-	    # configured in rc.conf
-	    auto-enable-service pbs_server cluster-setup \
-		> $LOG_DIR/pbs_server_enable 2>&1
-	    sleep 2
-	    service pbs_server restart 2> $LOG_DIR/pbs_server_start
-	    sleep 2
-
-	    auto-enable-service pbs_sched cluster-setup 
-		> $LOG_DIR/pbs_sched_enable 2>&1
-	    sleep 2
-	    service pbs_sched restart 2> $LOG_DIR/pbs_sched_start
-	    sleep 2
-	else
-	    # Use local address of head node on compute nodes.  If
-	    # head node has multiple interfaces, the DNS entry will
-	    # provide the public interface IP rather than the private
-	    # cluster IP.
-	    # Also use short hostname, which must be in /etc/hosts.
-	    # If someone messes up /etc/hosts, we prefer a clear lookup
-	    # failure over getting the wrong address from DNS.
-	    printf "$head_host\n" > $TSPOOL/server_name
-    
-	    line
-	    #printf "\nAdd `hostname -s` to server_priv/nodes on the server\n"
-	    #printf "and restart pbs_server.\n\n"
-	    #pause
-	    
-	    printf "Adding $(hostname -s) to server_priv/nodes on $head_host\n"
-	    ssh $head_host auto-append-line "$(hostname -s)" \
-		"$(hostname -s)" $TSPOOL/server_priv/nodes \
-		cluster-setup
-	    ssh $head_host service pbs_server restart
-	    
-	    if fgrep -q pbs_mom $RC_CONF; then
-		if ! service pbs_mom stop > /dev/null 2>&1; then
-		    if killall pbs_mom > /dev/null 2>&1; then
-			printf "Old pbs_mom terminated.\n"
-		    fi
-		fi
-	    fi
-
-	    # On compute nodes, add the following line to $RC_CONF:
-	    # pbs_mom_enable="YES"
-	    auto-enable-service pbs_mom cluster-setup \
-		> $LOG_DIR/pbs_mom_enable 2>&1
-	    sleep 5
-	    service pbs_mom restart
-	    ssh $head_host pbsnodes
-	    # printf "\nTest this node by running 'pbsnodes' on head node.\n\n"
-	    pause
-	fi
-	
-	# Change torque/spool and torque/undelivered to 777?
-	# Does not appear necessary anymore.
-    fi
 }
 
 
-# Currently must come after Torque setup.  Reorg to consolidate scheduler conf
 nfs_config()
 {
-    df
     cat << EOM
 
 Some schedulers require a shared spool or config directory.  Check the
@@ -517,6 +269,10 @@ EOM
 	return
     fi
 
+    # FIXME: Submit PR
+    # NFS may fail to start without this, even if using ZFS
+    touch /etc/exports
+    
     auto-enable-service -s statd rpc_statd $0
     auto-enable-service -s lockd rpc_lockd $0
     
@@ -526,13 +282,17 @@ EOM
 	# Export /usr (which should include /usr/home)
 	# FIXME: Make sure NFS server is enabled in rc.conf first
 	# Does not work for multi-homed host
-	# ip=`fgrep $head_host /etc/hosts | awk ' { print $1 }' | uniq`
-	subnet=`auto-ask subnet "Subnet for NFS?" 192.168.0.0`
+	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
+	subnet=`auto-ask subnet "\nSubnet for NFS?" 192.168.0.0`
 	
 	share='x'
 	while [ 0$share != 0 ]; do
+	    line
+	    printf "\nMounted filesystems:\n\n"
 	    df
-	    printf "Directory to export? [Press enter to quit] "
+	    printf "\nCurrent mounts:\n\n"
+	    showmount -e
+	    printf "\nDirectory to export? [Press enter to quit] "
 	    read share
 	    
 	    if [ 0$share != 0 ]; then
@@ -563,6 +323,7 @@ EOM
 
 	host='x'
 	while [ 0$host != 0 ]; do
+	    df
 	    printf "\nHost name of NFS server? [Press enter to quit] "
 	    read host
 	    
@@ -601,96 +362,9 @@ EOM
 		mount $share
 	    fi
 	done
-    
-	# FIXME: Find a way to list torque nodes that doesn't depend on
-	# a specific NFS mount.
-	# Add name of node to master list
-	#if auto-package-installed sysutils/torque; then
-	#    add_node_name `hostname -s` $HEAD_USR/local/cluster/torque_nodes
-	#fi
 	;;
 	
     *)
-	;;
-    esac
-}
-
-
-# Must come after NFS setup
-sge_config()
-{
-    case $NODE_TYPE in
-    "head")
-	# Configure SGE master
-	if auto-package-installed sysutils/sge62; then
-	    #cd $LOCALBASE/sge
-	    # -csp is for added security
-	    #./install_qmaster -csp
-	    #cd $start_dir
-	    cell=`auto-ask sge-cell "SGE cell name [default='default']?" default`
-	    if [ 0$cell = 0 ]; then
-		cell='default'
-	    fi
-	    
-	    if ! fgrep -q "sge_cell" $RC_CONF; then
-		printf "sge_cell=\"$cell\"\n" >> $RC_CONF
-	    fi
-	    if ! fgrep -q "sge_qmaster" $RC_CONF; then
-		printf "sge_qmaster_enable=\"YES\"\n" >> $RC_CONF
-	    fi
-	    
-	    if [ ! -e $LOCALBASE/sge/$cell ]; then
-		printf "\nRunning $LOCALBASE/sge/install_qmaster...\n\n"
-		pause
-		save_cwd=`pwd`
-		cd $LOCALBASE/sge
-		./install_qmaster
-		cd $save_cwd
-	    fi
-	fi
-	;;
-    compute)
-	# Configure SGE node
-	if auto-package-installed sysutils/sge62; then
-	    #cd $LOCALBASE/sge
-	    #./install_execd
-	    #cd $start_dir
-	    
-	    cell=`auto-ask sge-cell "SGE cell name [default='default']?" default`
-	    if [ 0$cell = 0 ]; then
-		cell='default'
-	    fi
-	    if ! fgrep -q "sge_cell" $RC_CONF; then
-		printf "sge_cell=\"$cell\"\n" >> $RC_CONF
-	    fi
-	    if ! fgrep -q "sge_execd" $RC_CONF; then
-		printf "sge_execd_enable=\"YES\"\n" >> $RC_CONF
-	    fi
-	    
-	    # FIXME: Don't expect HEAD_USR - let user choose mounts
-	    # Link cell directory or whole SGE directory from head to
-	    # $LOCALBASE/sge
-	    #ln -sf $HEAD_USR/local/sge/$cell $LOCALBASE/sge
-	    
-	    # 
-	    cat << EOM
-	
-Ready to run SGE setup tool...
-Make sure $(hostname) is configured as an administrative host
-On head node: Run qconf -sh to check and qconf -ah to add.
-
-EOM
-	    pause
-    
-	    #if [ ! -e $LOCALBASE/sge/$cell ]; then
-		printf "\nRunning $LOCALBASE/sge/install_execd...\n\n"
-		pause
-		save_cwd=`pwd`
-		cd $LOCALBASE/sge
-		./install_execd
-		cd $save_cwd
-	    #fi
-	fi
 	;;
     esac
 }
@@ -915,9 +589,6 @@ EOM
     if [ $NODE_TYPE = 'head' ]; then
 	# Disable prompting for new hosts, etc.
 	cluster-update-ssh_config
-    else
-	# Add this host to authorized keys for root on head node(s)
-	auto-ssh-authorize $head_host
     fi
 }
 
@@ -994,16 +665,9 @@ update_system()
     line
     printf "Updating system clock...\n"
     stop_service ntpd
-    if killall -9 ntpd > /dev/null 2>&1; then
-	printf "Killed rogue ntp.\n"
-    fi
     ntpdate -u pool.ntp.org
     auto-enable-service ntpd cluster-setup > /dev/null 2>&1
     service ntpd restart
-    local update=`auto-ask update-system 'Update system?' y`
-    if [ $update = y ]; then
-	auto-update-system
-    fi
 }
 
 
@@ -1045,7 +709,8 @@ install_common_tools()
 get_port_install_method()
 {
     line
-    resp=`auto-ask use-source "Build ports from source?" n`
+    #resp=`auto-ask use-source "Build ports from source?" n`
+    resp=n
     if [ 0$resp = 0'y' ]; then
 	export AUTO_BUILD_FROM_SOURCE='yes'
     else
@@ -1150,16 +815,15 @@ EOM
 
 verify_network()
 {
-    cat << EOM
-
-Before proceeding:
-
-1)  Confirm that your IP and netmask are correct in /etc/rc.conf.
-
-2)  Confirm that /etc/hosts contains a correct entry for each interface.
-
-EOM
+    line
+    printf "\nConfirm that your IP and netmask are correct in $RC_CONF.\n\n"
     pause
+    $EDITOR $RC_CONF
+
+    line
+    printf "\nConfirm that $HOSTS contains a correct entry for each interface.\n\n"
+    pause
+    $EDITOR $HOSTS
 }
 
 
@@ -1177,15 +841,12 @@ EOM
 
 get_head_host()
 {
-    printf 'Make sure /etc/hosts is up-to-date.\n'
-    pause
-    
     if [ $NODE_TYPE = "compute" ]; then
 	# If cluster-setup was previously completed on this node,
 	# get head node from configuration, otherwise ask.
 	head_host=''
 	while [ 0$head_host = 0 ]; do
-	    head_host=`auto-ask head-hostname "Short hostname of head node?" login`
+	    head_host=`auto-ask head-hostname "\nShort hostname of head node?" login`
 	done
     else
 	head_host=`hostname -s`
@@ -1226,20 +887,15 @@ done
 #   Set common variables
 ##########################################################################
 
-EDITOR=`auto-ask editor 'What is your preferred editor?' $EDITOR`
-export EDITOR
-
-printf 'If you have an old /etc/hosts.allow to restore, do it now.\n'
-pause
-$EDITOR /etc/hosts.allow
-
 # Recommended layout for dedicated hardware:
 # Use netmask of 255.255.128.0.
 MAX_NODES=60000
 
 # Misc
-LOCALBASE="/usr/local"
-RC_CONF='/etc/rc.conf'
+LOCALBASE=/usr/local
+RC_CONF=/etc/rc.conf
+HOSTS=/etc/hosts
+HOSTS_ALLOW=/etc/hosts.allow
 START_DIR=`pwd`
 APACHE_PKG=apache24
 
@@ -1252,8 +908,6 @@ pause
 
 # Source for default files
 DATADIR=$LOCALBASE/share/cluster-admin
-
-TSPOOL="/var/spool/torque"
 
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
@@ -1271,15 +925,36 @@ esac
 if [ $NODE_TYPE = head ]; then
     CLUSTER_DATA="$LOCALBASE/cluster"
     mkdir -p $CLUSTER_DATA
+
+    if [ -z $EDITOR ]; then
+	EDITOR=vi
+	export EDITOR
+    fi
+    
+    printf "\nIf you have an old $HOSTS_ALLOW to restore, do it now.\n\n"
+    pause
+    $EDITOR $HOSTS_ALLOW
 fi
 
 verify_network
-HEAD_IP=`auto-ask head-ip 'IP address of head node LOCAL interface?' 192.168.0.2`
+HEAD_IP=`auto-ask head-ip '\nIP address of head node LOCAL interface?' 192.168.0.2`
 NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
 
 ##########################################################################
 #   Begin setup
 ##########################################################################
+
+if [ $NODE_TYPE = head ]; then
+    latest=`auto-ask latest "Use latest packages instead of quarterly?" y`
+    if [ $latest = y ]; then
+	mkdir -p $LOCALBASE/etc/pkg/repos
+	cat << EOM > $LOCALBASE/etc/pkg/repos/FreeBSD.conf
+FreeBSD: {
+  url: "pkg+http://pkg.FreeBSD.org/\${ABI}/latest"
+}
+EOM
+    fi
+fi
 
 # The following configuration must be done on all nodes, although
 # different node types may be configured differently.
@@ -1306,8 +981,6 @@ case $NODE_TYPE in
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi
-    ssh $head_host cluster-update-ssh_config
-    cluster-update-ssh_config
     ;;
 *)
     ;;
@@ -1326,10 +999,9 @@ if ! fgrep -q clusteradmin /etc/passwd; then
 Adding clusteradmin user...
 
 EOM
-    cluster-groupadd clusteradmin -g 1000
-    cluster-useradd clusteradmin 1000 clusteradmin 'Cluster Administrator' /bin/tcsh
+    cluster-groupadd clusteradmin -g 1000 || true
+    cluster-useradd clusteradmin 1000 clusteradmin 'Cluster Administrator' /bin/tcsh || true
 fi
 
 # Reboot to test new config after initial setup
 reboot_maybe
-

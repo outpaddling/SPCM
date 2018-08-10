@@ -1,0 +1,51 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-04-01  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name expire-days [warning-days, default=14]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+2)
+    warning=14
+    ;;
+3)
+    warning=$3
+    ;;
+*)
+    usage
+esac
+user_name=$1
+days=$2
+
+auto-passwd-user-expiration $user_name $days $warning
+
+if [ $user_name = root ]; then
+    nodes=`cluster-all-nodes`
+else
+    nodes="`cluster-backup-login-nodes` `cluster-io-nodes` `cluster-vis-nodes`"
+fi
+
+# FIXME: Set all nodes and do the same in cluster-sync-passwd
+for node in $nodes; do
+    echo $node
+    ssh $node auto-passwd-user-expiration $user_name $days $warning
+done

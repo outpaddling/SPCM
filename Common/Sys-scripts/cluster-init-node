@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 hostname backup|compute|io\n"
+    printf "Usage: $0 host.domain backup|compute|io\n"
     exit 1
 }
 
@@ -35,6 +35,12 @@ if ! echo $node | fgrep -q '.'; then
 	exit 1
     fi
 fi
+
+if ! awk '{ print $2 }' /etc/hosts | fgrep -q $node; then
+    printf "Error: $node not found in /etc/hosts.\n"
+    exit 1
+fi
+
 node_type=$2
 
 case $node_type in
@@ -49,9 +55,23 @@ esac
 # login.mortimer
 # gateway=$2
 
+printf "Remove $node from all known_hosts files? [y]/n "
+read remove
+if [ 0$remove != 0n ]; then
+    cluster-remove-from-known-hosts $node
+fi
+
 case `auto-ostype` in
 RHEL)
     scp /etc/hosts ${node}:/etc
+
+    # FIXME: Use interface
+    if [ -e /etc/sysconfig/iptables ]; then
+	scp /etc/sysconfig/iptables ${node}:/etc/sysconfig
+    else
+	printf "No iptables to transfer.\n"
+    fi
+    
     
     # FIXME: Should this be handled by DHCP?
     ssh $node hostname $node
@@ -61,27 +81,42 @@ RHEL)
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
-    ssh $node yum install -y subversion rsync
+    ssh $node yum install -y subversion rsync gcc gcc-c++ gcc-gfortran
     
-    printf "Syncing pkgsrc...\n"
-    cluster-sync-pkgsrc $node_type $node
+    cat << EOM
+
+If all of your nodes run the same OS, you can use rsync to distribute 
+/usr/pkg* from the head node.  If they run different systems, /usr/pkg*
+should be maintained separatedly.
+
+EOM
+    printf "rsync pkgsrc? y/[n] "
+    read rsync_pkgsrc
+    if [ 0$rsync_pkgsrc = 0y ]; then
+	cluster-sync-pkgsrc $node_type $node
+    else
+	# Independent /usr/pkg
+	scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
+	    /usr/pkg/sbin/auto-os-release ${node}:
+	ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
+	ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
+	ssh $node 'pkgin install -y nbpatch python27'
+	ssh $node 'cd /usr/pkgsrc && svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
+	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/auto-admin && bmake install'
+	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin && bmake install'
+    fi
     
-    # Pull ssh keys from node
-    # FIXME: Should not be needed and security risk if compute nodes
-    # behind on updates can access login node
-    # auto-ssh-reverse-authorize $node
+    # ssh $node hostname $node
+    # ssh $node \
+    #    "sed -i -e 's|HOSTNAME=.*|HOSTNAME=$node|' /etc/sysconfig/network"
+    ssh $node auto-set-hostname $node
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     conf_dir='/usr/local/cluster'
     ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
 
     printf "Installing yum updates...\n"
     ssh $node yum update -y
-    
-    printf "Reboot? ([y]/n) "
-    read reboot
-    if [ 0$reboot != 0n ]; then
-	ssh $node shutdown -r now
-    fi
     ;;
 
 FreeBSD)
@@ -95,7 +130,18 @@ FreeBSD)
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
-    ssh $node pkg install -y subversion rsync auto-admin
+    repo_dir=/usr/local/etc/pkg/repos
+    pkg_conf=$repo_dir/FreeBSD.conf
+    if [ -e $pkg_conf ]; then
+	printf "Installing $pkg_conf...\n"
+	ssh $node mkdir -p $repo_dir
+	scp $pkg_conf ${node}:$repo_dir
+    fi
+    # FIXME: Add cluster-admin
+    ssh -t $node env ASSUME_ALWAYS_YES=yes \
+	pkg install -y subversion rsync auto-admin
+    
+    rsync -av --delete /usr/ports ${node}:/usr
     
     # Pull ssh keys from node
     # FIXME: Should not be needed and security risk if compute nodes
@@ -106,7 +152,7 @@ FreeBSD)
     ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
 
     printf "Installing updates...\n"
-    ssh $node auto-update-system
+    ssh $node auto-update-system --binary
     ;;
 
 *)
@@ -114,3 +160,8 @@ FreeBSD)
     ;;
 esac
 
+printf "Reboot? [y]/n "
+read reboot
+if [ 0$reboot != 0n ]; then
+    ssh $node shutdown -r now
+fi

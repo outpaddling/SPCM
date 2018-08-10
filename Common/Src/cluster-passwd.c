@@ -24,13 +24,7 @@
  *  own programs as root.
  */
 
-#ifdef __FreeBSD__
 #define SYNC_CMD    "/usr/local/sbin/cluster-sync-pw %s"
-#endif
-
-#ifdef linux
-#define SYNC_CMD    "/usr/pkg-1/sbin/cluster-sync-pw %s"
-#endif
 
 int     main(int argc,char *argv[])
 
@@ -70,18 +64,18 @@ int     main(int argc,char *argv[])
     else
 	snprintf(cmd, CMD_LEN, "passwd");
     
-    status = system(cmd);
-    if ( status == 0 )
-    {
-	setuid(0);
-	/*
-	 *  Make sure everything run from here on is owned by root!
-	 *  Use absolute pathnames for cluster-sync-pw and restrict PATH
-	 *  in cluster-sync-pw and all scripts eventually run from it.
-	 */
-	snprintf(cmd, CMD_LEN, SYNC_CMD, user_name);
-	system(cmd);
-    }
+    /* Keep trying until user gets it right */
+    while ( system(cmd) != 0 )
+	;
+    
+    setuid(0);
+    /*
+     *  Make sure everything run from here on is owned by root!
+     *  Use absolute pathnames for cluster-sync-pw and restrict PATH
+     *  in cluster-sync-pw and all scripts eventually run from it.
+     */
+    snprintf(cmd, CMD_LEN, SYNC_CMD, user_name);
+    system(cmd);
     return EX_OK;
 }
 

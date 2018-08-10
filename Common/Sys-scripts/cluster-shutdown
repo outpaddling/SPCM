@@ -53,25 +53,32 @@ esac
 printf "Shut down compute nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c 'shutdown $flag now' compute
+    for node in `cluster-compute-nodes`; do
+	if ping -c 1 -q $node > /dev/null 2>&1; then
+	    printf "Shutting down $node...\n"
+	    ssh $node shutdown $flag now || true
+	else
+	    printf "$node is not responding.  Moving on...\n"
+	fi
+    done
 fi
 
 printf "Shut down I/O nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c 'shutdown $flag now' io
+    cluster-run -c "shutdown $flag now" io
 fi
 
 printf "Shut down backup login nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c 'shutdown $flag now' backup
+    cluster-run -c "shutdown $flag now" backup
 fi
 
 printf "Shut down visualization nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c 'shutdown $flag now' vis
+    cluster-run -c "shutdown $flag now" vis
 fi
 
 printf "Shut down head node? (yes/[no]) "

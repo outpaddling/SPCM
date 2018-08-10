@@ -35,11 +35,7 @@ rm -f $new_node.installed $new_node.failed
 set +e
 for pkg in $packages; do
     basename=`echo ${pkg%%-[0-9]*}`
-    echo $basename
-    if ssh $new_node pkg install -y $basename; then
-	echo $pkg >> $new_node.installed
-    else
-	echo $pkg >> $new_node.failed
-    fi
+    base_packages="$base_packages $basename"
 done
-
+echo $base_packages
+ssh $new_node pkg install -y "$base_packages"

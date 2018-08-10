@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -9,12 +9,12 @@
 #       
 #   History:
 #   Date        Name        Modification
-#   2013-12-31  root        Begin
+#   2017-04-01  root        Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 username\n"
+    printf "Usage: $0 expire-days [warning-days, default=14]\n"
     exit 1
 }
 
@@ -23,21 +23,20 @@ usage()
 #   Main
 ##########################################################################
 
-if [ `hostname -s` != 'login' ]; then
-    printf "$0 can only be run on the primary login node.\n"
-    exit 1
-fi
-
-if [ $# != 1 ]; then
+case $# in
+1)
+    warning=14
+    ;;
+2)
+    warning=$2
+    ;;
+*)
     usage
-fi
+esac
+days=$1
 
-user_name="$1"
-
-# Add user and group to I/O and compute nodes
-for node in `cluster-all-nodes`; do
-    printf "$node $user_name\n"
-    if ! node-sync-users $node $user_name; then
-	printf "Warning: Unable to sync user to $node.\n"
-    fi
+for user in `cluster-users`; do
+    echo $user
+    
+    cluster-passwd-user-expiration $user $days $warning
 done

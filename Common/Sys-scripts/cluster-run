@@ -8,6 +8,8 @@ Usage: $0 [-p] [-c] [-n] 'command' backup|io|compute|vis|all
     -p = run in parallel, redirecting output to files. (implies -c)
     -n = omit ssh -t flag to disable full terminal control.
 	 Use only if a command has output problems without -n.
+    -f first-host
+    -l last-host
 
     Note: command must be enclosed in quotes.
 EOM
@@ -27,6 +29,14 @@ while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
 	shift
     elif [ $1 = '-n' ]; then
 	terminal_control=off
+	shift
+    elif [ $1 = '-f' ]; then
+	shift
+	first_node=$1
+	shift
+    elif [ $1 = '-l' ]; then
+	shift
+	last_node=$1
 	shift
     else
 	usage $0
@@ -64,7 +74,37 @@ while [ $# -gt 1 ]; do
     shift
 done
 
+if [ -z $first_node ]; then
+    first_node=`echo $nodes | awk '{ print $1 }'`
+fi
+echo $first_node
+if [ -z $last_node ]; then
+    last_node=`echo $nodes | awk '{ print $NF }'`
+fi
+echo $last_node
+if ! echo $nodes | fgrep -q $first_node; then
+    printf "$first_node is not among the selected nodes.\n"
+    exit 1
+fi
+if ! echo $nodes | fgrep -q $last_node; then
+    printf "$last_node is not among the selected nodes.\n"
+    exit 1
+fi
+
+in_range=0
 for node in $nodes; do
+    if [ $node = $first_node ]; then
+	in_range=1
+    fi
+    if [ $in_range = 1 ]; then
+	selected_nodes="$selected_nodes $node "
+    fi
+    if [ $node = $last_node ]; then
+	in_range=0
+    fi
+done
+
+for node in $selected_nodes; do
     printf "\n============================================================\n"
     printf "$node\n"
     printf "============================================================\n\n"

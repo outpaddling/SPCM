@@ -2,10 +2,7 @@
 
 cluster-dist-file /etc/hosts /etc all 644
 
-for node in \
-    `cluster-backup-login-nodes` \
-    `cluster-io-nodes` \
-    `cluster-compute-nodes`; do
+for node in `cluster-all-nodes`; do
     printf "$node\n"
     cluster-init-node $node
 done

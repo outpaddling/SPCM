@@ -52,8 +52,10 @@ while true; do
 1.. Add user
 2.. Change user's password
 3.. Sync a user's password
-4.. Add group
-5.. Add user to another group
+4.. Change user's password expiration date (to days after today)
+5.. Change password expiration date for all users (to days after today)
+6.. Add group
+7.. Add user to another group
 Q.. Quit
 
 EOM
@@ -76,11 +78,39 @@ EOM
 	cluster-sync-pw $user_name
 	;;
     4)
-	printf "New group name? "
-	read group
-	cluster-add-group $group
+	printf "Note: This will reset the expiration date on the current password\n"
+	printf "regardless of age.  Choose the number of days accordingly.\n"
+	printf "\nAre you sure you want to proceed? y/[n] "
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    printf "Username? "
+	    read user_name
+	    printf "Expire passwords in how many days? "
+	    read days
+	    cluster-passwd-user-expiration $user_name $days
+	fi
 	;;
     5)
+	printf "This will reset password expiration date for ALL users.\n"
+	printf "Some users may have special expiration periods, which will be overwritten.\n"
+	printf "You may prefer to set the default password age limit.\n"
+	printf "See login.conf on FreeBSD or login.defs on Linux.\n"
+	printf "\nAre you sure you want to proceed? y/[n] "
+	read proceed
+	if [ 0$proceed = 0y ]; then
+	    printf "Expire password in how many days? "
+	    read days
+	    cluster-passwd-expiration $days
+	fi
+	;;
+    6)
+	printf "New group name? "
+	read group
+	printf "GID? "
+	read gid
+	cluster-groupadd $group -g $gid
+	;;
+    7)
 	printf "Username? "
 	read user_name
 	printf "Group name? "

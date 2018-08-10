@@ -33,7 +33,8 @@ done
 rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
 cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin || true
+# Nothing here yet 
+# cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin || true
 cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 chmod 750 ${DESTDIR}${PREFIX}/sbin/*
@@ -65,15 +66,12 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
 
 src_prefix=$(dirname $(dirname $(dirname $(dirname $(pwd)))))
 printf "src_prefix = $src_prefix\n"
-for script in `fgrep -l '%%PREFIX%%' {$os,Common}/Sys-scripts/*`; do
+for script in `fgrep -l '%%PREFIX%%' \
+	$os/Sys-scripts/* \
+	Common/Sys-scripts/* \
+	$os/User-scripts/* \
+	Common/User-scripts/*`; do
     sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
 	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
     > ${DESTDIR}${PREFIX}/sbin/`basename $script`
 done
-
-for script in `fgrep -l '%%PREFIX%%' {$os,Common}/User-scripts/*`; do
-    sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
-	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
-    > ${DESTDIR}${PREFIX}/bin/`basename $script`
-done
-

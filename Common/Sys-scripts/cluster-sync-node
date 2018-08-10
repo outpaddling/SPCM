@@ -14,8 +14,22 @@
 
 usage()
 {
-    printf "Usage: $0 hostname compute|io\n"
+    printf "Usage: $0 host.domain compute|io\n"
     exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
 }
 
 
@@ -26,6 +40,8 @@ usage()
 if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
     usage
 fi
+
+LOCALBASE=/usr/local
 
 long_node_name=$1
 if ! echo $long_node_name | fgrep -q '.'; then
@@ -63,6 +79,10 @@ RHEL)
 	exit 1
     fi
     
+    printf "Reference node for Yum packages? "
+    read ref_node
+    cluster-sync-yum-packages $ref_node $node
+    
     # Sync users
     printf "Sync users? [y]/n "
     read sync_users
@@ -73,7 +93,7 @@ RHEL)
     # Not in the UID range for normal cluster users, so node-sync-all-users
     # will skip it.
     # FIXME: Don't assume slurm
-    node-sync-user $node slurm || true
+    node-sync-users $node slurm || true
     
     # Sync sys files
     cluster-sync-sysfiles $node
@@ -93,7 +113,7 @@ RHEL)
     else
 	printf "No $yum_list found.\n"
     fi
-    
+
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
     ssh -t $node cluster-setup $node_type
@@ -109,22 +129,38 @@ FreeBSD)
 	exit 1
     fi
     
+    # FIXME: Replace with pkg install cluster-admin when possible
+    # working around hwloc seg fault bug
+    ssh $node 'fgrep -q USE_LOCAL_MK /etc/make.conf || printf "USE_LOCAL_MK=yes\n" >> /etc/make.conf'
+    ssh $node 'cd /usr/ports/wip/wip-tools && make clean deinstall reinstall'
+    ssh -t $node wip-update
+    ssh $node 'cd /usr/ports/wip/cluster-admin && make -DBATCH deinstall reinstall'
+    ssh $node pkg install -y hwloc
+    #ssh $node 'cd /usr/ports/wip/hwloc && make -DBATCH deinstall reinstall'
+    
+    # Add new node to ssh_config on all hosts
+    cluster-update-ssh_config
+    ssh $node cluster-update-ssh_config
+    
     # Sync users
-    printf "Sync users? [y]/n "
-    read sync_users
-    if [ 0$sync_users != 0n ]; then
-	node-sync-all-users $node || true
-    fi
+    node-sync-all-users $node || true
     
     # Not in the UID range for normal cluster users, so node-sync-all-users
     # will skip it.
     # FIXME: Don't assume slurm
-    node-sync-user $node slurm || true
+    node-sync-users $node slurm || true
     
     # Sync sys files
     cluster-sync-sysfiles $node
     
     cluster-sync-files $node
+    
+    printf "Sync packages? [y]/n "
+    read sync
+    if [ 0$sync != 0n ]; then
+	read -p "Source node? " source_node
+	cluster-sync-packages $source_node $node
+    fi
     
     # hosts.allow
     rsync -av /etc/hosts.allow ${node}:/etc
@@ -134,11 +170,22 @@ FreeBSD)
     # Sync software
     # FIXME: Implement for FreeBSD
     
+    # Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
+    munge_dir="$LOCALBASE/etc/munge"
+    ssh $node mkdir -p -m 0700 $munge_dir
+    scp -p $munge_dir/munge.key ${node}:$munge_dir
+    
+    slurm_conf="$LOCALBASE/etc/slurm.conf"
+    scp $slurm_conf ${node}:$slurm_conf
+    
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
+    printf "\nRunning cluster-setup $node_type on $node...\n\n"
     ssh -t $node cluster-setup $node_type
     
+    printf "Run cluster-sync-sysfiles to update other nodes if you've updated /etc/hosts.\n"
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
+    pause
     ;;
 
 *)
@@ -147,7 +194,3 @@ FreeBSD)
     ;;
 
 esac
-
-# FIXME: Support other schedulers
-scontrol update nodename=$node state=resume
-
