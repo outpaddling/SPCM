@@ -56,7 +56,12 @@ Pkgsrc packages can generally be installed in minutes or hours.
 Software not presently in the Pkgsrc collection can also be requested,
 but will generally take longer to install.
 
-<img style="float:right" src="centos-power.jpg" alt="[Powered by CentOS]">
+<p>
+Powered by...
+
+<p>
+<img src="centos-power.jpg" alt="[Powered by CentOS]">
+<img src="pkgsrc.jpg" alt="[Powered by pkgsrc]">
 
 </body>
 </html>

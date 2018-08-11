@@ -37,3 +37,7 @@ pre
     padding: 2cm; /* distance from border edge to text */
 }
 
+img {
+    width: auto;
+    height: 10%;
+}
