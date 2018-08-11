@@ -61,56 +61,5 @@ case $# in
     esac
 esac
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% or %%SRC_PREFIX%% with a hard-coded prefix from an installed
-# script.
-prefix=%%PREFIX%%
-src_prefix=%%SRC_PREFIX%%
-
-auto-clean-pkgsrc $src_prefix
-
-# Use wildcards in --exclude patterns, as full prefix does not work and this
-# keeps things simple.
-
-# Backup login nodes get everything except logs
-for node in $backup_nodes; do
-    printf "$node...\n"
-    if ! rsync -av --delete \
-	--exclude '*/var/*/munge' \
-	$prefix $src_prefix ${node}:/usr; then
-	failed_nodes="$failed_nodes $node"
-    else
-	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
-    fi
-done
-
-# cluster-passwd can only be run on the login node
-for node in $other_nodes; do
-    printf "$node...\n"
-    if ! rsync -av --delete \
-	--exclude '*/var/*/munge' \
-	--exclude '*/bin/cluster-passwd' \
-	$prefix $src_prefix ${node}:/usr; then
-	failed_nodes="$failed_nodes $node"
-    else
-	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
-    fi
-done
-
-# cluster-passwd can only be run on the login node
-for node in $compute_nodes; do
-    printf "$node...\n"
-    if ! rsync -av --delete \
-	--exclude '*/var/*/munge' \
-	--exclude '*/bin/cluster-passwd' \
-	$prefix ${node}:/usr; then
-	failed_nodes="$failed_nodes $node"
-    else
-	ssh $node ln -sf $prefix/etc/pkgsrc.\*sh /etc/profile.d
-    fi
-done
-
-if [ ! -z "$failed_nodes" ]; then
-    printf "Unable to sync the following nodes: %s\n" "$failed_nodes"
-fi
+printf "$0 is currently unfinished.\n"
+exit 1

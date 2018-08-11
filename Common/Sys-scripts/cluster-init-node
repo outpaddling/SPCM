@@ -102,8 +102,7 @@ EOM
 	ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
 	ssh $node 'pkgin install -y nbpatch python27'
 	ssh $node 'cd /usr/pkgsrc && svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
-	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/auto-admin && bmake install'
-	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin && bmake install'
+	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin-devel && bmake install'
     fi
     
     # ssh $node hostname $node

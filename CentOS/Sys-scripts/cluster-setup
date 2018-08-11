@@ -836,7 +836,7 @@ pkgin install -y subversion
 cd /usr/pkgsrc
 svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk \
 	uwm-pkgsrc-wip
-for pkg in cluster-admin ape; do
+for pkg in cluster-admin-devel ape; do
     cd /usr/pkgsrc/uwm-pkgsrc-wip/$pkg
     bmake install
 done
