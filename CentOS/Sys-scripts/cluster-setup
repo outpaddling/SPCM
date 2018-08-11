@@ -659,8 +659,8 @@ ganglia_install()
 	chkconfig gmond on
 	service gmond restart
 	;;
+    
     RHEL7)
-	# FIXME: Is there a systemctl service script?
 	# FIXME: ganglia pkg should create this
 	mkdir -p /usr/pkg/var/run/
 	systemctl disable gmond.service || true
@@ -668,15 +668,15 @@ ganglia_install()
 	systemctl daemon-reload
 	systemctl restart gmond.service
 	;;
+    
     *)
 	printf "Unsupported RHEL version: $OS_RELEASE\n"
 	exit 1
+	;;
+    
     esac
 
     if [ $NODE_TYPE = head ]; then
-	# FIXME: Commit ganglia and just install that
-    
-	pkgin install -y ganglia-webfrontend
 	ganglia-web-setup
     fi
 }
