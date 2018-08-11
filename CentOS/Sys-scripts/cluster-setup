@@ -847,7 +847,7 @@ done
 
 # Configure firewall
 auto-enable-passwdqc
-cluster-iptables-config
+cluster-firewalld-config
 
 # After core_rpms.  Requires gcc.
 printf "Run harden script? y/[n] "

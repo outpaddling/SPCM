@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+# Excellent firewalld tutorial:
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7#creating-your-own-zones
+
+# yum install firewalld Part of CentOS base?
+
+# Basic checks
+systemctl enable firewalld
+systemctl start firewalld
+firewall-cmd --state
+firewall-cmd --get-default-zone
+firewall-cmd --get-active-zones
+firewall-cmd --list-all
+
+# Default zone is public, be more permissive?
+# firewall-cmd --list-all-zones
+# firewall-cmd --set-default-zone=home
+# firewall-cmd --get-services
+
+# Allow http traffic
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --list-services
+
+# If we want to add special ports
+# firewall-cmd --zone=public --add-port=5000/tcp
+# firewall-cmd --zone=public --list-ports
