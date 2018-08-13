@@ -13,29 +13,13 @@ pause()
     read junk
 }
 
-# Caution: 
-if which pkg_add > /dev/null 2>&1; then
-    pkg_add=`which pkg_add`
-    prefix=`echo ${pkg_add%/sbin/pkg_add}`
-else
-    printf "Cannot determine pkgsrc prefix.\n"
-    exit 1
-fi
+pkgin install -y apache ganglia-webfrontend
+pause
 
-# yum install httpd php
-printf "Ganglia setup is currently disabled.\n"
-printf "Replace yum httpd with pkgsrc apache in $0.\n"
-exit
+OS_RELEASE=`auto-os-release`
+prefix=`auto-pkgsrc-prefix`
 
-ganglia=/var/lib/ganglia
-mkdir -p $ganglia/rrds
-chown nobody:nobody $ganglia/rrds/
-restorecon -R -v $ganglia
-
-ganglia_web=/var/lib/ganglia-web
-cp -Rp $prefix/$ganglia_web /var/lib
-chown -R apache:apache $ganglia_web
-chmod -R u+rwX,g-w $ganglia_web
+init_script=$prefix/etc/apache.service
 
 # selinux attempted fixes
 #chcon -R -t httpd_sys_rw_content_t $ganglia_web
@@ -43,39 +27,123 @@ chmod -R u+rwX,g-w $ganglia_web
 #restorecon -R -v $ganglia_web
 #setsebool -P allow_httpd_anon_write=1
 # FIXME: Temporary hack
-setenforce Permissive
+# OK with pkgsrc apache24
+# setenforce Permissive
+# setenforce Enforcing
+
+web_root=$prefix/share/httpd/htdocs
 
 DATADIR=$prefix/share/cluster-admin
-cp $DATADIR/WWW/global_styles.css $DATADIR/WWW/centos-power.jpg /var/www/html
-chmod a+r /var/www/html/*
+cp $DATADIR/WWW/global_styles.css \
+    $DATADIR/WWW/centos-power.jpg \
+    $DATADIR/WWW/pkgsrc.jpg \
+    $web_root
+chmod a+r $web_root/*
 
-if [ ! -e /var/www/html/index.php ]; then
+if [ ! -e $web_root/index.php ]; then
     printf "Cluster name as it should appear on the web? "
     read name
-    sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/WWW/index.php > /var/www/html/index.php
+    sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/WWW/index.php > $web_root/index.php
 fi
 
-for service in gmond gmetad; do
-    if [ ! -e $prefix/etc/$service.conf ]; then
-	cp $prefix/share/examples/ganglia-monitor-core/$service.conf $prefix/etc
-    fi
-    vi $prefix/etc/$service.conf
-    chmod 644 $prefix/etc/$service.conf
+httpd_conf=/usr/pkg/etc/httpd/httpd.conf
+sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' \
+    $httpd_conf
+vi $httpd_conf
 
-    ln -sf $prefix/share/examples/ganglia-monitor-core/$service.init.linux /etc/init.d/$service
-    chkconfig --add $service
-    chkconfig $service on       # probably redundant
-    service $service restart
-    pause
-done
+# https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
+if [ ! -e $init_script ]; then
+    cat << EOM > $init_script
+[Unit]
+Description=The Apache HTTP Server
+After=network.target
 
-httpd_conf='/etc/httpd/conf/httpd.conf'
+[Service]
+Type=forking
+ExecStart=$prefix/sbin/apachectl -k start
+ExecReload=$prefix/sbin/apachectl -k graceful
+ExecStop=$prefix/sbin/apachectl -k graceful-stop
+PIDFile=$prefix/var/run/httpd.pid
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOM
+fi
+
+vi $init_script
+systemctl disable apache.service || true
+systemctl enable $init_script || true
+systemctl daemon-reload
+systemctl restart apache.service
+
+# FIXME: Update this for new webfrontend package if needed
+ganglia=/var/lib/ganglia
+mkdir -p $ganglia/rrds
+# chown nobody:nobody $ganglia/rrds
+chown -Rh ganglia:ganglia $ganglia
+chmod -R a+rX $ganglia
+restorecon -R -v $ganglia
+
+ganglia_web=/var/lib/ganglia-web
+mkdir -p $ganglia_web/dwoo/compiled $ganglia_web/dwoo/cache $ganglia_web/conf
+# cp -Rp $prefix/$ganglia_web /var/lib # From old wip pkg?
+# pkgsrc apache24 uses www user and group
+# Yum uses apache
+apache_user=www
+
+chown -R ${apache_user}:${apache_user} $ganglia_web
+chmod -R u+rwX,g-w,a+rX $ganglia_web
+
+ls -al /var/lib/ganglia*
+pause
+
+# Just set up gmond.conf on the head node and distribute to other nodes
+# gmond already enabled by cluster-setup on all nodes
+if [ ! -e $prefix/etc/gmond.conf ]; then
+    cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+fi
+vi $prefix/etc/gmond.conf
+chmod 644 $prefix/etc/gmond.conf
+
+# gmetad just for head node
+if [ ! -e $prefix/etc/gmetad.conf ]; then
+    cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
+fi
+vi $prefix/etc/gmetad.conf
+chmod 644 $prefix/etc/gmetad.conf
+
+case $OS_RELEASE in
+RHEL6)
+    cp $prefix/share/examples/ganglia/gmetad.init.linux /etc/init.d/gmetad
+    chkconfig --add gmetad
+    chkconfig gmetad on       # probably redundant
+    service gmetad restart
+    ;;
+
+RHEL7)
+    # FIXME: ganglia pkg should create this
+    mkdir -p /usr/pkg/var/run/
+    systemctl disable gmetad.service || true
+    vi /usr/pkg/share/examples/ganglia/gmetad.service
+    systemctl enable /usr/pkg/share/examples/ganglia/gmetad.service
+    systemctl daemon-reload
+    systemctl restart gmetad.service
+    ;;
+
+*)
+    printf "Unsupported os release: $OS_RELEASE\n"
+    exit 1
+
+esac
+pause
 
 if ! fgrep -q '/ganglia/' $httpd_conf; then
 
     cat << EOM >> $httpd_conf
 
-Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
+# Old: Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
+Include /usr/pkg/etc/ganglia/apache.conf
 
 <Directory "$prefix/share/httpd/htdocs/ganglia/">
     Options Indexes FollowSymlinks MultiViews
@@ -89,7 +157,6 @@ Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
 EOM
 fi
 
-chkconfig --add httpd
-chkconfig httpd on
-service httpd restart
-
+# FIXME: Is this necessary?
+chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
+systemctl restart apache.service

@@ -178,9 +178,11 @@ ib_config()
     # service srpd restart
 
     # Enable and test IB interface
-    ip link show
+    ip addr | egrep 'mtu|inet'
     if ip link show | fgrep -q eth0; then
 	default_if=eth0
+    elif ip link show | fgrep -q eno1; then
+	default_if=eno1
     else
 	default_if=em1
     fi
@@ -219,6 +221,9 @@ EOM
     # Causes network to hang if done remotely
     # Start ib0 by other means
     ip link set ib0 up
+    
+    # Fails on first try.  Guessing at solution...
+    sleep 5
     
     case $OS_RELEASE in
     RHEL6)

@@ -82,14 +82,25 @@ RHEL)
 	exit 1
     fi
     
-    read -p "Sync Yum packages? [y]/n " sync_yum
-    if [ 0$sync_yum != 0n ]; then
+    cat << EOM
+---
+Answer 'y' here if you have distributed new Yum packages while this node
+was inaccessible.
+---
+EOM
+    read -p "Sync Yum packages? y/[n] " sync_yum
+    if [ 0$sync_yum = 0y ]; then
 	printf "Reference node for Yum packages? "
 	read ref_node
 	cluster-sync-yum-packages $ref_node $node
     fi
     
     # Sync users
+    cat << EOM
+---
+Answer 'y' here if you have added new users while this node was inaccessible.
+---
+EOM
     printf "Sync users? [y]/n "
     read sync_users
     if [ 0$sync_users != 0n ]; then
