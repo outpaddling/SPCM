@@ -63,9 +63,8 @@ case $NODE_TYPE in
 
 'compute')
     if [ ! -e $munge_etc/munge.key ]; then
-	printf "Host name or IP address of head node? "
-	read head_node
-	scp ${head_node}:$munge_etc/munge.key $munge_etc
+	printf "Error, missing munge key.  Should have been pushed over by cluster-sync-node.\n"
+	exit
     fi
     ;;
 

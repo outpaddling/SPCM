@@ -55,6 +55,9 @@ node_type=$2
 
 node=${long_node_name%%.*}
 
+ssh $node pkgin install -y rsync
+ssh $node yum remove -y rsync
+
 case $node_type in
 backup|compute|io)
     ;;
@@ -79,9 +82,12 @@ RHEL)
 	exit 1
     fi
     
-    printf "Reference node for Yum packages? "
-    read ref_node
-    cluster-sync-yum-packages $ref_node $node
+    read -p "Sync Yum packages? [y]/n " sync_yum
+    if [ 0$sync_yum != 0n ]; then
+	printf "Reference node for Yum packages? "
+	read ref_node
+	cluster-sync-yum-packages $ref_node $node
+    fi
     
     # Sync users
     printf "Sync users? [y]/n "
@@ -103,7 +109,11 @@ RHEL)
     # hosts.allow
     rsync -av /etc/hosts.allow ${node}:/etc
     
-    # Other stuff
+    # Munge key
+    rsync -av /usr/pkg/etc/munge ${node}:/usr/pkg/etc
+    
+    # SLURM config
+    rsync -av /usr/pkg/etc/slurm.conf ${node}:/usr/pkg/etc
     
     # Sync software
     yum_list=/usr/local/cluster/$node_type-node-yum-packages

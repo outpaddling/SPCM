@@ -90,20 +90,13 @@ If all of your nodes run the same OS, you can use rsync to distribute
 should be maintained separatedly.
 
 EOM
-    printf "rsync pkgsrc? y/[n] "
-    read rsync_pkgsrc
-    if [ 0$rsync_pkgsrc = 0y ]; then
-	cluster-sync-pkgsrc $node_type $node
-    else
-	# Independent /usr/pkg
-	scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
-	    /usr/pkg/sbin/auto-os-release ${node}:
-	ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
-	ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
-	ssh $node 'pkgin install -y nbpatch python27'
-	ssh $node 'cd /usr/pkgsrc && svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
-	ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin-devel && bmake install'
-    fi
+    scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
+	/usr/pkg/sbin/auto-os-release ${node}:
+    ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
+    ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
+    ssh $node 'pkgin install -y nbpatch python27'
+    ssh $node 'cd /usr/pkgsrc && svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
+    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin-devel && bmake install'
     
     # ssh $node hostname $node
     # ssh $node \

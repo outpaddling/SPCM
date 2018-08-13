@@ -324,6 +324,7 @@ nfs_config()
     fi
     
     # Install NFS to all nodes
+    # https://www.unixmen.com/setting-nfs-server-client-centos-7/
     printf "Installing NFS utilities...\n"
     yum install -y nfs-utils
     
@@ -350,8 +351,9 @@ nfs_config()
 	;;
     RHEL7)
 	systemctl enable rpcbind
-	systemctl enable nfslock
-	systemctl enable nfs
+	systemctl enable nfs-server
+	systemctl enable nfs-lock
+	systemctl enable nfs-idmap
 	;;
     *)
 	printf "Unsupported RHEL version: $OS_RELEASE\n"
@@ -389,9 +391,10 @@ nfs_config()
 	    service nfs restart
 	    ;;
 	RHEL7)
-	    systemctl restart rpcbind.service
-	    systemctl restart nfslock.service
-	    systemctl restart nfs
+	    systemctl restart rpcbind
+	    systemctl restart nfs-server
+	    systemctl restart nfs-lock
+	    systemctl restart nfs-idmap
 	    ;;
 	*)
 	    printf "Unsupported RHEL version: $OS_RELEASE\n"
@@ -475,9 +478,6 @@ install_core_rpms()
     
     printf "Installing core utilities...\n"
     yum install -y \
-	rsync \
-	wget \
-	nano \
 	sysstat \
 	bind-utils \
 	ksh tcsh zsh \
@@ -486,7 +486,6 @@ install_core_rpms()
 	mailx \
 	parted \
 	lsof \
-	emacs \
 	words \
 	environment-modules \
 	yum-utils \
@@ -501,7 +500,7 @@ install_core_rpms()
     line
     printf "Installing base development tools...\n"
     # gcc-* and cvs required for pkgsrc
-    yum install -y gcc gcc-c++ gcc-gfortran cvs gdb
+    yum install -y gcc gcc-c++ gcc-gfortran gdb
 
     # Enable X11 apps without installing a desktop system like KDE
     line
@@ -831,15 +830,12 @@ ntp_config
 install_core_rpms
 pkgsrc_setup
 
-# Install cluster-admin and other wip packages
-pkgin install -y subversion
+pkgin install -y cvs subversion git rsync
+yum remove -y cvs subversion git rsync
+yum autoremove -y
+
 cd /usr/pkgsrc
-svn co https://outpaddling@github.com/outpaddling/uwm-pkgsrc-wip/trunk \
-	uwm-pkgsrc-wip
-for pkg in cluster-admin-devel ape; do
-    cd /usr/pkgsrc/uwm-pkgsrc-wip/$pkg
-    bmake install
-done
+# FIXME: Commit and use pkgin
 for pkg in denyhosts; do
     cd /usr/pkgsrc/wip/$pkg
     bmake install

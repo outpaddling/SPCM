@@ -25,3 +25,15 @@ firewall-cmd --permanent --list-services
 # If we want to add special ports
 # firewall-cmd --zone=public --add-port=5000/tcp
 # firewall-cmd --zone=public --list-ports
+
+# NFS
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --permanent --add-port=6817/tcp
+
+# Trust all cluster nodes
+firewall-cmd --permanent --zone=public --add-source=192.168.0.0/16
+
+firewall-cmd --reload
+firewall-cmd --list-all

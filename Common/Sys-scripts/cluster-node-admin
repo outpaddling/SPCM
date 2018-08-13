@@ -159,8 +159,11 @@ EOM
 	auto-pxe-node-discover $host_prefix $host_digits $domain
 	;;
     2)
-	printf "Host name prefix? (e.g. compute-) "
+	printf "Host name prefix? [compute-] "
 	read host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
 	printf "Domain? [local] "
 	read domain
 	if [ 0$domain = 0 ]; then
@@ -211,8 +214,11 @@ EOM
     3)
 	# FIXME: Support other schedulers
 	sinfo
-	printf "Host name prefix? (e.g. compute-) "
+	printf "Host name prefix? [compute-] "
 	read host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
 	printf "Domain? [local] "
 	read domain
 	if [ 0$domain = 0 ]; then
