@@ -109,11 +109,6 @@ pkgsrc_setup()
     line
     auto-binary-pkgsrc-setup /usr/pkg gcc-5.0
 
-    # Add pkgsrc to default path, non-exclusive
-    if [ -e /etc/profile.d ]; then
-	ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d
-    fi
-    
     # Add pkgsrc to current path, exclusive
     . /usr/pkg/etc/pkgsrc.sh
 }
