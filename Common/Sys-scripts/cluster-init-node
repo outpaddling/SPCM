@@ -108,7 +108,10 @@ EOM
     ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
 
     printf "Installing yum updates...\n"
-    ssh $node yum update -y
+    ssh $node auto-update-system --defaults
+    if [ $node_type = compute ]; then
+	scontrol update state=resume nodename=$node
+    fi
     ;;
 
 FreeBSD)

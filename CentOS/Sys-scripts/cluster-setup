@@ -153,12 +153,17 @@ ib_config()
     RHEL7)
 	systemctl enable ibacm.service
 	systemctl enable rdma.service
-	systemctl stop ibacm.service
+	sleep 5 # Guessing how to avoid ibacm start failure
+	systemctl stop ibacm.service || true
+	sleep 5
 	# Failed to restart rdma.service: Operation refused, unit rdma.service
 	# may be requested by dependency only (it is configured to refuse
 	# manual start/stop).
 	# systemctl restart rdma.service
-	systemctl start ibacm.service
+	while ! systemctl start ibacm.service; do
+	    printf "ibacm failed to start.  Sleeping 5 seconds and retrying...\n"
+	    sleep 5
+	done
 	;;
     *)
 	printf "Unsupported RHEL version: $OS_RELEASE\n"
