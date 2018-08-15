@@ -234,7 +234,7 @@ EOM
 	    if [ 0$use_defaults = 0y ]; then
 		yes '' | cluster-sync-node $node compute
 	    else
-		cluster-sync-node $node compute
+		cluster-sync-node $node compute || true
 	    fi
 	    printf "Done with $node...\n"
 	    num=$((num + 1))

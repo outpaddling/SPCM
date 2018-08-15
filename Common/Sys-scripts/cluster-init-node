@@ -65,14 +65,6 @@ case `auto-ostype` in
 RHEL)
     scp /etc/hosts ${node}:/etc
 
-    # FIXME: Use interface
-    if [ -e /etc/sysconfig/iptables ]; then
-	scp /etc/sysconfig/iptables ${node}:/etc/sysconfig
-    else
-	printf "No iptables to transfer.\n"
-    fi
-    
-    
     # FIXME: Should this be handled by DHCP?
     ssh $node hostname $node
     ssh $node \
@@ -81,7 +73,7 @@ RHEL)
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
-    ssh $node yum install -y subversion rsync gcc gcc-c++ gcc-gfortran
+    ssh $node yum install -y gcc gcc-c++ gcc-gfortran
     
     cat << EOM
 
@@ -109,9 +101,6 @@ EOM
 
     printf "Installing yum updates...\n"
     ssh $node auto-update-system --defaults
-    if [ $node_type = compute ]; then
-	scontrol update state=resume nodename=$node
-    fi
     ;;
 
 FreeBSD)

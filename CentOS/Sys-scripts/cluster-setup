@@ -848,7 +848,7 @@ done
 
 # Configure firewall
 auto-enable-passwdqc
-cluster-firewalld-config
+cluster-firewalld-config $NODE_TYPE
 
 # After core_rpms.  Requires gcc.
 printf "Run harden script? y/[n] "
