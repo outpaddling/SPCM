@@ -57,7 +57,6 @@ if [ ! -e $prefix/etc/slurm.conf ]; then
     cp $prefix/share/examples/slurm/slurm.conf.example $prefix/etc/slurm.conf
 fi
 chmod 644 $prefix/etc/slurm.conf
-$EDITOR $prefix/etc/slurm.conf
 
 case `auto-os-release` in
 RHEL6)
@@ -75,7 +74,6 @@ RHEL7)
 	init_script=$prefix/share/examples/slurm/slurmctld.service
 	# FIXME: Why?
 	sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
-	vi $init_script
 	systemctl disable slurmctld.service || true
 	systemctl enable $init_script || true
 	systemctl daemon-reload
@@ -86,7 +84,6 @@ RHEL7)
 	init_script=$prefix/share/examples/slurm/slurmd.service
 	# FIXME: Why?
 	sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
-	vi $init_script
 	systemctl disable slurmd.service || true
 	systemctl enable $init_script || true
 	systemctl daemon-reload

@@ -1,7 +1,8 @@
 #!/bin/sh
 
 status=0
-printf "%-20s %-10s %s\n" "Host" "Ping" "SSH"
+tmpfile=cluster-down-nodes-uptime
+printf "%-20s %-10s %s\n" "Host" "Ping" "ssh node uptime"
 for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
     printf "%-20s " $node
     if ! ping -c 1 $node > /dev/null 2>&1; then
@@ -9,12 +10,13 @@ for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nod
 	status=1
     else
 	printf "%-10s " "OK"
-	if ! ssh -o ConnectTimeout=10 $node hostname > /dev/null 2>&1; then
+	if ! ssh -o ConnectTimeout=10 $node uptime > $tmpfile 2> /dev/null; then
 	    printf "Failed\n"
 	    status=1
 	else
-	    printf "OK\n"
+	    awk -F , '{ print $1 }' $tmpfile | awk -F 'up ' '{ printf("Up %s\n", $2); }'
 	fi
+	rm $tmpfile
     fi
 done
 exit $status

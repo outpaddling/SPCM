@@ -58,8 +58,7 @@ pause()
 {
     local junk
     
-    printf "Press return to continue..."
-    read junk
+    read -p "Press return to continue..." junk
 }
 
 
@@ -333,7 +332,7 @@ nfs_config()
     printf "Installing NFS utilities...\n"
     yum install -y nfs-utils
     
-    idmapd_domain=`auto-ask idmapd-domain 'IDMAPD domain for NFS4?' cluster`
+    idmapd_domain=cluster
     sed -i "s|.*Domain = .*|Domain = $idmapd_domain|" /etc/idmapd.conf
     
     case $OS_RELEASE in
@@ -383,6 +382,10 @@ nfs_config()
 	    printf 'Enter another path to export, or press return to move on: '
 	    read export
 	    
+	    if [ ! -e $export ]; then
+		mkdir -p $export
+	    fi
+	    
 	    # Add to NFS exports if not already there
 	    auto-append-line "$export" \
 		"$export $range(rw,no_root_squash)" \
@@ -395,15 +398,19 @@ nfs_config()
 	    service nfslock restart
 	    service nfs restart
 	    ;;
+	
 	RHEL7)
 	    systemctl restart rpcbind
 	    systemctl restart nfs-server
 	    systemctl restart nfs-lock
 	    systemctl restart nfs-idmap
 	    ;;
+	
 	*)
 	    printf "Unsupported RHEL version: $OS_RELEASE\n"
 	    exit 1
+	    ;;
+	
 	esac
     
 	# Signal NFS daemon to update exports
@@ -716,43 +723,6 @@ disable_overcommit()
 
 
 ##########################################################################
-#   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
-#       
-#   History:
-#   Date        Name        Modification
-#   2014-11-14  root        Begin
-##########################################################################
-
-authorize_ssh()
-{
-    # Authorize ssh to and from head nodes
-    line
-    cat << EOM
-    
-You may now specify other hosts in the cluster to and from which
-$(hostname) should not require a password for ssh.
-    
-EOM
-    
-    ssh_host='x'
-    while [ 0$ssh_host != 0 ]; do
-	printf "Hostname or IP of node? [Just press return if there are no more] "
-	read ssh_host
-	if [ 0$ssh_host != 0 ]; then
-	    printf "Make sure $ssh_host has PermitRootLogin=yes.\n"
-	    pause
-	    auto-ssh-authorize $ssh_host
-	    ssh -t $ssh_host auto-ssh-authorize `hostname`
-	fi
-    done
-}
-
-
-##########################################################################
 #   Main
 ##########################################################################
 
@@ -767,17 +737,6 @@ fi
 if [ $# != 1 ]; then
     usage $0
 fi
-
-cat << EOM
-
-This is a new cluster-setup script, heavily modified from the original.
-It has not been tested on CentOS 6.  Use cluster-setup.old to ensure
-compatibiliity.
-
-Proceed with caution and watch for issues!
-
-EOM
-pause
 
 # Caution: 
 # The line below is modified by install.sh. Be careful not to replace
@@ -796,8 +755,8 @@ case $NODE_TYPE in
 esac
 
 if [ -e /root/Save/node-configured ]; then
-    printf "Node already configured.  Reconfigure? [n] "
-    read reconfig
+    
+    read -p "Node already configured.  Reconfigure? [n] " reconfig
     if [ 0$reconfig != 0y ]; then
 	exit 0
     fi
@@ -813,9 +772,7 @@ done
 if [ $NODE_TYPE != head ]; then
     cat << EOM
 
-1)  Make sure /etc/hosts is up-to-date on all nodes.
-2)  Run cluster-sync-pkgsrc on the head node if `hostname` is out of date.
-    This is done automatically by cluster-init-node.
+Make sure /etc/hosts is up-to-date on all nodes.
 
 EOM
     pause
@@ -849,13 +806,6 @@ done
 # Configure firewall
 auto-enable-passwdqc
 cluster-firewalld-config $NODE_TYPE
-
-# After core_rpms.  Requires gcc.
-printf "Run harden script? y/[n] "
-read harden
-if [ 0$harden = 0y ]; then
-    auto-harden
-fi
 
 ib=`auto-ask ib-config 'Configure Infiniband?' y`
 if [ $ib = y ]; then
@@ -895,14 +845,12 @@ case $NODE_TYPE in
     ;;
 
 'compute')    # Compute nodes
-    # Do this in cluster-init-node authorize_ssh
     cluster-set-compute-memory-limits
     
     # Set default OMP threads to 1 for all jobs
     ;;
 
 'io')
-    # Do this in cluster-init-node authorize_ssh
     ;;
 
 esac
@@ -929,8 +877,7 @@ printf "Checking/setting UID limits...\n"
 cluster-lowest-uid
 cluster-highest-uid
 
-printf 'Reboot? [y]/n '
-read reboot
+read -p 'Reboot? [y]/n ' reboot
 if [ 0$reboot != 0n ]; then
     shutdown -r now
 fi

@@ -26,7 +26,6 @@ for node in `cluster-io-nodes` `cluster-zfs-nodes`; do
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
-	ssh -t $node auto-update-system
+	ssh -t $node auto-update-system --binary
     fi
 done
-

@@ -103,7 +103,6 @@ case $RHEL_VERSION in
     init_script=$prefix/lib/systemd/system/munge.service
     # FIXME: Move this to munge pkg?
     sed -i'' 's|=munge|=daemon|g' $init_script
-    vi $init_script
     systemctl disable munge.service || true
     systemctl enable $init_script || true
     systemctl daemon-reload

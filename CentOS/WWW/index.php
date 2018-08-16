@@ -13,15 +13,6 @@
 
 <hr>
 
-<p>
-The %%HOSTNAME%% HPC cluster is operated by UWM's UITS Research Computing Support
-group and is available for grant-related research conducted by participating
-UWM schools and colleges.
-
-<p>
-For more information, please visit the
-<a href="http://uwm.edu/hpc">Research Computing Support website</a>.
-
 <h2>Current %%HOSTNAME%% Status</h2>
 
 <p>
@@ -40,8 +31,8 @@ Most open source software is installed on %%HOSTNAME%% using the
 a fully-automated software installation system with an
 extensive collection pre-packaged software.  The Pkgsrc system
 was developed by the NetBSD project, but is designed to work on any
-Unix-compatible system.  In addition to being the native package-management
-system for NetBSD and DragonFly BSD, Pkgsrc is widely used on Linux
+POSIX-compatible system.  In addition to being the native package-management
+system for NetBSD and SmartOS, Pkgsrc is widely used on Linux
 (especially Redhat Enterprise, CentOS, and similar distributions),
 Mac OS X, and Solaris.
 

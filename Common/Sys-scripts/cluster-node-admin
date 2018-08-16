@@ -47,10 +47,11 @@ pause()
 
 get_host_info()
 {
-    printf "Digits in hostname #? [3] "
+    default_digits=$1
+    printf "Digits in hostname #? [$default_digits] "
     read host_digits
     if [ 0$host_digits = 0 ]; then
-	host_digits=3
+	host_digits=$default_digits
     fi
     
     # Remove leading zeros so printf doesn't interpret it as octal
@@ -108,6 +109,7 @@ if [ $# != 0 ]; then
 fi
 
 updates_dir="/home/slurm/Compute-node-updates"
+default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' /usr/pkg/etc/slurm.conf`
 
 while true; do
 
@@ -140,7 +142,8 @@ EOM
     read selection
     clear
     case $selection in
-    1)
+    
+    1)  # PXE
 	printf "Host name prefix? [compute-] "
 	read host_prefix
 	if [ 0$host_prefix = 0 ]; then
@@ -151,23 +154,24 @@ EOM
 	if [ 0$host_digits = 0 ]; then
 	    host_digits=3
 	fi
-	printf "Domain? [local] "
+	printf "Domain? [$default_name] "
 	read domain
 	if [ 0$domain = 0 ]; then
-	    domain='local'
+	    domain='$default_name'
 	fi
 	auto-pxe-node-discover $host_prefix $host_digits $domain
 	;;
-    2)
+    
+    2)  # Initialize
 	printf "Host name prefix? [compute-] "
 	read host_prefix
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix='compute-'
 	fi
-	printf "Domain? [local] "
+	printf "Domain? [$default_domain] "
 	read domain
 	if [ 0$domain = 0 ]; then
-	    domain='local'
+	    domain=$default_domain
 	fi
 	node_type=none
 	while [ $node_type = none ]; do
@@ -183,22 +187,26 @@ EOM
 	    case $node_type in
 	    1)
 		node_type=backup
+		default_digits=1
 		;;
 	    2)
 		node_type=compute
+		default_digits=3
 		;;
 	    3)
 		node_type=io
+		default_digits=2
 		;;
 	    4)
 		node_type=vis
+		default_digits=1
 		;;
 	    *)
 		printf "Invalid selection.\n"
 		pause
 	    esac
 	done
-	get_host_info
+	get_host_info $default_digits
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
@@ -211,28 +219,28 @@ EOM
 	    num=$((num + 1))
 	done
 	;;
-    3)
-	# FIXME: Support other schedulers
+    
+    3)  # Sync compute nodes
 	sinfo
 	printf "Host name prefix? [compute-] "
 	read host_prefix
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix='compute-'
 	fi
-	printf "Domain? [local] "
+	printf "Domain? [$default_domain] "
 	read domain
 	if [ 0$domain = 0 ]; then
-	    domain='local'
+	    domain=$default_domain
 	fi
-	get_host_info
-	printf "Answer yes to all prompts? y/[n] "
+	get_host_info 3
+	printf "Default responses to all prompts? y/[n] "
 	read use_defaults
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
 	    printf "Synchronizing $node...\n"
 	    if [ 0$use_defaults = 0y ]; then
-		yes '' | cluster-sync-node $node compute
+		cluster-sync-node --use-defaults $node compute || true
 	    else
 		cluster-sync-node $node compute || true
 	    fi
@@ -240,7 +248,8 @@ EOM
 	    num=$((num + 1))
 	done
 	;;
-    4)
+    
+    4)  # Sync I/O nodes
 	printf "Full qualified host name? "
 	read node
 	printf "Use all default settings? y/[n] "
@@ -253,7 +262,8 @@ EOM
 	fi
 	printf "Done with $node...\n"
 	;;
-    5)
+    
+    5)  # Update backup login node
 	cluster-update-backup-nodes
 	
 	cat << EOM
@@ -264,10 +274,12 @@ updating the primary login node.
 EOM
 	pause
 	;;
-    6)
+    
+    6)  # Verify scheduler running on backup login node
 	ssh login-2 tail /var/log/slurm/slurmctld || true
 	;;
-    7)
+    
+    7)  # Update login node
 	update_warning
 	w
 	printf 'Continue? y/[n] '
@@ -310,13 +322,16 @@ EOM
 	    fi
 	fi
 	;;
+    
     8)
 	cluster-update-vis-nodes
 	;;
+    
     9)
 	cluster-update-io-nodes
 	;;
-    10)
+    
+    10) # Update all compute nodes
 	update_warning
 	cat << EOM
 
@@ -332,7 +347,8 @@ EOM
 	fi
 	slurm-update-idle-nodes $updates_dir
 	;;
-    11)
+    
+    11) # Schedule compute node updates in cron
 	clear
 	update_warning
 	cat << EOM
@@ -359,7 +375,7 @@ EOM
 	fi
 	;;
 
-    12)
+    12) # Drain all nodes
 	printf "Reason for draining all nodes? "
 	read reason
 	all_nodes=`sinfo -ho '%N'`
@@ -371,7 +387,7 @@ EOM
 	slurm-shutdown-idle-nodes
 	;;
 
-    14)
+    14) # Synchronize system files
 	cat << EOM
 
 This will distribute common system files such as
@@ -387,9 +403,11 @@ EOM
 	    cluster-sync-sysfiles
 	fi
 	;;
+    
     Q|q)
 	exit 0
 	;;
+    
     *)
 	printf "Invalid selection: '$selection'\n"
 	;;

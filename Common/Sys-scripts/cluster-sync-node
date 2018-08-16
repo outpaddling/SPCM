@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 host.domain compute|io\n"
+    printf "Usage: $0 [--defaults] host.domain compute|io\n"
     exit 1
 }
 
@@ -37,6 +37,10 @@ pause()
 #   Main
 ##########################################################################
 
+if [ $1 == --use-defaults ]; then
+    use_defaults=yes
+    shift
+fi
 if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
     usage
 fi
@@ -88,10 +92,13 @@ Answer 'y' here if you have distributed new Yum packages while this node
 was inaccessible.
 ---
 EOM
-    read -p "Sync Yum packages? y/[n] " sync_yum
+    if [ $use_defaults = yes ]; then
+	sync_yum=n
+    else
+	read -p "Sync Yum packages? y/[n] " sync_yum
+    fi
     if [ 0$sync_yum = 0y ]; then
-	printf "Reference node for Yum packages? "
-	read ref_node
+	read -p "Reference node for Yum packages? " ref_node
 	cluster-sync-yum-packages $ref_node $node
     fi
     
@@ -101,8 +108,11 @@ EOM
 Answer 'y' here if you have added new users while this node was inaccessible.
 ---
 EOM
-    printf "Sync users? [y]/n "
-    read sync_users
+    if [ $use_defaults = yes ]; then
+	sync_users=y
+    else
+	read -p "Sync users? [y]/n " sync_users
+    fi
     if [ 0$sync_users != 0n ]; then
 	node-sync-all-users $node || true
     fi
@@ -180,9 +190,12 @@ FreeBSD)
     
     cluster-sync-files $node
     
-    printf "Sync packages? [y]/n "
-    read sync
-    if [ 0$sync != 0n ]; then
+    if [ $use_defaults = yes ]; then
+	sync_packages=y
+    else
+	read -p "Sync packages? [y]/n " sync_packages
+    fi
+    if [ 0$sync_packages != 0n ]; then
 	read -p "Source node? " source_node
 	cluster-sync-packages $source_node $node
     fi
