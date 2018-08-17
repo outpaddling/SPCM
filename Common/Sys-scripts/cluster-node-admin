@@ -235,15 +235,18 @@ EOM
 	get_host_info 3
 	printf "Default responses to all prompts? y/[n] "
 	read use_defaults
+	if [ 0$use_defaults = 0y ]; then
+	    sync_opts="--use-defaults"
+	    read -p "Configure infiniband for all nodes? y/[n] " infiniband
+	    if [ 0$infiniband = 0y ]; then
+		sync_opts="$sync_opts --infiniband"
+	    fi
+	fi
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
 	    printf "Synchronizing $node...\n"
-	    if [ 0$use_defaults = 0y ]; then
-		cluster-sync-node --use-defaults $node compute || true
-	    else
-		cluster-sync-node $node compute || true
-	    fi
+	    cluster-sync-node $sync_opts $node compute || true
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done
@@ -252,13 +255,13 @@ EOM
     4)  # Sync I/O nodes
 	printf "Full qualified host name? "
 	read node
-	printf "Use all default settings? y/[n] "
+	printf "Default responses to all prompts? y/[n] "
 	read use_defaults
 	printf "Synchronizing $node...\n"
 	if [ 0$use_defaults = 0y ]; then
-	    yes '' | cluster-sync-node $node io
+	    cluster-sync-node --use-defaults $node io || true
 	else
-	    cluster-sync-node $node io
+	    cluster-sync-node $node io || true
 	fi
 	printf "Done with $node...\n"
 	;;

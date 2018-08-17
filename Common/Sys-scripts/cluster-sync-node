@@ -37,8 +37,12 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $1 == --use-defaults ]; then
+if [ $1 = --use-defaults ]; then
     use_defaults=yes
+    shift
+fi
+if [ $1 = --infiniband ]; then
+    setup_flags=--infiniband
     shift
 fi
 if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
@@ -86,15 +90,15 @@ RHEL)
 	exit 1
     fi
     
-    cat << EOM
+    if [ 0$use_defaults = 0yes ]; then
+	sync_yum=n
+    else
+	cat << EOM
 ---
 Answer 'y' here if you have distributed new Yum packages while this node
 was inaccessible.
 ---
 EOM
-    if [ $use_defaults = yes ]; then
-	sync_yum=n
-    else
 	read -p "Sync Yum packages? y/[n] " sync_yum
     fi
     if [ 0$sync_yum = 0y ]; then
@@ -103,14 +107,14 @@ EOM
     fi
     
     # Sync users
-    cat << EOM
+    if [ 0$use_defaults = 0yes ]; then
+	sync_users=y
+    else
+	cat << EOM
 ---
 Answer 'y' here if you have added new users while this node was inaccessible.
 ---
 EOM
-    if [ $use_defaults = yes ]; then
-	sync_users=y
-    else
 	read -p "Sync users? [y]/n " sync_users
     fi
     if [ 0$sync_users != 0n ]; then
@@ -147,7 +151,11 @@ EOM
 
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
-    ssh -t $node cluster-setup $node_type
+    if [ 0$use_defaults = 0yes ]; then
+	ssh -t $node env AUTO_ASK_USE_DEFAULTS=yes cluster-setup $setup_flags $node_type
+    else
+	ssh -t $node cluster-setup $setup_flags $node_type
+    fi
 
     if [ $node_type = compute ]; then
 	scontrol update state=resume nodename=$node
@@ -190,7 +198,7 @@ FreeBSD)
     
     cluster-sync-files $node
     
-    if [ $use_defaults = yes ]; then
+    if [ 0$use_defaults = 0yes ]; then
 	sync_packages=y
     else
 	read -p "Sync packages? [y]/n " sync_packages

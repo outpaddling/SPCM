@@ -238,10 +238,6 @@ EOM
     
     ip addr show ib0
     
-    # Add ib interface to /etc/hosts
-    printf "Add ib0 interace to /etc/hosts on all nodes.\n"
-    pause
-    
     # Set ipath lanes to twice the number of cores?
 }
 
@@ -734,6 +730,11 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
+if [ $1 = --infiniband ]; then
+    ib=y
+    shift
+fi
+
 if [ $# != 1 ]; then
     usage $0
 fi
@@ -769,15 +770,6 @@ for file in /root/.ssh /etc/fstab; do
     fi
 done
 
-if [ $NODE_TYPE != head ]; then
-    cat << EOM
-
-Make sure /etc/hosts is up-to-date on all nodes.
-
-EOM
-    pause
-fi
-
 # Save downloaded RPMs
 sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
 
@@ -807,7 +799,10 @@ done
 auto-enable-passwdqc
 cluster-firewalld-config $NODE_TYPE
 
-ib=`auto-ask ib-config 'Configure Infiniband?' y`
+# May be set by --infiniband
+if [ 0$ib != 0y ]; then
+    ib=`auto-ask ib-config 'Configure Infiniband?' y`
+fi
 if [ $ib = y ]; then
     ib_config
 fi
@@ -873,9 +868,11 @@ if ! fgrep -q clusteradmin /etc/passwd; then
     cluster-adduser clusteradmin
 fi
 
-printf "Checking/setting UID limits...\n"
-cluster-lowest-uid
-cluster-highest-uid
+if [ $NODE_TYPE = head ]; then
+    printf "Checking/setting UID limits...\n"
+    cluster-lowest-uid
+    cluster-highest-uid
+fi
 
 read -p 'Reboot? [y]/n ' reboot
 if [ 0$reboot != 0n ]; then

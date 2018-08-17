@@ -28,6 +28,9 @@ if [ $# != 2 ]; then
 fi
 
 node=$1
+short_name=${node%%.*}
+ip=`awk -v hn=$node '$2 == hn { print $1 }' /etc/hosts` 
+
 if ! echo $node | fgrep -q '.'; then
     printf "No domain name in $node.  Continue? y/[n] "
     read continue
@@ -60,6 +63,9 @@ read remove
 if [ 0$remove != 0n ]; then
     cluster-remove-from-known-hosts $node
 fi
+
+# Disable prompt for first ssh
+auto-disable-host-key-prompt $short_name $node $ip
 
 case `auto-ostype` in
 RHEL)
