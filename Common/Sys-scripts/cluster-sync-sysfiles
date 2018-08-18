@@ -98,10 +98,11 @@ esac
 
 conf_dir='/usr/local/cluster'
 cd $conf_dir
-ssh $node mkdir -p $conf_dir
-for file in add-shares *-packages; do
+# Should have been done by cluster-init-node
+# ssh $node mkdir -p $conf_dir
+for file in fstab.*; do
     if [ -e $file ]; then
-	scp $file ${node}:$conf_dir
+	scp -p $file ${node}:$conf_dir
     fi
 done
 

@@ -421,11 +421,26 @@ nfs_config()
     case $NODE_TYPE in
     'compute'|'io')
 	# Compute nodes
-	script=/usr/local/cluster/add-shares
-	if [ -e $script ]; then
-	    printf "Automatically configuring shares with $script...\n"
-	    sh $script || true
+	fstab=/usr/local/cluster/fstab.$NODE_TYPE
+	if [ -e $fstab ]; then
+	    printf "Automatically adding shares from $fstab...\n"
+	    while read mount; do
+		dir=`echo $mount | awk '{ print $2 }'`
+		if fgrep -ww $dir /etc/fstab; then
+		    printf "$dir is already in fstab.\n"
+		else
+		    printf "Adding $dir to fstab...\n"
+		    printf "$mount\n" >> /etc/fstab
+		fi
+	    done < $fstab
 	else
+	    cat << EOM
+
+Adding share manually.  If you would like this done automatically, create
+the file $fstab on the head node with the desired entries
+for $NODE_TYPE nodes.
+
+EOM
 	    nfs_server='prime'
 	    while [ x$nfs_server != x ]; do
 		printf 'Enter an NFS server to mount from, or press return to move on: '
