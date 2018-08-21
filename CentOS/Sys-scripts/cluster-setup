@@ -79,7 +79,7 @@ pause()
 
 usage()
 {
-    printf "Usage: $0 head|compute|io\n"
+    printf "Usage: $0 [--infiniband] head|compute|io\n"
     exit 1
 }
 
@@ -632,9 +632,7 @@ slurm_install()
 {
     case $NODE_TYPE in
     'head'|'compute')
-	if ! pkg_info -e slurm; then
-	    pkgin install -y slurm-wlm
-	fi
+	pkgin install -y slurm-wlm
 	cluster-munge-enable $NODE_TYPE
 	cluster-slurm-enable $NODE_TYPE
 	;;
@@ -884,9 +882,9 @@ if [ $NODE_TYPE = head ]; then
     cluster-highest-uid
 fi
 
+touch /root/Save/node-configured
+
 read -p 'Reboot? [y]/n ' reboot
 if [ 0$reboot != 0n ]; then
     shutdown -r now
 fi
-
-touch /root/Save/node-configured
