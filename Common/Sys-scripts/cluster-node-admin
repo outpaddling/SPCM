@@ -122,8 +122,8 @@ while true; do
 
 1.. PXE install new nodes
 2.. Initialize new nodes
-3.. Synchronize compute nodes
-4.. Synchronize an I/O node
+3.. Synchronize an I/O node
+4.. Synchronize compute nodes
 5.. Install updates on backup login node
 6.. Verify scheduler restart on backup login node
 7.. Install updates on login node
@@ -213,14 +213,27 @@ EOM
 	    printf "Initializing $node.  Are you sure? y/[n] "
 	    read sure
 	    if [ 0$sure = 0y ]; then
-		cluster-init-node $node $node_type
+		cluster-init-node $node $node_type || true
 	    fi
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done
 	;;
     
-    3)  # Sync compute nodes
+    3)  # Sync I/O nodes
+	printf "Full qualified host name? "
+	read node
+	printf "Default responses to all prompts? y/[n] "
+	read use_defaults
+	if [ 0$use_defaults = 0y ]; then
+	    sync_opts="--use-defaults"
+	fi
+	printf "Synchronizing $node...\n"
+	cluster-sync-node $sync_opts $node io || true
+	printf "Done with $node...\n"
+	;;
+    
+    4)  # Sync compute nodes
 	sinfo
 	printf "Host name prefix? [compute-] "
 	read host_prefix
@@ -233,11 +246,10 @@ EOM
 	    domain=$default_domain
 	fi
 	get_host_info 3
-	printf "Default responses to all prompts? y/[n] "
-	read use_defaults
+	read -p "Default responses to all prompts? y/[n] " use_defaults
 	if [ 0$use_defaults = 0y ]; then
 	    sync_opts="--use-defaults"
-	    read -p "Configure infiniband for all nodes? y/[n] " infiniband
+	    read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
 	    if [ 0$infiniband = 0y ]; then
 		sync_opts="$sync_opts --infiniband"
 	    fi
@@ -250,20 +262,6 @@ EOM
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done
-	;;
-    
-    4)  # Sync I/O nodes
-	printf "Full qualified host name? "
-	read node
-	printf "Default responses to all prompts? y/[n] "
-	read use_defaults
-	printf "Synchronizing $node...\n"
-	if [ 0$use_defaults = 0y ]; then
-	    cluster-sync-node --use-defaults $node io || true
-	else
-	    cluster-sync-node $node io || true
-	fi
-	printf "Done with $node...\n"
 	;;
     
     5)  # Update backup login node

@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--defaults] host.domain compute|io\n"
+    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain compute|io\n"
     exit 1
 }
 
@@ -37,11 +37,11 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $1 = --use-defaults ]; then
+if [ 0$1 = 0--use-defaults ]; then
     use_defaults=yes
     shift
 fi
-if [ $1 = --infiniband ]; then
+if [ 0$1 = 0--infiniband ]; then
     setup_flags=--infiniband
     shift
 fi

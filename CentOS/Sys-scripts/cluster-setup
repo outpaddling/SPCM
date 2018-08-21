@@ -634,11 +634,6 @@ slurm_install()
     'head'|'compute')
 	if ! pkg_info -e slurm; then
 	    pkgin install -y slurm-wlm
-	else
-	    if ! fgrep slurm /etc/passwd; then
-		printf "Run node-sync-user `hostname` slurm from the head node\n"
-		pause
-	    fi
 	fi
 	cluster-munge-enable $NODE_TYPE
 	cluster-slurm-enable $NODE_TYPE
@@ -816,7 +811,7 @@ cluster-firewalld-config $NODE_TYPE
 
 # May be set by --infiniband
 if [ 0$ib != 0y ]; then
-    ib=`auto-ask ib-config 'Configure Infiniband?' y`
+    read -p "Configure Infiniband? y/[n] " ib
 fi
 if [ $ib = y ]; then
     ib_config
