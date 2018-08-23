@@ -157,10 +157,6 @@ EOM
 	ssh -t $node cluster-setup $setup_flags $node_type
     fi
 
-    if [ $node_type = compute ]; then
-	scontrol update state=resume nodename=$node
-    fi
-    
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 

@@ -134,7 +134,12 @@ for node in $nodes; do
 		#    reason=slurm-update-idle-nodes
 		
 		# Install all available binary updates and reboot
-		if ssh -t $node auto-update-system --binary+reboot; then
+		if ssh -t $node auto-update-system --binary; then
+		    
+		    # --binary+reboot always returns non-zero
+		    # on CentOS 7, so reboot separately
+		    ssh $node shutdown -r now || true
+		    
 		    # shutdown may take some time to disable sshd
 		    # This will prevent slurm-resume-updated-nodes from
 		    # resuming the node before the reboot.

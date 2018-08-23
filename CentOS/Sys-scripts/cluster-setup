@@ -426,11 +426,12 @@ nfs_config()
 	    printf "Automatically adding shares from $fstab...\n"
 	    while read mount; do
 		dir=`echo $mount | awk '{ print $2 }'`
-		if fgrep -ww $dir /etc/fstab; then
+		if fgrep -qw $dir /etc/fstab; then
 		    printf "$dir is already in fstab.\n"
 		else
 		    printf "Adding $dir to fstab...\n"
 		    printf "$mount\n" >> /etc/fstab
+		    mkdir -p $dir
 		fi
 	    done < $fstab
 	else
@@ -882,6 +883,7 @@ if [ $NODE_TYPE = head ]; then
     cluster-highest-uid
 fi
 
+auto-update-system --binary
 touch /root/Save/node-configured
 
 read -p 'Reboot? [y]/n ' reboot
