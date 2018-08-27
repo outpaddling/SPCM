@@ -93,7 +93,7 @@ EOM
     ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
     ssh $node 'ln -sf /usr/pkg/etc/pkgsrc.* /etc/profile.d'
     ssh $node 'pkgin install -y nbpatch python27 subversion git cvs mozilla-rootcerts'
-    ssh -t $node 'cd /usr/pkgsrc && svn co https://github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
+    ssh -t $node 'cd /usr/pkgsrc && svn co --non-interactive --trust-server-cert-failures=unknown-ca https://github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
     ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin-devel && bmake install'
     
     # ssh $node hostname $node

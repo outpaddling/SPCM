@@ -178,8 +178,8 @@ EOM
 	    cat << EOM
 
 1.. Backup login nodes
-2.. Compute nodes
-3.. I/O nodes
+2.. I/O nodes
+3.. Compute nodes
 4.. Visualization nodes
 
 EOM
@@ -190,12 +190,12 @@ EOM
 		default_digits=1
 		;;
 	    2)
-		node_type=compute
-		default_digits=3
-		;;
-	    3)
 		node_type=io
 		default_digits=2
+		;;
+	    3)
+		node_type=compute
+		default_digits=3
 		;;
 	    4)
 		node_type=vis
