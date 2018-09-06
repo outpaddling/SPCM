@@ -91,7 +91,7 @@ chown -Rh daemon:daemon \
 case $RHEL_VERSION in
 6)
     rm -f /etc/init.d/munge
-    init_script=$prefix/share/examples/munge/rc.d/init.d/munge
+    init_script=$prefix/share/examples/rc.d/init.d/munge
     if [ -e $init_script ]; then
 	ln -s $init_script /etc/init.d/munge
     fi
