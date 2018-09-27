@@ -63,9 +63,6 @@ node_type=$2
 
 node=${long_node_name%%.*}
 
-ssh $node pkgin install -y rsync
-ssh $node yum remove -y rsync
-
 case $node_type in
 backup|compute|io)
     ;;
@@ -78,17 +75,20 @@ if [ -z EDITOR ]; then
 fi
 
 conf_dir='/usr/local/cluster'
+# cluster-init-node $long_node_name $node_type
+if ! ssh $node stat $conf_dir/init-done; then
+    printf "You must run cluster-init-node $long_node_name first.\n"
+    exit 1
+fi
 
 case `auto-ostype` in
 RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
 
+    ssh $node pkgin install -y rsync
+    ssh $node yum remove -y rsync
+
     # Install basic tools and updates
-    # cluster-init-node $long_node_name $node_type
-    if ! ssh $node stat $conf_dir/init-done; then
-	printf "You must run cluster-init-node $long_node_name first.\n"
-	exit 1
-    fi
     
     if [ 0$use_defaults = 0yes ]; then
 	sync_yum=n
@@ -162,24 +162,9 @@ EOM
 
 FreeBSD)
     # Install basic tools and updates
-    # cluster-init-node $long_node_name $node_type
-    if ! ssh $node stat $conf_dir/init-done; then
-	printf "You must run cluster-init-node $long_node_name first.\n"
-	exit 1
-    fi
-    
-    # FIXME: Replace with pkg install cluster-admin when possible
-    # working around hwloc seg fault bug
-    ssh $node 'fgrep -q USE_LOCAL_MK /etc/make.conf || printf "USE_LOCAL_MK=yes\n" >> /etc/make.conf'
-    ssh $node 'cd /usr/ports/wip/wip-tools && make clean deinstall reinstall'
+
+    # Should be preinstalled by cluster-init-node
     ssh -t $node wip-update
-    ssh $node 'cd /usr/ports/wip/cluster-admin && make -DBATCH deinstall reinstall'
-    ssh $node pkg install -y hwloc
-    #ssh $node 'cd /usr/ports/wip/hwloc && make -DBATCH deinstall reinstall'
-    
-    # Add new node to ssh_config on all hosts
-    cluster-update-ssh_config
-    ssh $node cluster-update-ssh_config
     
     # Sync users
     node-sync-all-users $node || true
@@ -195,11 +180,11 @@ FreeBSD)
     cluster-sync-files $node
     
     if [ 0$use_defaults = 0yes ]; then
-	sync_packages=y
+	sync_packages=n
     else
-	read -p "Sync packages? [y]/n " sync_packages
+	read -p "Sync packages? y/[n] " sync_packages
     fi
-    if [ 0$sync_packages != 0n ]; then
+    if [ 0$sync_packages = 0y ]; then
 	read -p "Source node? " source_node
 	cluster-sync-packages $source_node $node
     fi
@@ -223,7 +208,11 @@ FreeBSD)
     # Run cluster-setup compute
     # Do this last, since it enables the scheduler
     printf "\nRunning cluster-setup $node_type on $node...\n\n"
-    ssh -t $node cluster-setup $node_type
+    if [ 0$use_defaults = 0yes ]; then
+	ssh -t $node env AUTO_ASK_USE_DEFAULTS=yes cluster-setup $setup_flags $node_type
+    else
+	ssh -t $node cluster-setup $setup_flags $node_type
+    fi
     
     printf "Run cluster-sync-sysfiles to update other nodes if you've updated /etc/hosts.\n"
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"

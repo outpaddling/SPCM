@@ -664,7 +664,11 @@ ganglia_install()
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
-	pkgin install -y ganglia-monitor-core
+	# pkgin install -y ganglia-monitor-core
+	cd /usr/pkgsrc/wip/ganglia-monitor-core
+	bmake deinstall
+	bmake clean
+	bmake install
     fi
 
     case $OS_RELEASE in
@@ -793,7 +797,7 @@ ntp_config
 install_core_rpms
 pkgsrc_setup
 
-pkgin install -y cvs subversion git rsync
+pkgin install -y cvs subversion git rsync iftop
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 

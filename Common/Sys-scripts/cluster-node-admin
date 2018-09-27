@@ -28,8 +28,7 @@ pause()
 {
     local junk
     
-    printf "Press return to continue..."
-    read junk
+    read -p "Press return to continue..." junk
 }
 
 
@@ -48,18 +47,15 @@ pause()
 get_host_info()
 {
     default_digits=$1
-    printf "Digits in hostname #? [$default_digits] "
-    read host_digits
+    read -p "Digits in hostname #? [$default_digits] " host_digits
     if [ 0$host_digits = 0 ]; then
 	host_digits=$default_digits
     fi
     
     # Remove leading zeros so printf doesn't interpret it as octal
-    printf "First host number? "
-    read first_num
+    read -p "First host number? " first_num
     first_num=`echo $first_num | sed -E 's|^0+||'`
-    printf "Last host number? "
-    read last_num
+    read -p "Last host number? " last_num
     last_num=`echo $last_num | sed -E 's|^0+||'`
     return 0
 }
@@ -109,7 +105,11 @@ if [ $# != 0 ]; then
 fi
 
 updates_dir="/home/slurm/Compute-node-updates"
-default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' /usr/pkg/etc/slurm.conf`
+for prefix in /usr/local /usr/pkg; do
+    if [ -e $prefix/etc/slurm.conf ]; then
+	default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $prefix/etc/slurm.conf`
+    fi
+done
 
 while true; do
 
@@ -138,24 +138,20 @@ Q.. Quit
 
 EOM
 
-    printf "Selection? "
-    read selection
+    read -p "Selection? " selection
     clear
     case $selection in
     
     1)  # PXE
-	printf "Host name prefix? [compute-] "
-	read host_prefix
+	read -p "Host name prefix? [compute-] " host_prefix
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix='compute-'
 	fi
-	printf "Digits in hostname #? [3] "
-	read host_digits
+	read -p "Digits in hostname #? [3] " host_digits
 	if [ 0$host_digits = 0 ]; then
 	    host_digits=3
 	fi
-	printf "Domain? [$default_name] "
-	read domain
+	read -p "Domain? [$default_name] " domain
 	if [ 0$domain = 0 ]; then
 	    domain='$default_name'
 	fi
@@ -163,16 +159,6 @@ EOM
 	;;
     
     2)  # Initialize
-	printf "Host name prefix? [compute-] "
-	read host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
-	fi
-	printf "Domain? [$default_domain] "
-	read domain
-	if [ 0$domain = 0 ]; then
-	    domain=$default_domain
-	fi
 	node_type=none
 	while [ $node_type = none ]; do
 	    cat << EOM
@@ -188,30 +174,41 @@ EOM
 	    1)
 		node_type=backup
 		default_digits=1
+		default_prefix=login-
 		;;
 	    2)
 		node_type=io
 		default_digits=2
+		default_prefix=raid-
 		;;
 	    3)
 		node_type=compute
 		default_digits=3
+		default_prefix=compute-
 		;;
 	    4)
 		node_type=vis
 		default_digits=1
+		default_prefix=vis-
 		;;
 	    *)
 		printf "Invalid selection.\n"
 		pause
 	    esac
 	done
+	read -p "Host name prefix? [$default_prefix] " host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
+	read -p "Domain? [$default_domain] " domain
+	if [ 0$domain = 0 ]; then
+	    domain=$default_domain
+	fi
 	get_host_info $default_digits
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-	    printf "Initializing $node.  Are you sure? y/[n] "
-	    read sure
+	    read -p "Initializing $node.  Are you sure? y/[n] " sure
 	    if [ 0$sure = 0y ]; then
 		cluster-init-node $node $node_type || true
 	    fi
@@ -221,27 +218,25 @@ EOM
 	;;
     
     3)  # Sync I/O nodes
-	printf "Full qualified host name? "
-	read node
-	printf "Default responses to all prompts? y/[n] "
-	read use_defaults
-	if [ 0$use_defaults = 0y ]; then
-	    sync_opts="--use-defaults"
+	read -p"Fully qualified host name? " node
+	if [ 0$node != 0 ]; then
+	    read -p "Default responses to all prompts? y/[n] " use_defaults
+	    if [ 0$use_defaults = 0y ]; then
+		sync_opts="--use-defaults"
+	    fi
+	    printf "Synchronizing $node...\n"
+	    cluster-sync-node $sync_opts $node io || true
+	    printf "Done with $node...\n"
 	fi
-	printf "Synchronizing $node...\n"
-	cluster-sync-node $sync_opts $node io || true
-	printf "Done with $node...\n"
 	;;
     
     4)  # Sync compute nodes
 	sinfo
-	printf "Host name prefix? [compute-] "
-	read host_prefix
+	read -p "Host name prefix? [compute-] " host_prefix
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix='compute-'
 	fi
-	printf "Domain? [$default_domain] "
-	read domain
+	read -p "Domain? [$default_domain] " domain
 	if [ 0$domain = 0 ]; then
 	    domain=$default_domain
 	fi
@@ -283,8 +278,7 @@ EOM
     7)  # Update login node
 	update_warning
 	w
-	printf 'Continue? y/[n] '
-	read continue
+	read -p 'Continue? y/[n] ' continue
 	if [ 0$continue = 0y ]; then
 		cat << EOM | wall
 
@@ -295,8 +289,7 @@ is necessary.
 EOM
 	    auto-update-system --binary
 	    if [ `auto-ostype` = FreeBSD ]; then
-		printf "Update and sync ports tree to all nodes? [y]/n "
-		read portsnap
+		read -p "Update and sync ports tree to all nodes? [y]/n " portsnap
 		if [ 0$portsnap != 0n ]; then
 		    cluster-portsnap
 		    if [ -e /usr/local/sbin/wip-update ]; then
@@ -305,11 +298,9 @@ EOM
 		fi
 	    fi
 	    w
-	    printf "Reboot? [y]/n "
-	    read reboot
+	    read -p "Reboot? [y]/n " reboot
 	    if [ 0$reboot != 0n ]; then
-		printf "Minutes before reboot? [2] "
-		read minutes
+		read -p "Minutes before reboot? [2] " minutes
 		if [ 0$minutes = 0 ]; then
 		    minutes=2
 		fi
@@ -341,8 +332,7 @@ last round of updates.
 
 EOM
 	mkdir -p $updates_dir
-	printf "Update all compute nodes? y/[n] "
-	read update_all
+	read -p "Update all compute nodes? y/[n] " update_all
 	if [ 0$update_all = 0y ]; then
 	    rm -f $updates_dir/updated-nodes
 	fi
@@ -369,16 +359,14 @@ Note: cron must be configured with an entry like the following:
 slurm-update-idle-nodes and scripts it depends on must be in PATH.
 
 EOM
-	printf "Proceed? y/[n] "
-	read proceed
+	read -p "Proceed? y/[n] " proceed
 	if [ 0"$proceed" = 0y ]; then
 	    rm -f $updates_dir/updated-nodes $updates_dir/updates.log
 	fi
 	;;
 
     12) # Drain all nodes
-	printf "Reason for draining all nodes? "
-	read reason
+	read -p "Reason for draining all nodes? " reason
 	all_nodes=`sinfo -ho '%N'`
 	scontrol update state=drain nodename="$all_nodes" reason="$reason"
 	sinfo
@@ -398,8 +386,7 @@ This will distribute common system files such as
     Local plugins for cluster-adduser
     
 EOM
-	printf "Proceed? y/[n] "
-	read proceed
+	read -p "Proceed? y/[n] " proceed
 	if [ 0"$proceed" = 0y ]; then
 	    cluster-sync-sysfiles
 	fi
