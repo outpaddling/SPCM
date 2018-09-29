@@ -1,9 +1,10 @@
 #!/bin/sh -e
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+for prefix in /usr/pkg /usr/local; do
+    if [ -e $prefix/etc/slurm.conf ]; then
+	break;
+    fi
+done
 
 # Backup controller needs to save state info to the same location as
 # primary controller
@@ -12,5 +13,8 @@ sed -e 's|StateSaveLocation=/home/slurm/slurmctld|StateSaveLocation=/head_home/s
 for node in `cluster-backup-login-nodes`; do
     printf "Syncing slurm.conf to $node...\n"
     rsync -pog $prefix/etc/slurm.conf.backup-node ${node}:$prefix/etc/slurm.conf
+    if [ -e $prefix/etc/cgroup.conf ]; then
+	rsync -pog $prefix/etc/cgroup.conf ${node}:$prefix/etc
+    fi
 done
-
+rm -f $prefix/etc/slurm.conf.backup-node

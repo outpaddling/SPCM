@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+if [ `hostname -s` != 'login' ]; then
+    printf "$0 can only be run on the primary login node.\n"
+    exit 1
+fi
+
+for prefix in /usr/pkg /usr/local; do
+    if [ -e $prefix/etc/slurm.conf ]; then
+	break;
+    fi
+done
+
+cluster-dist-file $prefix/etc/slurm.conf $prefix/etc 644 compute
+if [ -e $prefix/etc/cgroup.conf ]; then
+    cluster-dist-file $prefix/etc/cgroup.conf $prefix/etc 644 compute
+fi
+slurm-sync-backup-login
+
