@@ -58,6 +58,7 @@ case $NODE_TYPE in
     if [ ! -e $munge_etc/munge.key ]; then
 	printf "Generating munge key...\n"
 	dd if=/dev/urandom bs=1 count=1024 > $munge_etc/munge.key
+	chmod 600 $munge_etc/munge.key
     fi
     ;;
 

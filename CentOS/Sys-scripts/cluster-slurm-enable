@@ -71,6 +71,9 @@ RHEL6)
 RHEL7)
     case $NODE_TYPE in
     head)
+	printf "Install/edit $prefix/etc/slurm.conf.\n"
+	pause
+	$EDITOR $prefix/etc/slurm.conf
 	init_script=$prefix/share/examples/slurm/slurmctld.service
 	# FIXME: Why?
 	sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script

@@ -18,6 +18,11 @@ pkgin install -y apache ganglia-webfrontend
 OS_RELEASE=`auto-os-release`
 prefix=`auto-pkgsrc-prefix`
 
+##########################################################################
+#   Systemd init script
+##########################################################################
+
+# FIXME: CentOS7 only
 init_script=$prefix/etc/apache.service
 
 # selinux attempted fixes
@@ -45,10 +50,52 @@ if [ ! -e $web_root/index.php ]; then
     sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/WWW/index.php > $web_root/index.php
 fi
 
-httpd_conf=$prefix/etc/httpd/httpd.conf
-sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' $httpd_conf
-vi $httpd_conf
+# Just set up gmond.conf on the head node and distribute to other nodes
+# gmond already enabled by cluster-setup on all nodes
+if [ ! -e $prefix/etc/gmond.conf ]; then
+    cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+fi
 
+printf "Install/edit $prefix/etc/gmond.conf.\n"
+pause
+vi $prefix/etc/gmond.conf
+chmod 644 $prefix/etc/gmond.conf
+
+# gmetad just for head node
+if [ ! -e $prefix/etc/gmetad.conf ]; then
+    cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
+fi
+
+printf "Install/edit $prefix/etc/gmetad.conf.\n"
+pause
+vi $prefix/etc/gmetad.conf
+chmod 644 $prefix/etc/gmetad.conf
+
+case $OS_RELEASE in
+RHEL6)
+    cp $prefix/share/examples/ganglia/gmetad.init.linux /etc/init.d/gmetad
+    chkconfig --add gmetad
+    chkconfig gmetad on       # probably redundant
+    service gmetad restart
+    ;;
+
+RHEL7)
+    # FIXME: ganglia pkg should create this
+    mkdir -p $prefix/var/run/
+    systemctl disable gmetad.service || true
+    systemctl enable $prefix/share/examples/ganglia/gmetad.service
+    systemctl daemon-reload
+    systemctl restart gmetad.service
+    ;;
+
+*)
+    printf "Unsupported os release: $OS_RELEASE\n"
+    exit 1
+
+esac
+pause
+
+# FIXME: CentOS7 only
 # https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
 # FIXME: Add this to apache package?
 if [ ! -e $init_script ]; then
@@ -70,80 +117,37 @@ WantedBy=multi-user.target
 EOM
 fi
 
-vi $init_script
 systemctl disable apache.service || true
 systemctl enable $init_script || true
 systemctl daemon-reload
-systemctl restart apache.service
 
-# FIXME: Update this for new webfrontend package if needed
-#ganglia=/var/lib/ganglia
-#mkdir -p $ganglia/rrds
-# chown nobody:nobody $ganglia/rrds
-#chown -Rh ganglia:ganglia $ganglia
-#chmod -R a+rX $ganglia
-#restorecon -R -v $ganglia
+##########################################################################
+#   Hacks to apache config
+##########################################################################
 
-#ganglia_web=/var/lib/ganglia-web
-#mkdir -p $ganglia_web/dwoo/compiled $ganglia_web/dwoo/cache $ganglia_web/conf
-# cp -Rp $prefix/$ganglia_web /var/lib # From old wip pkg?
-# pkgsrc apache24 uses www user and group
-# Yum uses apache
-#apache_user=www
+httpd_conf=$prefix/etc/httpd/httpd.conf
+sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' $httpd_conf
 
-#chown -R ${apache_user}:${apache_user} $ganglia_web
-#chmod -R u+rwX,g-w,a+rX $ganglia_web
-
-#ls -al /var/lib/ganglia*
-#pause
-
-# Just set up gmond.conf on the head node and distribute to other nodes
-# gmond already enabled by cluster-setup on all nodes
-if [ ! -e $prefix/etc/gmond.conf ]; then
-    cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
-fi
-vi $prefix/etc/gmond.conf
-chmod 644 $prefix/etc/gmond.conf
-
-# gmetad just for head node
-if [ ! -e $prefix/etc/gmetad.conf ]; then
-    cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
-fi
-vi $prefix/etc/gmetad.conf
-chmod 644 $prefix/etc/gmetad.conf
-
-case $OS_RELEASE in
-RHEL6)
-    cp $prefix/share/examples/ganglia/gmetad.init.linux /etc/init.d/gmetad
-    chkconfig --add gmetad
-    chkconfig gmetad on       # probably redundant
-    service gmetad restart
-    ;;
-
-RHEL7)
-    # FIXME: ganglia pkg should create this
-    mkdir -p $prefix/var/run/
-    systemctl disable gmetad.service || true
-    vi $prefix/share/examples/ganglia/gmetad.service
-    systemctl enable $prefix/share/examples/ganglia/gmetad.service
-    systemctl daemon-reload
-    systemctl restart gmetad.service
-    ;;
-
-*)
-    printf "Unsupported os release: $OS_RELEASE\n"
-    exit 1
-
-esac
-pause
+# Disable threaded MPM, conflicts with non-threaded mod_php
+sed -i'' -e 's|^LoadModule mpm_event_module|#LoadModule mpm_event_module|' $httpd_conf
+sed -i'' -e 's|#LoadModule mpm_prefork_module|LoadModule mpm_prefork_module|' $httpd_conf
 
 if ! fgrep -q '/ganglia/' $httpd_conf; then
 
     cat << EOM >> $httpd_conf
 
-# Old: Alias /ganglia/ "$prefix/share/httpd/htdocs/ganglia/"
-Include $prefix/etc/ganglia/apache.conf
+# www/ap-php/MESSAGE
+LoadModule php7_module lib/httpd/mod_php7.so
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
 
+# www/ganglia-webfrontend/MESSAGE
+Include $prefix/etc/ganglia/apache.conf
+EOM
+
+# Appears to be unnecessary
+cat << EOM >> /dev/null
 <Directory "$prefix/share/httpd/htdocs/ganglia/">
     Options Indexes FollowSymlinks MultiViews
     AllowOverride None
@@ -155,7 +159,9 @@ Include $prefix/etc/ganglia/apache.conf
 </Directory>
 EOM
 fi
+vi $httpd_conf
 
-# FIXME: Is this necessary?  Support CentOS 6?
-# chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
+# Make sure everything is readable by apache_user
+chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
+chmod -R a+rX $prefix/share/ganglia/
 systemctl restart apache.service
