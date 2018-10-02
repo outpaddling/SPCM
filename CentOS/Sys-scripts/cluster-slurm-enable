@@ -72,6 +72,7 @@ RHEL7)
     case $NODE_TYPE in
     head)
 	printf "Install/edit $prefix/etc/slurm.conf.\n"
+	printf "(and $prefix/etc/cgroup.conf if needed)\n"
 	pause
 	$EDITOR $prefix/etc/slurm.conf
 	init_script=$prefix/share/examples/slurm/slurmctld.service

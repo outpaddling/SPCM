@@ -82,6 +82,7 @@ mkdir -p -m 700 $prefix/var/log/munge
 mkdir -p -m 755 $prefix/var/run/munge
 mkdir -p -m 400 $munge_etc
 
+chmod 755 $prefix/var/lib $prefix/var/log $prefix/var/run
 chown -Rh daemon:daemon \
     $prefix/var/log/munge \
     $prefix/var/run/munge \
