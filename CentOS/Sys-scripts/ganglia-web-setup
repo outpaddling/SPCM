@@ -15,15 +15,8 @@ pause()
 
 pkgin install -y apache ganglia-webfrontend
 
-OS_RELEASE=`auto-os-release`
+os_release=`auto-os-release`
 prefix=`auto-pkgsrc-prefix`
-
-##########################################################################
-#   Systemd init script
-##########################################################################
-
-# FIXME: CentOS7 only
-init_script=$prefix/etc/apache.service
 
 # selinux attempted fixes
 #chcon -R -t httpd_sys_rw_content_t $ganglia_web
@@ -35,43 +28,89 @@ init_script=$prefix/etc/apache.service
 # setenforce Permissive
 # setenforce Enforcing
 
-web_root=$prefix/share/httpd/htdocs
+##########################################################################
+#   Generate landing page
+##########################################################################
 
-DATADIR=$prefix/share/cluster-admin
-cp $DATADIR/WWW/global_styles.css \
-    $DATADIR/WWW/centos-power.jpg \
-    $DATADIR/WWW/pkgsrc.jpg \
+web_root=$prefix/share/httpd/htdocs
+datadir=$prefix/share/cluster-admin/WWW
+
+cp $datadir/global_styles.css \
+    $datadir/centos-power.jpg \
+    $datadir/pkgsrc.jpg \
     $web_root
 chmod a+rX $web_root/*
 
 if [ ! -e $web_root/index.php ]; then
-    printf "Cluster name as it should appear on the web? "
+    printf "Cluster name as it should appear on the main web page? "
     read name
-    sed -e "s|%%HOSTNAME%%|$name|g" $DATADIR/WWW/index.php > $web_root/index.php
+    sed -e "s|%%HOSTNAME%%|$name|g" $datadir/index.php > $web_root/index.php
 fi
+
+##########################################################################
+#   Generate basic Ganglia config
+##########################################################################
 
 # Just set up gmond.conf on the head node and distribute to other nodes
 # gmond already enabled by cluster-setup on all nodes
+
 if [ ! -e $prefix/etc/gmond.conf ]; then
-    cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+    cat << EOM
+===
+
+If you have a working gmond.conf, install it in $prefix/etc now.
+Otherwise, one will be generated for you.
+
+===
+EOM
+    pause
+
+    #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+    read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
+    read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
+    ip addr
+    read -p "IP address on head node to receive Ganglia data? " head_node_ip
+    sed \
+	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
+	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
+	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
+	$datadir/gmond.conf.template > $prefix/etc/gmond.conf
 fi
 
-printf "Install/edit $prefix/etc/gmond.conf.\n"
-pause
-vi $prefix/etc/gmond.conf
 chmod 644 $prefix/etc/gmond.conf
+vi $prefix/etc/gmond.conf
 
 # gmetad just for head node
 if [ ! -e $prefix/etc/gmetad.conf ]; then
-    cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
+    #cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
+    cat << EOM
+===
+
+If you have a working gmetad.conf, install it in $prefix/etc now.
+Otherwise, one will be generated for you.
+
+===
+EOM
+    pause
+
+    #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+    # Use values from gmond.conf if available
+    if [ -z "$cluster_name" ]; then
+	read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
+	read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
+	ip addr
+	read -p "IP address on head node to receive Ganglia data? " head_node_ip
+    fi
+    sed \
+	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
+	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
+	$datadir/gmetad.conf.template > $prefix/etc/gmetad.conf
 fi
 
-printf "Install/edit $prefix/etc/gmetad.conf.\n"
-pause
-vi $prefix/etc/gmetad.conf
 chmod 644 $prefix/etc/gmetad.conf
+vi $prefix/etc/gmetad.conf
 
-case $OS_RELEASE in
+case $os_release in
 RHEL6)
     cp $prefix/share/examples/ganglia/gmetad.init.linux /etc/init.d/gmetad
     chkconfig --add gmetad
@@ -89,17 +128,22 @@ RHEL7)
     ;;
 
 *)
-    printf "Unsupported os release: $OS_RELEASE\n"
+    printf "Unsupported os release: $os_release\n"
     exit 1
 
 esac
 pause
 
+##########################################################################
+#   Configure apache
+##########################################################################
+
 # FIXME: CentOS7 only
 # https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
 # FIXME: Add this to apache package?
-if [ ! -e $init_script ]; then
-    cat << EOM > $init_script
+apache_init_script=$prefix/etc/apache.service
+if [ ! -e $apache_init_script ]; then
+    cat << EOM > $apache_init_script
 [Unit]
 Description=The Apache HTTP Server
 After=network.target
@@ -118,12 +162,8 @@ EOM
 fi
 
 systemctl disable apache.service || true
-systemctl enable $init_script || true
+systemctl enable $apache_init_script || true
 systemctl daemon-reload
-
-##########################################################################
-#   Hacks to apache config
-##########################################################################
 
 httpd_conf=$prefix/etc/httpd/httpd.conf
 sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' $httpd_conf
