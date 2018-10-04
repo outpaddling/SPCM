@@ -54,7 +54,18 @@ fi
 # Just set up gmond.conf on the head node and distribute to other nodes
 # gmond already enabled by cluster-setup on all nodes
 
-if [ ! -e $prefix/etc/gmond.conf ]; then
+gmond_conf=$prefix/etc/gmond.conf
+if [ -e $gmond_conf ]; then
+    read -p "Overwrite gmond.conf? y/[n] " overwrite
+    if [ 0$overwrite = 0y ]; then
+        if [ ! -e $gmond_conf.orig ]; then
+            cp $gmond_conf $gmond_conf.orig
+        fi
+        rm -f $gmond_conf
+    fi
+fi
+
+if [ ! -e $gmond_conf ]; then
     cat << EOM
 ===
 
@@ -74,14 +85,25 @@ EOM
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
 	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
-	$datadir/gmond.conf.template > $prefix/etc/gmond.conf
+	$datadir/gmond.conf.template > $gmond_conf
 fi
 
-chmod 644 $prefix/etc/gmond.conf
-vi $prefix/etc/gmond.conf
+chmod 644 $gmond_conf
+vi $gmond_conf
+
+gmetad_conf=$prefix/etc/gmetad.conf
+if [ -e $gmetad_conf ]; then
+    read -p "Overwrite gmetad.conf? y/[n] " overwrite
+    if [ 0$overwrite = 0y ]; then
+        if [ ! -e $gmetad_conf.orig ]; then
+            cp $gmetad_conf $gmetad_conf.orig
+        fi
+    fi
+    rm $gmetad_conf
+fi
 
 # gmetad just for head node
-if [ ! -e $prefix/etc/gmetad.conf ]; then
+if [ ! -e $gmetad_conf ]; then
     #cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
     cat << EOM
 ===
@@ -104,11 +126,11 @@ EOM
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
-	$datadir/gmetad.conf.template > $prefix/etc/gmetad.conf
+	$datadir/gmetad.conf.template > $gmetad_conf
 fi
 
-chmod 644 $prefix/etc/gmetad.conf
-vi $prefix/etc/gmetad.conf
+chmod 644 $gmetad_conf
+vi $gmetad_conf
 
 case $os_release in
 RHEL6)

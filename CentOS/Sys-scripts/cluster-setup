@@ -723,6 +723,8 @@ disable_overcommit()
 # Quit on first error
 set -e
 
+: ${EDITOR:=vi}
+
 if [ `whoami` != root ]; then
     printf "$0 must be run by root.\n"
     exit 1
@@ -741,6 +743,11 @@ fi
 # The line below is modified by install.sh. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
 prefix=/usr/pkg
+
+read -p "Hostname for this head node? [$(hostname)] " host_name
+if [ 0$host_name != 0 ]; then
+    hostnamectl set-hostname $host_name
+fi
 
 NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
@@ -795,6 +802,8 @@ install_core_rpms
 pkgsrc_setup
 
 # FIXME: Remove || true when pkg repo is fixed
+# Workaround: git install looks for missing older version
+pkgin install -y tcl
 pkgin install -y cvs subversion git rsync iftop
 yum remove -y cvs subversion git rsync
 yum autoremove -y
