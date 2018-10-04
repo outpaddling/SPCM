@@ -795,7 +795,7 @@ install_core_rpms
 pkgsrc_setup
 
 # FIXME: Remove || true when pkg repo is fixed
-pkgin install -y cvs subversion git rsync iftop || true
+pkgin install -y cvs subversion git rsync iftop
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 

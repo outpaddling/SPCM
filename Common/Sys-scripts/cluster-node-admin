@@ -198,7 +198,7 @@ EOM
 	done
 	read -p "Host name prefix? [$default_prefix] " host_prefix
 	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
+	    host_prefix=$default_prefix
 	fi
 	read -p "Domain? [$default_domain] " domain
 	if [ 0$domain = 0 ]; then
