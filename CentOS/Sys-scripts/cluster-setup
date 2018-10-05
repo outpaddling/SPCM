@@ -744,16 +744,16 @@ fi
 # %%PREFIX%% with a hard-coded prefix from an installed script.
 prefix=/usr/pkg
 
-read -p "Hostname for this head node? [$(hostname)] " host_name
-if [ 0$host_name != 0 ]; then
-    hostnamectl set-hostname $host_name
-fi
-
 NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
 
 case $NODE_TYPE in
 'head')
+    read -p "Hostname for this head node? [$(hostname)] " host_name
+    if [ 0$host_name != 0 ]; then
+	hostnamectl set-hostname $host_name
+    fi
+
     printf "Install/edit /etc/hosts.\n"
     pause
     $EDITOR /etc/hosts

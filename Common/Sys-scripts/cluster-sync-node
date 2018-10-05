@@ -138,7 +138,11 @@ EOM
     rsync -av /usr/pkg/etc/munge ${node}:/usr/pkg/etc
     
     # SLURM config
-    rsync -av /usr/pkg/etc/slurm.conf ${node}:/usr/pkg/etc
+    for file in slurm.conf cgroup.conf; do
+	if [ -e /usr/pkg/etc/$file ]; then
+	    rsync -av /usr/pkg/etc/$file ${node}:/usr/pkg/etc
+	fi
+    done
     
     # Sync software
     yum_list=/usr/local/cluster/$node_type-node-yum-packages
