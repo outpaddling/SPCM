@@ -9,9 +9,9 @@ condor_status \
     -format '%4d' Cpus \
     -format '%7d\n' Memory
 condor_status -autof State Cpus | \
-    awk '($1 == "Claimed") && ($2 != 0) { sum += $2 } END { print "\nClaimed: ", sum }'
+    awk 'BEGIN { sum = 0} ($1 == "Claimed") && ($2 != 0) { sum += $2 } END { printf("\nClaimed:   %d\n", sum) }'
 condor_status -autof State Cpus | \
-    awk '($1 == "Unclaimed" || $1 == "Backfill") && ($2 != 0) { sum += $2 } END { print "Unclaimed: ", sum }'
-condor_status -autof Machine Cpus | \
-    awk ' { sum += $2 } END { print "Total: ", sum }'
+    awk 'BEGIN { sum = 0} ($1 == "Unclaimed" || $1 == "Backfill") && ($2 != 0) { sum += $2 } END { printf("Unclaimed: %d\n", sum) }'
+condor_status -autof State Cpus | \
+    awk 'NF == 2 { sum += $2 } END { printf("Total:     %d\n", sum) }'
 
