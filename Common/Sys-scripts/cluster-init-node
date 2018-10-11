@@ -143,7 +143,7 @@ FreeBSD)
     rsync -a --delete /usr/ports ${node}:/usr
     ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
     ssh $node sh ./freebsd-wip-checkout svn
-    ssh $node 'cd /usr/ports/wip/cluster-admin-devel && make deinstall clean reinstall clean'
+    ssh $node 'cd /usr/ports/wip/cluster-admin && make deinstall clean reinstall clean'
     
     # Pull ssh keys from node
     # FIXME: Should not be needed and security risk if compute nodes
