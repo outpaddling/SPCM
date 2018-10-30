@@ -653,6 +653,9 @@ ganglia_install()
     
     # Redundant check due to name diff between pkg and port
     if ! pkg_info ganglia-monitor-core > /dev/null; then
+	# FIXME: Work around llvm* dep issue in pkgsrc-current
+	# Remove this when fixed upstream
+	pkgin install -y llvm libXrandr
 	pkgin install -y ganglia-monitor-core
     fi
 
