@@ -84,6 +84,7 @@ fi
 case `auto-ostype` in
 RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
+    # until setup is complete
 
     ssh $node pkgin install -y rsync
     ssh $node yum remove -y rsync
@@ -137,6 +138,9 @@ EOM
     # Munge key
     rsync -av /usr/pkg/etc/munge ${node}:/usr/pkg/etc
     
+    # Ganglia
+    rsync -av /usr/pkg/etc/gmond.conf ${node}:/usr/pkg/etc
+    
     # SLURM config
     for file in slurm.conf cgroup.conf; do
 	if [ -e /usr/pkg/etc/$file ]; then
@@ -144,7 +148,7 @@ EOM
 	fi
     done
     
-    # Sync software
+    # Install standard software packages
     yum_list=/usr/local/cluster/$node_type-node-yum-packages
     if [ -e $yum_list ]; then
 	printf "Installing local packages from $yum_list...\n"
@@ -183,6 +187,7 @@ FreeBSD)
     
     cluster-sync-files $node
     
+    # Sync core packages
     if [ 0$use_defaults = 0yes ]; then
 	sync_packages=n
     else
@@ -196,10 +201,8 @@ FreeBSD)
     # hosts.allow
     rsync -av /etc/hosts.allow ${node}:/etc
     
-    # Other stuff
-    
-    # Sync software
-    # FIXME: Implement for FreeBSD
+    # Ganglia
+    rsync -av /usr/local/etc/gmond.conf ${node}:/usr/local/etc
     
     # Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
     munge_dir="$LOCALBASE/etc/munge"

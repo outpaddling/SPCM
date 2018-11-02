@@ -10,6 +10,9 @@
 #   History:
 #   Date        Name        Modification
 #   2016-02-23  Jason Bacon - UITS - SysadminBegin
+#
+#   FIXME: Merge this with FreeBSD cluster-sync-packages
+#
 ##########################################################################
 
 usage()

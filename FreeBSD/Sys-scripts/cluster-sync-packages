@@ -2,14 +2,18 @@
 
 ##########################################################################
 #   Script description:
-#       
+#       Sync core system packages from one node to another
+#
 #   Arguments:
-#       
-#   Returns:
+#       1)  Source node
+#       2)  Target node
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-04-14  Charlie &   Begin
+#   2015-04-14  J Bacon     Begin
+#
+#   FIXME: Merge this with CentOS cluster-sync-yum-packages
+#
 ##########################################################################
 
 usage()
