@@ -1,0 +1,61 @@
+#!/bin/sh -e
+
+this_host=`hostname`
+this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
+default_server=ad.${this_domain}:3268
+printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
+read server
+if [ 0$server = 0 ]; then
+    server=$default_server
+fi
+
+default_ad_user=$USER
+printf "YOUR AD Username for user query? [$default_ad_user] "
+read ad_user_name
+if [ 0$ad_user_name = 0 ]; then
+    ad_user_name=$default_ad_user
+fi
+
+printf "AD password? "
+stty -echo
+read ad_pw
+stty echo
+
+printf "\n\nChecking for expired users...\n"
+for user_name in $(cluster-users); do
+    ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
+    if [ 0$ldap_verified_uid != 0$user_name ]; then
+	done=0
+	while [ $done != 1 ]; do
+	    printf "\n===\nPassword entry:\n\n"
+	    fgrep $user_name /etc/passwd
+	    printf "\nRecent logins:\n\n"
+	    last $user_name | head
+	    printf "\n===\n"
+	    cat << EOM
+
+$user_name is not in AD.
+
+1.. Lock account
+2.. Remove account
+3.. Do nothing
+
+EOM
+	    read selection
+	    case $selection in
+	    1)
+		# pw lock $user_name
+		cluster-lock-user $user_name
+		done=1
+		;;
+	    2)
+		cluster-rmuser $user_name || true
+		done=1
+		;;
+	    3)
+		done=1
+		;;
+	    esac
+	done
+    fi
+done
