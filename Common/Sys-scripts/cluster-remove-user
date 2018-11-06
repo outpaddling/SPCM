@@ -50,6 +50,6 @@ fgrep $user_name /etc/passwd >> /usr/local/cluster/removed-users
 fgrep $user_name /etc/group >> /usr/local/cluster/removed-users
 
 # Group should be removed by rmuser, but it isn't!
-cluster-run -c "auto-rmuser $user_name" all
-auto-rmuser $user_name
+cluster-run -c "auto-remove-user $user_name" all
+auto-remove-user $user_name
 
