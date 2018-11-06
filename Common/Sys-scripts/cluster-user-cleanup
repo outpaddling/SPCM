@@ -49,7 +49,7 @@ EOM
 		done=1
 		;;
 	    2)
-		cluster-rmuser $user_name || true
+		cluster-remove-user $user_name || true
 		done=1
 		;;
 	    3)
