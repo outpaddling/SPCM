@@ -1,4 +1,18 @@
-#!/bin/sh
+#!/bin/sh -e
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
 
 if [ `whoami` != root ]; then
     printf "$0 must be run as root.\n"
@@ -10,13 +24,70 @@ if [ $# != 1 ]; then
     exit 1
 fi
 user_name=$1
+home_dir=$(awk -F : -v user_name=$user_name '$1 == user_name { print $6 }' /etc/passwd)
+
+clear
+cat << EOM
+
+Scanning for files owned by $user_name...
+
+There MUST be a link within $home_dir to every directory outside
+$home_dir containing files owned by $user_name.
+
+If there is not, create all necessary links before proceeding.
+
+We will then view a list of all files owned by $user_name.
+
+EOM
+pause
+
+find -L $home_dir -user $user_name -ls | less
+
+clear
 
 cat << EOM
+
+The following files are symbolic links.  The targets they point to
+will NOT be removed automatically.  You MUST deal with these targets
+before proceeding to avoid orphaning files on the cluster.
+
+EOM
+pause
+
+find -L $home_dir -type l -ls | less
+
+clear
+cat << EOM
+
+In a separate window, open a root shell on any file server containing
+files to be archived or removed.
+
+You will need it to clean up old files before proceeding without
+exiting this script.
+
+EOM
+pause
+
+clear
+cat << EOM
+
+If there are any files owned by $user_name that you would like to
+save, archive them or chown them to another user NOW.  Be sure to
+set both owner and group to something that will exist after
+$user_name is removed.
+
+EOM
+
+pause
+
+clear
+cat << EOM
 		
-Make sure *ALL* files outside $user_name's home directory are removed or
+Make sure *ALL* files outside $home_dir are removed, archived, or
 assigned to another user before you continue.
 
-Files in the home directory will be removed automatically if you choose.
+Files in $home_dir will be removed automatically if you choose
+not to archive it.
 
 Type "All files removed" when you are done.  Type anything else to abort
 the removal.
@@ -24,7 +95,7 @@ the removal.
 EOM
 
 read -p 'All files removed? ' removed
-if [ 0$removed != 0"All files removed" ]; then
+if [ 0"$removed" != 0"All files removed" ]; then
     exit 0
 fi
 
@@ -38,7 +109,7 @@ fi
 
 printf "Save home directory? [yes]/no "
 read save_home
-if [ x$save_home != xno ]; then
+if [ 0$save_home != 0no ]; then
     # Save home dir from removal by rmuser -y
     mkdir -p /home/Archived-users
     mv /home/$user_name /home/Archived-users
@@ -47,9 +118,8 @@ fi
 # Save user info
 mkdir -p /usr/local/cluster
 fgrep $user_name /etc/passwd >> /usr/local/cluster/removed-users
-fgrep $user_name /etc/group >> /usr/local/cluster/removed-users
+fgrep $user_name /etc/group >> /usr/local/cluster/removed-users || true
 
 # Group should be removed by rmuser, but it isn't!
-cluster-run -c "auto-remove-user $user_name" all
-auto-remove-user $user_name
-
+cluster-run -c "auto-remove-user -y $user_name" all
+auto-remove-user -r -y $user_name

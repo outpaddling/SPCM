@@ -24,17 +24,23 @@ stty echo
 printf "\n\nChecking for expired users...\n"
 for user_name in $(cluster-users); do
     ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
-    if [ 0$ldap_verified_uid != 0$user_name ]; then
+    uwm_member="`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | grep -i uwm-member`" || true
+    # Debug: printf "uwm_member='%s'\n" "$uwm_member"
+    if [ 0$ldap_verified_uid != 0$user_name ] || [ 0"$uwm_member" = 0 ]; then
 	done=0
 	while [ $done != 1 ]; do
 	    printf "\n===\nPassword entry:\n\n"
 	    fgrep $user_name /etc/passwd
-	    printf "\nRecent logins:\n\n"
+	    printf "\n===\nGroups:\n\n"
+	    fgrep $user_name /etc/group || true
+	    printf "\n===\nPassword statuss:\n\n"
+	    auto-password-status $user_name
+	    printf "\n===\nRecent logins:\n\n"
 	    last $user_name | head
 	    printf "\n===\n"
 	    cat << EOM
 
-$user_name is not in AD.
+$user_name is not a member of UWM-Member in AD:
 
 1.. Lock account
 2.. Remove account
@@ -57,5 +63,7 @@ EOM
 		;;
 	    esac
 	done
+    else
+	printf "$user_name is a member of UWM-Member in AD.\n"
     fi
 done
