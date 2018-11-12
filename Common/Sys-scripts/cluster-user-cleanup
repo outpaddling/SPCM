@@ -33,7 +33,7 @@ for user_name in $(cluster-users); do
 	    fgrep $user_name /etc/passwd
 	    printf "\n===\nGroups:\n\n"
 	    fgrep $user_name /etc/group || true
-	    printf "\n===\nPassword statuss:\n\n"
+	    printf "\n===\nPassword status:\n\n"
 	    auto-password-status $user_name
 	    printf "\n===\nRecent logins:\n\n"
 	    last $user_name | head

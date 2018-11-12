@@ -1,0 +1,103 @@
+#!/bin/sh -e
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Script description:
+#       Archive a user's files on a RAID server
+#
+#   Arguments:
+#       Directory name
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-11-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if ! hostname | egrep 'data|raid'; then
+    printf "$0 should only be run on a file server, not over NFS.\n"
+    exit 1
+fi
+
+dir="$1"
+full_path=`(cd $dir && pwd)`
+printf "Full path is $full_path.\n"
+archive_dir=$(echo $full_path | awk -F / '{ printf("/%s/Archived-users", $2) }')
+archive=$archive_dir/${full_path##*/}.tgz
+printf "Archiving to $archive.\n"
+
+cat << EOM
+
+Search
+
+    $dir
+
+for any core dumps or other large, useless files.
+
+Remove as much junk as possible before archiving to save time and space.
+
+EOM
+pause
+
+printf "\nPossible core files:\n\n"
+find $dir -name '*core' -exec file '{}' \;| more
+printf "\n"
+pause
+
+cat << EOM
+
+After you have cleaned up
+
+    $dir
+
+type "Continue" to archive the contents to
+
+    $archive_dir.
+
+Type anything else to cancel.
+
+EOM
+read continue
+if [ 0$continue = 0Continue ]; then
+    printf "Archiving...\n"
+    tar zcf $archive $full_path
+    
+    printf "Reviewing $archive content...\n"
+    pause
+    tar ztf $archive | less
+    
+    while [ 0$remove != 0yes ] && [ 0$remove != 0no ];do
+	printf "Remove $full_path? yes/no "
+	read remove
+    done
+    if [ 0$remove = 0yes ]; then
+	rm -rf $full_path
+    fi
+fi
