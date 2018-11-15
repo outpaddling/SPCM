@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-
 ##########################################################################
 #   Function description:
 #       Pause until user presses return
@@ -26,22 +25,53 @@ fi
 user_name=$1
 home_dir=$(awk -F : -v user_name=$user_name '$1 == user_name { print $6 }' /etc/passwd)
 
+gid=$(awk -F : -v u=$user_name '$1 == u { print $4 }' /etc/passwd)
+gid_owner=$(awk -F : -v gid=$gid '$3 == gid { print $1 }' /etc/group)
+dependent_users=$(awk -F : -v gid=$gid '$4 == gid { print $0 }' /etc/passwd | wc -l)
+if [ $dependent_users -gt 1 ] && [ $gid_owner = $user_name ]; then
+    cat << EOM
+
+Other users have $gid as their primary group.
+
+You must remove their accounts first.
+
+EOM
+    pause
+    exit 0  # Don't kill cluster-user-cleanup over this
+fi
+
+# FIXME: Generalize this
 cat << EOM
+
+Possible share directories are shown below.
+
+Do not assume this is a complete list.  Users may own files in other places!
+
+EOM
+
+ls -d /share*/*/$user_name* /*raid*/*/$user_name* /fasttemp1/*/$user_name* 2> /dev/null || true
+if [ $gid_owner != $user_name ]; then
+    ls -d /share*/*/$gid_owner* /*raid*/*/$user_name* /fasttemp1/*/$gid_owner* 2> /dev/null || true
+fi
+printf '\n'
+pause
+
+resp="Restart"
+while [ 0"$resp" = 0Restart ] && [ 0"$resp" != 0Cancel ]; do
+    cat << EOM
 
 The following files are symbolic links.  The targets they point to
 will NOT be removed automatically.  You MUST deal with these targets
 before proceeding to avoid orphaning files on the cluster.
-
 EOM
-pause
 
-printf '\n'
-find $home_dir -type l -ls
-printf '\n'
-
-pause
-
-cat << EOM
+    printf '\n'
+    find $home_dir -type l -ls
+    printf '\n'
+    
+    pause
+    
+    cat << EOM
 
 In a separate window:
 
@@ -56,9 +86,12 @@ In a separate window:
     follow.
 
 EOM
-pause
-
-cat << EOM
+    done=''
+    while [ 0$done != 0done ]; do
+	read -p "Type 'done' when finished: " done
+    done
+    
+    cat << EOM
 
 Scanning for files owned by $user_name...
 
@@ -70,11 +103,14 @@ If there is not, create all necessary links before proceeding.
 We will then view a list of all files owned by $user_name.
 
 EOM
-pause
-
-find -L $home_dir -user $user_name | more
-
-cat << EOM
+    resp=''
+    while [ 0"$resp" != 0done ]; do
+	read -p "Type 'done' when finished: " resp
+    done
+    
+    find -L $home_dir -user $user_name | more
+    
+    cat << EOM
 
 If there are other any files owned by $user_name that you would like to
 save, archive them or chown them to another user NOW.  Be sure to
@@ -83,9 +119,9 @@ $user_name is removed.
 
 EOM
 
-pause
-
-cat << EOM
+    pause
+    
+    cat << EOM
 		
 Make sure *ALL* files outside $home_dir are removed, archived, or
 assigned to another user before you continue.
@@ -93,13 +129,17 @@ assigned to another user before you continue.
 Files in $home_dir will be removed automatically if you choose
 not to archive it.
 
-Type "All files removed" when you are done.  Type anything else to abort
-the removal.
+Type "Remove account" to proceed with removal of $user_name.
+
+Type "Restart" to restart the removal process for this user.
+
+Type "Cancel" to abort the removal.
 
 EOM
 
-read -p 'All files removed? ' removed
-if [ 0"$removed" != 0"All files removed" ]; then
+    read -p 'Enter your choice: ' resp
+done
+if [ 0"$resp" != 0"Remove account" ]; then
     exit 0
 fi
 

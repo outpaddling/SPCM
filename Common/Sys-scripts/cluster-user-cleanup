@@ -1,13 +1,27 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
 this_host=`hostname`
 this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
 default_server=ad.${this_domain}:3268
 printf "KRB (or AD) server:port for ldapsearch? [$default_server] "
 read server
-if [ 0$server = 0 ]; then
-    server=$default_server
-fi
+: ${server:=$default_server}
+#if [ 0$server = 0 ]; then
+#    server=$default_server
+#fi
 
 default_ad_user=$USER
 printf "YOUR AD Username for user query? [$default_ad_user] "
@@ -29,18 +43,26 @@ for user_name in $(cluster-users); do
     if [ 0$ldap_verified_uid != 0$user_name ] || [ 0"$uwm_member" = 0 ]; then
 	done=0
 	while [ $done != 1 ]; do
-	    printf "\n===\nPassword entry:\n\n"
-	    fgrep $user_name /etc/passwd
-	    printf "\n===\nGroups:\n\n"
-	    fgrep $user_name /etc/group || true
-	    printf "\n===\nPassword status:\n\n"
-	    auto-password-status $user_name
-	    printf "\n===\nRecent logins:\n\n"
-	    last $user_name | head
-	    printf "\n===\n"
-	    cat << EOM
+	    printf "\n======================================================\n"
+	    printf "$user_name is not active in AD.\n"
 
-$user_name is not a member of UWM-Member in AD:
+	    printf "\n=== Password entry:\n\n"
+	    fgrep $user_name /etc/passwd
+	    
+	    printf "\n=== Group entries:\n\n"
+	    fgrep $user_name /etc/group || true
+	    
+	    printf "\nUsers with this primary group:\n\n"
+	    gid=$(awk -F : -v u=$user_name '$1 == u { print $4 }' /etc/passwd)
+	    awk -F : -v gid=$gid '$4 == gid { print $0 }' /etc/passwd
+	    
+	    printf "\n=== Password status:\n\n"
+	    auto-password-status $user_name
+	    
+	    printf "\n=== Recent logins:\n"
+	    last $user_name | head -5
+	    
+	    cat << EOM
 
 1.. Lock account
 2.. Remove account
@@ -55,7 +77,7 @@ EOM
 		done=1
 		;;
 	    2)
-		cluster-remove-user $user_name || true
+		env USER=$ad_user_name cluster-remove-user $user_name || true
 		done=1
 		;;
 	    3)
