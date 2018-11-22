@@ -16,7 +16,7 @@
 
 usage()
 {
-    printf "Usage: $0 host.domain backup|compute|io\n"
+    printf "Usage: $0 [--unattended] host.domain backup|compute|io\n"
     exit 1
 }
 
@@ -25,8 +25,15 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# -lt 2 ]; then
     usage
+fi
+
+if [ $1 = --unattended ]; then
+    unattended=y
+    shift
+else
+    unattended=n
 fi
 
 node=$1
@@ -48,6 +55,18 @@ fi
 
 node_type=$2
 
+conf_dir='/usr/local/cluster'
+if ssh $node ls $conf_dir/init-done; then
+    cat << EOM
+
+$node already initialized.
+
+Remove $conf_dir/init-done to override.
+
+EOM
+    exit
+fi
+
 case $node_type in
 backup|compute|io)
     ;;
@@ -60,8 +79,13 @@ esac
 # login.mortimer
 # gateway=$2
 
-printf "Remove $node from all known_hosts files? [y]/n "
-read remove
+if [ $unattended = y ]; then
+    remove=y
+else
+    printf "Remove $node from all known_hosts files? [y]/n "
+    read remove
+fi
+
 if [ 0$remove != 0n ]; then
     cluster-remove-from-known-hosts $node
 fi
@@ -83,7 +107,7 @@ RHEL)
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
-    ssh $node yum install -y gcc gcc-c++ gcc-gfortran
+    ssh $node yum install -y gcc gcc-c++ gcc-gfortran net-tools
     
     cat << EOM
 
@@ -108,9 +132,6 @@ EOM
     ssh $node auto-set-hostname $node
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
-    conf_dir='/usr/local/cluster'
-    ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
-
     printf "Installing yum updates...\n"
     ssh $node auto-update-system --defaults
     ;;
@@ -150,9 +171,6 @@ FreeBSD)
     # behind on updates can access login node
     # auto-ssh-reverse-authorize $node
     
-    conf_dir='/usr/local/cluster'
-    ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
-
     printf "Installing updates...\n"
     ssh $node auto-update-system --binary
     ;;
@@ -162,8 +180,14 @@ FreeBSD)
     ;;
 esac
 
-printf "Reboot? [y]/n "
-read reboot
+ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
+
+if [ $unattended = y ]; then
+    reboot=y
+else
+    printf "Reboot? [y]/n "
+    read reboot
+fi
 if [ 0$reboot != 0n ]; then
     ssh $node shutdown -r now
 fi

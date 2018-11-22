@@ -205,6 +205,10 @@ EOM
 	    domain=$default_domain
 	fi
 	get_host_info $default_digits
+	read -p "Unattended init? y/[n] " unattended
+	if [ 0$unattended = 0y ]; then
+	    flags=--unattended
+	fi
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`

@@ -86,6 +86,8 @@ Type anything else to cancel.
 EOM
 read continue
 if [ 0$continue = 0Continue ]; then
+    mkdir -p $archive_dir
+    
     printf "Archiving...\n"
     tar zcf $archive $full_path
     
