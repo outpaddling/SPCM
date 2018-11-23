@@ -52,5 +52,5 @@ if [ 0$proceed != 0Proceed ]; then
     exit
 fi
 
-auto-change-group-gid $group_name $new_gid $dirs
+auto-change-group-gid $group_name $new_gid $dirs || true
 cluster-run "auto-change-group-gid --silent $group_name $new_gid" all

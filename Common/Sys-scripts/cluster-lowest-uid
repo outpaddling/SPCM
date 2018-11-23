@@ -15,10 +15,10 @@ If users already exist on this system, check /etc/password to determine
 the lowest UID in use.
 
 EOM
-    printf "Lowest UID for regular users on this cluster? [1000] " >> `tty`
+    printf "Lowest UID for regular users on this cluster? [2000] " >> `tty`
     read lowest_uid
     if [ 0$lowest_uid = 0 ]; then
-	lowest_uid=1000
+	lowest_uid=2000
     fi
     printf "lowest-uid $lowest_uid\n" >> cluster-admin.conf
 fi

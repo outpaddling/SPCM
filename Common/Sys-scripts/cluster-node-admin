@@ -212,10 +212,7 @@ EOM
 	num=$first_num
 	while [ $num -le $last_num ]; do
 	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-	    read -p "Initializing $node.  Are you sure? y/[n] " sure
-	    if [ 0$sure = 0y ]; then
-		cluster-init-node $node $node_type || true
-	    fi
+	    cluster-init-node $flags $node $node_type || true
 	    printf "Done with $node...\n"
 	    num=$((num + 1))
 	done

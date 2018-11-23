@@ -39,9 +39,9 @@ usage()
 
 next_uid()
 {
-    # Start at 1000 to leave plenty of room for non-cluster user accounts
+    # Start at 2000 to leave plenty of room for non-cluster user accounts
     uid=`cluster-lowest-uid`
-    while uid_taken $uid; do
+    while uid_taken $uid || [ $uid -lt 2000 ]; do
 	uid=$((uid + 1))
 	if [ $uid -gt `cluster-highest-uid` ]; then
 	    printf "Out of user IDs.\n"
