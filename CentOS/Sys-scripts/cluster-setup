@@ -294,11 +294,11 @@ ntp_config()
 boot_block_backup()
 {
     # Save boot block for restoring software RAID
-    if [ ! -e /root/Save/boot-block.$NODE_TYPE ]; then
+    if [ ! -e $CONF_DIR/boot-block.$NODE_TYPE ]; then
 	line
 	printf "Backing up boot block...\n"
-	mkdir -p /root/Save
-	dd if=/dev/sda of=/root/Save/boot-block.$NODE_TYPE bs=512 count=1
+	mkdir -p $CONF_DIR
+	dd if=/dev/sda of=$CONF_DIR/boot-block.$NODE_TYPE bs=512 count=1
     fi
 }
 
@@ -421,7 +421,7 @@ nfs_config()
     case $NODE_TYPE in
     'compute'|'io')
 	# Compute nodes
-	fstab=/usr/local/cluster/fstab.$NODE_TYPE
+	fstab=$CONF_DIR/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
 	    while read mount; do
@@ -749,6 +749,7 @@ prefix=/usr/pkg
 
 NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
+CONF_DIR=/usr/local/cluster
 
 case $NODE_TYPE in
 'head')
@@ -768,10 +769,9 @@ case $NODE_TYPE in
     ;;
 esac
 
-if [ -e /root/Save/node-configured ]; then
-    
-    read -p "Node already configured.  Reconfigure? [n] " reconfig
-    if [ 0$reconfig != 0y ]; then
+if [ -e $CONF_DIR/node-configured ]; then
+    reconfig=`auto-ask reconfigure "Node already configured." n`
+    if [ $reconfig != y ]; then
 	exit 0
     fi
 fi
@@ -873,8 +873,8 @@ case $NODE_TYPE in
 esac
 
 # Save Kickstart file
-mkdir -p /root/Save
-backup_file ~/anaconda-ks.cfg /root/Save
+mkdir -p $CONF_DIR
+backup_file ~/anaconda-ks.cfg $CONF_DIR
 
 if ! fgrep -q clusteradmin /etc/passwd; then
     printf "Adding cluster-admin user...\n"
@@ -887,10 +887,16 @@ if [ $NODE_TYPE = head ]; then
     cluster-highest-uid
 fi
 
-auto-update-system --binary
-touch /root/Save/node-configured
+auto-update-system --binary || true
+touch $CONF_DIR/node-configured
 
-read -p 'Reboot? [y]/n ' reboot
+# FIXME: Add auto-ask option for not recording response?
+# We don't want the response recorded here.  Should always default to yes.
+if [ 0$AUTO_ASK_USE_DEFAULTS = 0yes ]; then
+    reboot=y
+else
+    read -p 'Reboot? [y]/n ' reboot
+fi
 if [ 0$reboot != 0n ]; then
     shutdown -r now
 fi
