@@ -419,7 +419,7 @@ nfs_config()
     awk '$3 == "nfs" { print $0 }' /etc/fstab
     
     case $NODE_TYPE in
-    'compute'|'io')
+    'head'|'compute'|'io')
 	# Compute nodes
 	fstab=$CONF_DIR/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
