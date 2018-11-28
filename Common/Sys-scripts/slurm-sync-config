@@ -11,9 +11,13 @@ for prefix in /usr/pkg /usr/local; do
     fi
 done
 
-cluster-dist-file $prefix/etc/slurm.conf $prefix/etc 644 compute
+files=$prefix/etc/slurm.conf
 if [ -e $prefix/etc/cgroup.conf ]; then
-    cluster-dist-file $prefix/etc/cgroup.conf $prefix/etc 644 compute
+    files="$files $prefix/etc/cgroup.conf"
 fi
+for node in $(cluster-compute-nodes); do
+    printf "\n$node...\n"
+    scp -p $files ${node}:$prefix/etc
+done
 slurm-sync-backup-login
 

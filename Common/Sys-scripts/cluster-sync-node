@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain compute|io\n"
+    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain head|compute|io\n"
     exit 1
 }
 
@@ -45,7 +45,8 @@ if [ 0$1 = 0--infiniband ]; then
     setup_flags=--infiniband
     shift
 fi
-if [ $# != 2 ] || [ 0$2 != 0'compute' ] && [ 0$2 != 0'io' ]; then
+
+if [ $# != 2 ]; then
     usage
 fi
 
@@ -59,25 +60,24 @@ if ! echo $long_node_name | fgrep -q '.'; then
 	exit 1
     fi
 fi
+
 node_type=$2
-
-node=${long_node_name%%.*}
-
 case $node_type in
-backup|compute|io)
+head|compute|io)
     ;;
 *)
     usage
 esac
+
+node=${long_node_name%%.*}
 
 if [ -z EDITOR ]; then
     EDITOR="vi"
 fi
 
 conf_dir='/usr/local/cluster'
-# cluster-init-node $long_node_name $node_type
 if ! ssh $node stat $conf_dir/init-done; then
-    printf "You must run cluster-init-node $long_node_name first.\n"
+    printf "You must run 'cluster-init-node $long_node_name $node_type' first.\n"
     exit 1
 fi
 
@@ -157,7 +157,7 @@ EOM
 	printf "No $yum_list found.\n"
     fi
 
-    # Run cluster-setup compute
+    # Run cluster-setup $node_type
     # Do this last, since it enables the scheduler
     if [ 0$use_defaults = 0yes ]; then
 	ssh -t $node env AUTO_ASK_USE_DEFAULTS=yes cluster-setup $setup_flags $node_type
@@ -212,7 +212,7 @@ FreeBSD)
     slurm_conf="$LOCALBASE/etc/slurm.conf"
     scp $slurm_conf ${node}:$slurm_conf
     
-    # Run cluster-setup compute
+    # Run cluster-setup $node_type
     # Do this last, since it enables the scheduler
     printf "\nRunning cluster-setup $node_type on $node...\n\n"
     if [ 0$use_defaults = 0yes ]; then
