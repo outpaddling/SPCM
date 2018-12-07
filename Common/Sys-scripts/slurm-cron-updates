@@ -1,0 +1,57 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#
+#       Launch compute node updats from cron.  This script will
+#       run slurm-update-idle-nodes, which will drain all nodes
+#       and then update all nodes in the "drained" state.  Busy
+#       nodes will be skipped, so you need to run slurm-update-idle-nodes
+#       repeatedly to update nodes as they become available.
+#
+#       Add this script to the root crontab as follows:
+#
+#       0-59/10 * * * * /usr/pkg/sbin/cluster-cron-updates
+#
+#       slurm-update-idle-nodes will gracefully exit if another
+#       instance is running, so feel free to schedule frequently in
+#       order to minimize idle time of nodes that require updating.
+#
+#   Arguments:
+#       None
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-12-07  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH
+
+printf '\n'
+date
+printf '\n'
+
+updates_dir=/home/slurm/Compute-node-updates
+mkdir -p $updates_dir
+log=$updates_dir/log
+slurm-update-idle-nodes $updates_dir >> $log
+
+# Trim log
+tail -50000 $log > $log.tmp
+mv -f $log.tmp $log
