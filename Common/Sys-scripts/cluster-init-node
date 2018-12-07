@@ -16,7 +16,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--unattended] host.domain backup|compute|io\n"
+    printf "Usage: $0 [--unattended] host.domain backup|compute|io|vis\n"
     exit 1
 }
 
@@ -68,7 +68,7 @@ EOM
 fi
 
 case $node_type in
-backup|compute|io)
+backup|compute|io|vis)
     ;;
 *)
     usage
@@ -95,7 +95,8 @@ auto-disable-host-key-prompt $short_name $node $ip
 
 # FIXME: Run ntpdate
 
-case `auto-ostype` in
+scp $(which auto-ostype) ${node}:
+case $(ssh $node ./auto-ostype) in
 RHEL)
     scp /etc/hosts ${node}:/etc
 
@@ -158,10 +159,14 @@ FreeBSD)
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
 	pkg upgrade -y
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
-	pkg install -y subversion rsync ca_root_nss-3.39
+	pkg install -y subversion rsync ca_root_nss
     
     printf "Syncing ports...\n"
-    rsync -a --delete /usr/ports ${node}:/usr
+    if [ -e /usr/ports ]; then
+	rsync -a --delete /usr/ports ${node}:/usr
+    else
+	ssh -t $node portsnap fetch extract
+    fi
     ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
     ssh $node sh ./freebsd-wip-checkout svn
     ssh $node 'cd /usr/ports/wip/cluster-admin && make deinstall clean reinstall clean'

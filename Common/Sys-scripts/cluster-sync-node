@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain head|compute|io\n"
+    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain head|compute|io|vis\n"
     exit 1
 }
 
@@ -63,7 +63,7 @@ fi
 
 node_type=$2
 case $node_type in
-head|compute|io)
+head|compute|io|vis)
     ;;
 *)
     usage
@@ -81,7 +81,13 @@ if ! ssh $node stat $conf_dir/init-done; then
     exit 1
 fi
 
-case `auto-ostype` in
+remote_ostype=$(ssh $node auto-ostype)
+if [ $remote_ostype != $(auto-ostype) ]; then
+    printf "Unsupported remote operating system: $remote_ostype\n"
+    exit 1
+fi
+exit
+case $(auto-ostype) in
 RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
     # until setup is complete

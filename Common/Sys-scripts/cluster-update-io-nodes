@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-
 ##########################################################################
 #   Function description:
 #       Pause until user presses return
@@ -22,10 +21,11 @@ for node in `cluster-io-nodes` `cluster-zfs-nodes`; do
     ssh $node w
     pause
     ssh -t $node iftop
-    ssh -t $node iftop -i ib0 || true
+    ssh -t $node iftop -i ib0 || true   # May not be an IB interface
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
-	ssh -t $node auto-update-system --binary
+	# CentOS 7 ssh always returns non-zero when rebooting
+	ssh -t $node auto-update-system --binary+reboot || true
     fi
 done

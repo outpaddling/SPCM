@@ -261,7 +261,7 @@ EOM
 	;;
     
     5)  # Update backup login node
-	cluster-update-backup-nodes
+	cluster-update-backup-nodes || true
 	
 	cat << EOM
 	
@@ -273,7 +273,7 @@ EOM
 	;;
     
     6)  # Verify scheduler running on backup login node
-	ssh login-2 tail /var/log/slurm/slurmctld || true
+	ssh login-2 tail /var/log/slurm/slurmctld.log || true
 	;;
     
     7)  # Update login node
@@ -317,11 +317,11 @@ EOM
 	;;
     
     8)
-	cluster-update-vis-nodes
+	cluster-update-vis-nodes || true
 	;;
     
     9)
-	cluster-update-io-nodes
+	cluster-update-io-nodes || true
 	;;
     
     10) # Update all compute nodes
