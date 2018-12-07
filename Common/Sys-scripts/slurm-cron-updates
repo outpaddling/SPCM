@@ -40,7 +40,7 @@ if [ $# != 0 ]; then
     usage
 fi
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin:/usr/local/bin:/usr/local/sbin
 export PATH
 
 printf '\n'
