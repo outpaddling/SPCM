@@ -26,7 +26,6 @@ case `uname` in
 	exit 1
 esac
 
-set -x
 for dir in bin sbin libexec; do
     mkdir -p ${DESTDIR}${PREFIX}/$dir
 done
