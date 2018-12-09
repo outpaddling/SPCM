@@ -100,7 +100,7 @@ conf_dir='/usr/local/cluster'
 cd $conf_dir
 # Should have been done by cluster-init-node
 # ssh $node mkdir -p $conf_dir
-for file in fstab.*; do
+for file in fstab.* site-mods.sh; do
     if [ -e $file ]; then
 	scp -p $file ${node}:$conf_dir
     fi

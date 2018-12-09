@@ -887,6 +887,17 @@ if [ $NODE_TYPE = head ]; then
     cluster-highest-uid
 fi
 
+# Run local site hooks
+if [ -e $CONF_DIR/site-mods.sh ]; then
+    if auto-file-secure $CONF_DIR/site-mods.sh; then
+	$CONF_DIR/site-mods.sh
+    else
+	printf "ALERT: $CONF_DIR/site-mods.sh is not secure!\n"
+	printf "Investigate this problem before proceeding!\n"
+	exit 1           
+    fi
+fi
+
 auto-update-system --binary || true
 touch $CONF_DIR/node-configured
 

@@ -967,15 +967,18 @@ fi
 # FIXME: Remove need for sudo.  Maybe use su -m?
 install_packages security/sudo
 
-if ! fgrep -q clusteradmin /etc/passwd; then
-    cat << EOM
-
-Adding clusteradmin user...
-
-EOM
-    cluster-groupadd clusteradmin -g 1000 || true
-    cluster-useradd clusteradmin 1000 clusteradmin 'Cluster Administrator' /bin/tcsh || true
+# Run local site hooks
+if [ -e $CONF_DIR/site-mods.sh ]; then
+    if auto-file-secure $CONF_DIR/site-mods.sh; then
+	$CONF_DIR/site-mods.sh
+    else
+	printf "ALERT: $CONF_DIR/site-mods.sh is not secure!\n"
+	printf "Investigate this problem before proceeding!\n"
+	exit 1           
+    fi
 fi
+
+touch $CONF_DIR/node-configured
 
 # Reboot to test new config after initial setup
 reboot_maybe
