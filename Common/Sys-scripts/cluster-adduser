@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-# Need bash for read -s
+#!/bin/sh
 
 pause()
 {
@@ -101,6 +99,8 @@ if [ `whoami` != "root" ]; then
     printf "$0 must be run by root.\n"
     exit 1
 fi
+
+CONF_DIR=/usr/local/cluster
 
 os_type=`auto-ostype`
 case $os_type in
@@ -231,7 +231,9 @@ case $gecos_source in
     fi
     
     printf "AD password? "
-    read -s ad_pw
+    stty -echo
+    read ad_pw
+    stty echo
 
     ldap_verified_uid=`ldapsearch -H ldap://$server -x -w $ad_pw -D "AD\\\\$ad_user_name" cn=$user_name | awk '$1 == "cn:" { print $2 }'`
     echo $ldap_verified_uid
@@ -261,7 +263,7 @@ fi
 # Convention
 home_dir=/home/$user_name
 
-build_gecos=/root/bin/adduser-build-gecos
+build_gecos=$CONF_DIR/adduser-build-gecos
 if [ -e $build_gecos ]; then
     if auto-file-secure $build_gecos; then
 	# Sets gecos_extension

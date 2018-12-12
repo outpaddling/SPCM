@@ -2,11 +2,10 @@
 
 ##########################################################################
 #   Script description:
+#       Sync users from head node
 #       
-#   Arguments:
-#       
-#   Returns:
-#       
+#       FIXME: Factor out OS dependencies to auto-admin
+#
 #   History:
 #   Date        Name        Modification
 #   2014-03-26  root        Begin
@@ -47,11 +46,25 @@ for user_name in $@; do
     
     case `auto-ostype` in
     RHEL)
+	groups="`groups $user_name | awk -F ': ' '{print $2}' | cut -s -d ' ' -f 2- | tr ' ' ','`"
+	;;
+    
+    FreeBSD)
+	groups="`groups $user_name | cut -s -d ' ' -f 2- | tr ' ' ','`"
+	;;
+    
+    *)
+	printf "$0: Invalid OS: `auto-ostype`"
+	exit 1
+    esac
+    
+    remote_os=`ssh $node auto-ostype`
+    case $remote_os in
+    RHEL)
 	# -f = return success even if the group already exists
 	ssh $node groupadd -f -g $group_id $group_name
     
 	# Create user
-	groups="`groups $user_name | awk -F ': ' '{print $2}' | cut -s -d ' ' -f 2- | tr ' ' ','`"
 	if [ -z "$groups" ]; then
 	    ssh $node useradd -c "\"$gecos\"" -d $home -g $group_id -M \
 		-s $shell -u $user_id $user_name
@@ -69,7 +82,6 @@ for user_name in $@; do
 	fi
     
 	# Create user
-	groups="`groups $user_name | cut -s -d ' ' -f 2- | tr ' ' ','`"
 	if [ -z "$groups" ]; then
 	    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
 		$group_id -s $shell -u $user_id

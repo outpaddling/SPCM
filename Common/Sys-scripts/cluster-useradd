@@ -37,6 +37,8 @@ if [ $# -lt 5 ]; then
     usage
 fi
 
+CONF_DIR=/usr/local/cluster
+
 os_type=`auto-ostype`
 
 user_name="$1"
@@ -104,7 +106,7 @@ if [ 0$NOPW != 0true ]; then
     cluster-passwd $user_name
 fi
 
-post_setup=/root/bin/useradd-post-setup
+post_setup=$CONF_DIR/useradd-post-setup
 if [ -e $post_setup ]; then
     if auto-file-secure $post_setup; then
 	$post_setup $user_name

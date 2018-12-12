@@ -13,6 +13,9 @@ if [ `whoami` != root ]; then
     exit 1
 fi
 
+LOCALBASE=/usr/local
+CONF_DIR=$LOCALBASE/cluster
+
 login_nodes="`cluster-backup-login-nodes`"
 root_nodes="`cluster-backup-login-nodes` `cluster-io-nodes`"
 all_nodes="`cluster-all-nodes`"
@@ -40,7 +43,7 @@ RHEL)
     printf "root home...\n"
     for node in $root_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	rsync -av /root/bin ${node}:/root
+	rsync -av $CONF_DIR ${node}:$LOCALBASE
     done
     
     for node in $all_nodes; do
@@ -67,7 +70,7 @@ FreeBSD)
     printf "root home...\n"
     for node in $root_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	rsync -av /root/bin ${node}:/root
+	rsync -av $CONF_DIR ${node}:$LOCALBASE
     done
     
     for node in $all_nodes; do
@@ -96,13 +99,12 @@ FreeBSD)
     ;;
 esac
 
-conf_dir='/usr/local/cluster'
-cd $conf_dir
+cd $CONF_DIR
 # Should have been done by cluster-init-node
-# ssh $node mkdir -p $conf_dir
+# ssh $node mkdir -p $CONF_DIR
 for file in fstab.* site-mods.sh; do
     if [ -e $file ]; then
-	scp -p $file ${node}:$conf_dir
+	scp -p $file ${node}:$CONF_DIR
     fi
 done
 

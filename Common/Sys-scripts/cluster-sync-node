@@ -86,7 +86,7 @@ if [ $remote_ostype != $(auto-ostype) ]; then
     printf "Unsupported remote operating system: $remote_ostype\n"
     exit 1
 fi
-exit
+
 case $(auto-ostype) in
 RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
