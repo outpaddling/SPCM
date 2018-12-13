@@ -85,7 +85,7 @@ else
 fi
 
 # Restore old password
-cluster-restore-pw $user_name $old_shadow_file
+cluster-transfer-pw $user_name $old_shadow_file
 
 # Copy files to new home dir
 if [ -d $old_dir ]; then

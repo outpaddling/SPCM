@@ -1,0 +1,62 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Transfer a password from another shadow file to all relevant
+#       nodes.
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-12-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username shadow-file\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+user_name="$1"
+old_shadow_pw="$2"
+
+pw="`awk -F : '$1 == "'$user_name'" { print $2 }' $old_shadow_pw`"
+if [ "0$pw" = 0 ]; then
+    printf "No such user: $user_name\n"
+    exit 1
+fi
+
+# FIXME: Preserve password age and expiration
+case $(auto-ostype) in
+FreeBSD)
+    prefix=/usr/local
+    pw_change="`awk -F : '$1 == "'$user_name'" { print $3 }' $old_shadow_pw`"
+    ;;
+
+RHEL)
+    prefix=/usr/pkg
+    pw_last_change="`awk -F : '$1 == "'$user_name'" { print $3 }' $old_shadow_pw`"
+    pw_max_age="`awk -F : '$1 == "'$user_name'" { print $5 }' $old_shadow_pw`"
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac
+
+$prefix/sbin/auto-transfer-pw $user_name "$pw"
+if [ $user_name = root ]; then
+    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" all
+else
+    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" backup io vis
+fi

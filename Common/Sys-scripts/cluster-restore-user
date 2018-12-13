@@ -84,5 +84,5 @@ else
     exit 1
 fi
 
-cluster-restore-pw $user_name $old_shadow_pw
+cluster-transfer-pw $user_name $old_shadow_pw
 

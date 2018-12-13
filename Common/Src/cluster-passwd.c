@@ -24,7 +24,7 @@
  *  own programs as root.
  */
 
-#define SYNC_CMD    "/usr/local/sbin/cluster-sync-pw %s"
+#define SYNC_CMD    "/usr/local/sbin/cluster-dist-pw %s"
 
 int     main(int argc,char *argv[])
 

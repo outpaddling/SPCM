@@ -102,11 +102,11 @@ line()
 #   2013-12-10  bacon        Begin
 ##########################################################################
 
-
+# FIXME: Is this still useful?  cluster-bootstrap handle it?
 pkgsrc_setup()
 {
     line
-    auto-binary-pkgsrc-setup /usr/pkg gcc-5.0
+    auto-binary-pkgsrc-setup /usr/pkg auto
 
     # Add pkgsrc to current path, exclusive
     . /usr/pkg/etc/pkgsrc.sh

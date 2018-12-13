@@ -49,7 +49,7 @@ else
     RHEL_VERSION=7
 fi
 
-prefix=/usr/pkg
+prefix=$(auto-pkgsrc-prefix)
 munge_etc="$prefix/etc/munge"
 mkdir -p -m 0700 $munge_etc
 
