@@ -24,7 +24,7 @@
  *  own programs as root.
  */
 
-#define SYNC_CMD    "/usr/local/sbin/cluster-transfer-pw %s"
+#define SYNC_CMD    "/usr/local/sbin/cluster-sync-pw %s"
 
 int     main(int argc,char *argv[])
 
@@ -66,7 +66,7 @@ int     main(int argc,char *argv[])
     
     /* Keep trying until user gets it right */
     while ( system(cmd) != 0 )
-	;
+	sleep(1);
     
     setuid(0);
     /*
