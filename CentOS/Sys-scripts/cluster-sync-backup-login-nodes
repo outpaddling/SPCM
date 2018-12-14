@@ -14,7 +14,8 @@ for node in `cluster-backup-login-nodes`; do
     ssh ${node} 'restorecon -R -v /home/*/.ssh'
     rsync -av /etc/security/limits.d ${node}:/etc/security
     rsync -av /usr/local ${node}:/usr
-    rsync -av /usr/pkg* ${node}:/usr
+    
+    # FIXME: Sync pkgsrc installs
     
     # Back up crontabs, but don't activate
     ssh $node mkdir -p Crontabs

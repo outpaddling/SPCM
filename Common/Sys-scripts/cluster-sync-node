@@ -2,19 +2,23 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Sync binary packages from one node to another
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-06-16  root        Begin
+#   2015-06-16  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 [--use-defaults] [--infiniband] host.domain head|compute|io|vis\n"
+    cat << EOM
+
+Usage: $0 [--use-defaults reference-node] [--infiniband] host.domain head|compute|io|vis
+
+reference-node: Source for list of binary packages to install
+--infiniband: Automatically condigure infiniband
+
+EOM
     exit 1
 }
 
@@ -39,6 +43,8 @@ pause()
 
 if [ 0$1 = 0--use-defaults ]; then
     use_defaults=yes
+    ref_node=$2
+    shift
     shift
 fi
 if [ 0$1 = 0--infiniband ]; then
@@ -98,7 +104,7 @@ RHEL)
     # Install basic tools and updates
     
     if [ 0$use_defaults = 0yes ]; then
-	sync_yum=n
+	sync_packages=y
     else
 	cat << EOM
 ---
@@ -106,11 +112,13 @@ Answer 'y' here if you have distributed new Yum packages while this node
 was inaccessible.
 ---
 EOM
-	read -p "Sync Yum packages? y/[n] " sync_yum
+	read -p "Sync binary packages? y/[n] " sync_packages
     fi
-    if [ 0$sync_yum = 0y ]; then
-	read -p "Reference node for Yum packages? " ref_node
-	cluster-sync-yum-packages $ref_node $node
+    if [ 0$sync_packages = 0y ]; then
+	if [ 0$ref_node = 0 ]; then
+	    read -p "Reference node for binary packages? " ref_node
+	fi
+	cluster-sync-packages $ref_node $node
     fi
     
     # Sync users
@@ -195,13 +203,15 @@ FreeBSD)
     
     # Sync core packages
     if [ 0$use_defaults = 0yes ]; then
-	sync_packages=n
+	sync_packages=y
     else
 	read -p "Sync packages? y/[n] " sync_packages
     fi
     if [ 0$sync_packages = 0y ]; then
-	read -p "Source node? " source_node
-	cluster-sync-packages $source_node $node
+	if [ 0$ref_node = 0 ]; then
+	    read -p "Reference node for binary packages? " ref_node
+	fi
+	cluster-sync-packages $ref_node $node
     fi
     
     # hosts.allow

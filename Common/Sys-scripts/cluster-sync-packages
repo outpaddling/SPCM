@@ -1,0 +1,82 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Sync core system packages from one node to another
+#
+#   Arguments:
+#       1)  Source node
+#       2)  Target node [target node ...]
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-14  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 master-node target-node [target-node ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+master=$1
+shift
+
+case $(auto-ostype) in
+RHEL)
+    # Yum
+    # FIXME: Preserve dependency status of packages for autoremove
+    yum_packages=`ssh $master yum list installed | awk 'NF == 3 && $3 ~ "@" { print $1 }'`
+    
+    # List only non-autoremovable packages so dependencies are
+    # autoremovable on target
+    pkgsrc_packages=`ssh $master pkgin show-keep | awk '{ print $1 }'`
+    
+    # Remove newlines?
+    yum_packages=`echo $yum_packages`
+    pkgsrc_packages=`echo $pkgsrc_packages`
+    
+    for node in $@; do
+	ssh $node yum install -y "$yum_packages"
+	ssh $node pkgin install -y "$pkgsrc_packages"
+    done
+    
+    # FIXME: Prune packages not present on master node
+    ;;
+
+FreeBSD)
+    # FIXME: Preserve dependency status of packages for autoremove
+    packages=`ssh $master pkg info | awk ' { print $1 }'`
+    rm -f $new_node.installed $new_node.failed
+    for pkg in $packages; do
+	basename=`echo ${pkg%%-[0-9]*}`
+	base_packages="$base_packages $basename"
+    done
+    for node in $@; do
+	# Fails outright if one package is unavailable:
+	# ssh $node pkg install -y "$base_packages"
+	ssh $node pkg update
+	for pkg in $base_packages; do
+	    echo $pkg
+	    ssh $node pkg install --no-repo-update -y $pkg || true
+	done
+    done
+
+    # FIXME: Prune packages not present on master node
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac

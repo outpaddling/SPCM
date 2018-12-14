@@ -223,7 +223,8 @@ EOM
 	if [ 0$node != 0 ]; then
 	    read -p "Default responses to all prompts? y/[n] " use_defaults
 	    if [ 0$use_defaults = 0y ]; then
-		sync_opts="--use-defaults"
+		read -p "Reference node for binary packages? " ref_node
+		sync_opts="--use-defaults $ref_node"
 	    fi
 	    printf "Synchronizing $node...\n"
 	    cluster-sync-node $sync_opts $node io || true
@@ -244,7 +245,8 @@ EOM
 	get_host_info 3
 	read -p "Default responses to all prompts? y/[n] " use_defaults
 	if [ 0$use_defaults = 0y ]; then
-	    sync_opts="--use-defaults"
+	    read -p "Reference node for binary packages? " ref_node
+	    sync_opts="--use-defaults $ref_node"
 	    read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
 	    if [ 0$infiniband = 0y ]; then
 		sync_opts="$sync_opts --infiniband"
