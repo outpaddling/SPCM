@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-for share in /share*; do
-    mount -o remount $share
-done
-

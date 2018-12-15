@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-for node in `cluster-io-nodes` `cluster-compute-nodes`; do
-    cluster-init-node $node
-done
-

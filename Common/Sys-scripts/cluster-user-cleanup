@@ -13,6 +13,7 @@ pause()
     read junk
 }
 
+# FIXME: Support LDAP, like cluster-adduser
 this_host=`hostname`
 this_domain=`hostname | awk -F . '{ printf("%s.%s", $(NF-1), $NF) }'`
 default_server=ad.${this_domain}:3268
