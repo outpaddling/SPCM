@@ -54,8 +54,7 @@ while true; do
 3.. Sync a user's password
 4.. Change user's password expiration date (to days after today)
 5.. Change password expiration date for all users (to days after today)
-6.. Add group
-7.. Add user to another group
+6.. Add user to another group
 Q.. Quit
 
 EOM
@@ -104,13 +103,6 @@ EOM
 	fi
 	;;
     6)
-	printf "New group name? "
-	read group
-	printf "GID? "
-	read gid
-	cluster-groupadd $group -g $gid
-	;;
-    7)
 	printf "Username? "
 	read user_name
 	printf "Group name? "
