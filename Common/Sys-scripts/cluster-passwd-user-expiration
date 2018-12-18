@@ -41,7 +41,7 @@ auto-passwd-user-expiration $user_name $days $warning
 if [ $user_name = root ]; then
     nodes=`cluster-all-nodes`
 else
-    nodes="`cluster-backup-login-nodes` `cluster-io-nodes` `cluster-vis-nodes`"
+    nodes="`cluster-backup-nodes` `cluster-io-nodes` `cluster-vis-nodes`"
 fi
 
 # FIXME: Set all nodes and do the same in cluster-sync-passwd

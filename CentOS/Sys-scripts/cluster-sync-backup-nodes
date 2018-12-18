@@ -5,7 +5,7 @@ if [ `hostname -s` != 'login' ]; then
     exit 1
 fi
 
-for node in `cluster-backup-login-nodes`; do
+for node in `cluster-backup-nodes`; do
     echo $node
 
     # Syncing .ssh could kill ssh keys.
@@ -26,5 +26,5 @@ for node in `cluster-backup-login-nodes`; do
     # ssh ${node} yum install $pkgs
 done
 
-slurm-sync-backup-login
+slurm-sync-backup
 

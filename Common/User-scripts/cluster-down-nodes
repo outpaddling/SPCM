@@ -3,7 +3,7 @@
 status=0
 tmpfile=cluster-down-nodes-uptime
 printf "%-20s %-10s %s\n" "Host" "Ping" "ssh node uptime"
-for node in `cluster-backup-login-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
+for node in `cluster-backup-nodes` `cluster-io-nodes` `cluster-compute-nodes`; do
     printf "%-20s " $node
     if ! ping -c 1 $node > /dev/null 2>&1; then
 	printf "%-10s %s\n" "Failed" "-"

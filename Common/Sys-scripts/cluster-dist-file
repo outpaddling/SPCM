@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 local-path remote-path perms backup-login|compute|io|vis|all\n"
+    printf "Usage: $0 local-path remote-path perms backup|compute|io|vis|all\n"
     exit 1
 }
 
@@ -39,7 +39,7 @@ shift; shift; shift
 
 node_types="$*"
 if [ "$node_types" = all ]; then
-    node_types="backup-login compute io vis"
+    node_types="backup compute io vis"
 fi
 
 for node_type in $node_types; do

@@ -61,7 +61,7 @@ while [ $# -gt 1 ]; do
     fi
     
     if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
-	nodes="$nodes `cluster-backup-login-nodes`"
+	nodes="$nodes `cluster-backup-nodes`"
     fi
     
     if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then

@@ -10,7 +10,7 @@ done
 # primary controller
 sed -e 's|StateSaveLocation=/home/slurm/slurmctld|StateSaveLocation=/head_home/slurm/slurmctld|' \
     $prefix/etc/slurm.conf > $prefix/etc/slurm.conf.backup-node
-for node in `cluster-backup-login-nodes`; do
+for node in `cluster-backup-nodes`; do
     printf "Syncing slurm.conf to $node...\n"
     rsync -pog $prefix/etc/slurm.conf.backup-node ${node}:$prefix/etc/slurm.conf
     if [ -e $prefix/etc/cgroup.conf ]; then

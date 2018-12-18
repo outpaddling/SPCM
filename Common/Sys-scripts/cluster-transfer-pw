@@ -60,3 +60,11 @@ if [ $user_name = root ]; then
 else
     $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" backup io vis
 fi
+if [ $user_name = root ]; then
+    hosts=all
+else
+    hosts="io vis backup"
+fi
+cluster-run 'mkdir /usr/local/cluster/pw-age' $hosts
+cluster-dist-file /usr/local/cluster/pw-age/$user_name \
+    /usr/local/cluster/pw-age 750 $hosts

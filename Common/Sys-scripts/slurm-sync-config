@@ -19,5 +19,5 @@ for node in $(cluster-compute-nodes); do
     printf "\n$node...\n"
     scp -p $files ${node}:$prefix/etc
 done
-slurm-sync-backup-login
+slurm-sync-backup
 
