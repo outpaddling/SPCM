@@ -18,8 +18,8 @@ case `uname` in
 	    exit 1
 	fi
 
-	mkdir -p ${DESTDIR}${PREFIX}/etc/profile.d
-	cp CentOS/profile.d/* ${DESTDIR}${PREFIX}/etc/profile.d
+	mkdir -p ${DESTDIR}${PREFIX}/share/profile.d
+	cp CentOS/profile.d/* ${DESTDIR}${PREFIX}/share/profile.d
 	;;
     *)
 	printf "Unsupported OS: `uname`\n"
