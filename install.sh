@@ -7,8 +7,8 @@ fi
 case `uname` in
     FreeBSD)
 	os='FreeBSD'
-
 	;;
+
     Linux)
 	#
 	if [ -e /etc/redhat-release ]; then
@@ -17,29 +17,31 @@ case `uname` in
 	    printf "Only RHEL-based Linux is supported.\n"
 	    exit 1
 	fi
-
-	mkdir -p ${DESTDIR}${DATADIR}/profile.d
-	cp CentOS/profile.d/* ${DESTDIR}${DATADIR}/profile.d
 	;;
+
     *)
 	printf "Unsupported OS: `uname`\n"
 	exit 1
 esac
 
+mkdir -p ${DESTDIR}${DATADIR}/profile.d
+cp Common/profile.d/* ${DESTDIR}${DATADIR}/profile.d
+
 for dir in bin sbin libexec; do
     mkdir -p ${DESTDIR}${PREFIX}/$dir
 done
+
 rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
+
 cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-# Nothing here yet 
-# cp $os/User-scripts/* ${DESTDIR}${PREFIX}/bin || true
+
 cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
+
 chmod 750 ${DESTDIR}${PREFIX}/sbin/*
 chmod 755 ${DESTDIR}${PREFIX}/bin/*
 
-cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 cp cluster-passwd ${DESTDIR}${PREFIX}/bin
 chmod 6755 ${DESTDIR}${PREFIX}/bin/cluster-passwd
 
@@ -52,6 +54,7 @@ if [ -e $os/Share ]; then
 fi
 cp $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 
+cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
