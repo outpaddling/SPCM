@@ -44,11 +44,11 @@ today=$(($today / 3600 / 24))
 pw_age=$(($today - $last_pw_change))
 printf "Max password age: $max_pw_age  Days since last change: $pw_age\n"
 
-# FIXME: Is this the head node?
-if [ `whoami` = $user_name ] && [ $pw_age -ge $max_pw_age ]; then
-    if is-login-node; then
+if is-login-node; then
+    if [ `whoami` = $user_name ] && [ $pw_age -ge $max_pw_age ]; then
+	printf "Your password is expired.\n"
 	cluster-passwd
-    else
-	printf "Your password is expired.  Run cluster-passwd on the login node immediately.\n"
     fi
+else
+    printf "Please run $0 on the login node.\n"
 fi
