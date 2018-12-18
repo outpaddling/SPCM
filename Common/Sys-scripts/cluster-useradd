@@ -2,19 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Create a new user account on all nodes
 #       
 #   History:
 #   Date        Name        Modification
-#   2013-12-28  root        Begin
+#   2013-12-28  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 username uid primary-group-name 'Comment' shell [additional useradd flags]\n"
+    printf "Usage: $0 username uid primary-group-name 'Comment' shell max-password-age additional useradd flags]\n"
     exit 1
 }
 
@@ -33,7 +30,7 @@ if [ `whoami` != root ]; then
     exit 1                                                                      
 fi                                                                              
 
-if [ $# -lt 5 ]; then
+if [ $# -lt 6 ]; then
     usage
 fi
 
@@ -46,6 +43,7 @@ user_id="$2"
 group_name="$3"
 gecos="$4"
 shell="$5"
+max_pw_age=$6
 shift; shift; shift; shift; shift
 
 printf "Checking cluster integrity.  One moment please...\n"
@@ -92,15 +90,32 @@ RHEL)
     # FIXME: Merge ssh-keygen-for-user with cluster-ssh-keygen
     ssh-keygen-for-user $user_name
     ;;
+
 FreeBSD)
     pw useradd $user_name -c "$gecos" -g $group_name -m \
 	-s $shell -u $user_id $@
     cluster-ssh-keygen $user_name $group_name
     ;;
+
 *)
     ;;
+
 esac
 
+# Record password age info
+# Simple file with two fields:
+#   1. Maximum password age in days
+#   2. Date of last change in days since epoch (init to 0)
+# Writable only by root, readable only by user's primary group
+pw_age_dir=$CONF_DIR/pw-age
+mkdir -p $pw_age_dir
+pw_age_file=$pw_age_dir/$user_name
+touch $pw_age_file
+chown root:$group_name $pw_age_file
+chmod 750 $pw_age_file
+printf "$max_pw_age 0\n" > $pw_age_file
+
+# Sync user to all nodes
 cluster-sync-user $user_name
 if [ 0$NOPW != 0true ]; then
     cluster-passwd $user_name
@@ -116,4 +131,3 @@ if [ -e $post_setup ]; then
 else
     printf "No $post_setup found; ignoring.\n"
 fi
-

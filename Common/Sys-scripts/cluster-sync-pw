@@ -32,10 +32,7 @@ if [ `hostname -s` != login ]; then
     exit 1
 fi
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/pkg
+prefix=`auto-pkgsrc-prefix`
 
 # This script is called from cluster-passwd, which runs suid root.
 # Prevent malicious users from running imposter programs.

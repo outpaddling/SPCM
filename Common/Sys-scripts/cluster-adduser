@@ -9,14 +9,11 @@ pause()
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Interactive interface for adding users
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-04-03  root        Begin
+#   2015-04-03  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -39,7 +36,7 @@ next_uid()
 {
     # Start at 2000 to leave plenty of room for non-cluster user accounts
     uid=`cluster-lowest-uid`
-    while uid_taken $uid || [ $uid -lt 2000 ]; do
+    while uid_taken $uid; do
 	uid=$((uid + 1))
 	if [ $uid -gt `cluster-highest-uid` ]; then
 	    printf "Out of user IDs.\n"
@@ -343,12 +340,18 @@ while [ $valid = 0 ]; do
     fi
 done
 
+default_pw_age=180
+printf "Maximum password age (days) [180]? "
+read max_pw_age
+: ${max_pw_age:=$default_pw_age}
+
 printf "Username:       $user_name\n"
 printf "UID:            $uid\n"
 printf "GID:            $gid\n"
 printf "Comment:        $gecos\n"
 printf "Primary group:  $primary_group\n"
 printf "Shell:          $shell\n"
+printf "Max passwd age: $max_pw_age\n"
 printf "\nCreate account? [y]/n "
 read resp
 if [ 0$resp = 0n ]; then
@@ -368,5 +371,5 @@ printf "Adding user $user_name...\n"
 # $agroup_flags -m $user_name
 
 umask 027
-cluster-useradd $user_name $uid $primary_group "$gecos" $shell $agroup_flags
-
+cluster-useradd $user_name $uid $primary_group "$gecos" $shell $max_pw_age \
+    $agroup_flags

@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <time.h>
+#include <limits.h>
 
 #define CMD_LEN     128
 
@@ -30,10 +32,13 @@ int     main(int argc,char *argv[])
 
 {
     uid_t   uid, euid;
+    unsigned int    max_pw_age, last_pw_change;
     char    *user_name,
-	    cmd[CMD_LEN+1];
+	    cmd[CMD_LEN+1],
+	    pw_age_file[PATH_MAX+1];
+    FILE    *fp;
     struct passwd   *pw_ent;
-    int     status = 0;
+    time_t  now;
     
     uid = getuid();
     euid = geteuid();
@@ -66,7 +71,7 @@ int     main(int argc,char *argv[])
     
     /* Keep trying until user gets it right */
     while ( system(cmd) != 0 )
-	sleep(1);
+	sleep(2);
     
     setuid(0);
     /*
@@ -76,6 +81,32 @@ int     main(int argc,char *argv[])
      */
     snprintf(cmd, CMD_LEN, SYNC_CMD, user_name);
     system(cmd);
+    
+    /*
+     *  Record password change time
+     */
+    now = time(NULL) / 3600 / 24;
+    snprintf(pw_age_file, PATH_MAX, "/usr/local/cluster/pw-age/%s", user_name);
+    fp = fopen(pw_age_file, "r+");
+    if ( fp == NULL )
+    {
+	fprintf(stderr, "%s: Cannot open %s.\n", argv[0], pw_age_file);
+	return EX_UNAVAILABLE;
+    }
+    if ( fscanf(fp, "%u %u", &max_pw_age, &last_pw_change) != 2 )
+    {
+	fprintf(stderr, "%s: Error reading %s.\n", argv[0], pw_age_file);
+	fclose(fp);
+	return EX_DATAERR;
+    }
+    // printf("%u %u %lu\n", max_pw_age, last_pw_change, now);
+    rewind(fp);
+    if ( fprintf(fp, "%u %lu\n", max_pw_age, now) < 0 )
+    {
+	fprintf(stderr, "%s: Error writing %s.\n", argv[0], pw_age_file);
+	fclose(fp);
+	return EX_DATAERR;
+    }
+    fclose(fp);
     return EX_OK;
 }
-
