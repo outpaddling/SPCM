@@ -602,7 +602,7 @@ EOM
 
 cluster_startup_scripts()
 {
-    ln -sf /usr/pkg/etc/profile.d/* /etc/profile.d
+    ln -sf /usr/pkg/share/cluster-admin/profile.d/* /etc/profile.d
 }
 
 

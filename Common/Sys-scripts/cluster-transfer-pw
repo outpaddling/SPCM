@@ -34,11 +34,12 @@ if [ "0$pw" = 0 ]; then
     exit 1
 fi
 
-# FIXME: Preserve password age and expiration
 case $(auto-ostype) in
 FreeBSD)
     prefix=/usr/local
-    pw_change="`awk -F : '$1 == "'$user_name'" { print $3 }' $old_shadow_pw`"
+    pw_last_change="`awk -F : '$1 == "'$user_name'" { print $3 }' $old_shadow_pw`"
+    # FIXME: Extract from login.conf if possible
+    pw_max_age=180
     ;;
 
 RHEL)
@@ -53,6 +54,9 @@ RHEL)
     ;;
 
 esac
+
+# Store cluster pw aging info
+printf "$pw_max_age $pw_last_change\n" > /usr/local/cluster/pw-age/$user_name
 
 $prefix/sbin/auto-transfer-pw $user_name "$pw"
 if [ $user_name = root ]; then

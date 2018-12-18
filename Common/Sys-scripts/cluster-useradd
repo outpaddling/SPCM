@@ -44,7 +44,7 @@ group_name="$3"
 gecos="$4"
 shell="$5"
 max_pw_age=$6
-shift; shift; shift; shift; shift
+shift; shift; shift; shift; shift; shift
 
 printf "Checking cluster integrity.  One moment please...\n"
 if ! cluster-down-nodes; then
