@@ -109,6 +109,7 @@ esac
 # Writable only by root, readable only by user's primary group
 pw_age_dir=$CONF_DIR/pw-age
 mkdir -p $pw_age_dir
+chmod 755 $pw_age_dir
 pw_age_file=$pw_age_dir/$user_name
 touch $pw_age_file
 chown root:$group_name $pw_age_file

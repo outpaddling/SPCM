@@ -185,7 +185,7 @@ FreeBSD)
     ;;
 esac
 
-ssh $node "mkdir -p $conf_dir && touch $conf_dir/init-done"
+ssh $node "mkdir -p $conf_dir && chmod 755 $conf_dir && touch $conf_dir/init-done"
 
 if [ $unattended = y ]; then
     reboot=y
