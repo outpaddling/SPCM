@@ -78,14 +78,16 @@ while [ $# -gt 1 ]; do
     shift
 done
 
+if [ -z $nodes ]; then
+    exit
+fi
+
 if [ -z $first_node ]; then
     first_node=`echo $nodes | awk '{ print $1 }'`
 fi
-echo $first_node
 if [ -z $last_node ]; then
     last_node=`echo $nodes | awk '{ print $NF }'`
 fi
-echo $last_node
 if ! echo $nodes | fgrep -q $first_node; then
     printf "$first_node is not among the selected nodes.\n"
     exit 1
