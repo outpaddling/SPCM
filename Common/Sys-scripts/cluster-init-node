@@ -125,7 +125,7 @@ EOM
     ssh $node 'pkgin install -y tcl'
     ssh $node 'pkgin install -y nbpatch python27 subversion git cvs mozilla-rootcerts'
     ssh -t $node 'cd /usr/pkgsrc && svn co --non-interactive --trust-server-cert-failures=unknown-ca https://github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
-    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin-devel && bmake install'
+    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin && bmake install'
     
     # ssh $node hostname $node
     # ssh $node \
