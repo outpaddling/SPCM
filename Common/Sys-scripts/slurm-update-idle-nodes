@@ -46,8 +46,7 @@ case $# in
     ;;
 esac
 
-log_dir="$1"
-
+readonly log_dir="$1"
 readonly lock_file="$log_dir/lockfile"
 if [ -e "$lock_file" ]; then
     printf "Another instance of $0 is currently running.\n"
@@ -184,7 +183,7 @@ for node in $nodes; do
     
     # Resume all nodes that have been updated but are still marked down
     # or drained, but respond to ssh.
-    slurm-resume-updated-nodes "$log_dir"
+    slurm-resume-updated-nodes "$log_dir" || true
 done
 wc -l $updated_nodes_file
 rm -f "$lock_file"

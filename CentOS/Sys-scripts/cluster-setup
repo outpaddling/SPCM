@@ -804,10 +804,9 @@ ntp_config
 install_core_rpms
 pkgsrc_setup
 
-# FIXME: Remove || true when pkg repo is fixed
 # Workaround: git install looks for missing older version
 pkgin install -y tcl
-pkgin install -y cvs subversion git rsync iftop
+pkgin install -y cvs subversion git rsync iftop nano
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 
