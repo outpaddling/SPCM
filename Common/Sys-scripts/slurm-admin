@@ -60,7 +60,7 @@ EOM
 	clear
 	printf "Nodes currently down:\n\n"
 	sinfo --list-reasons
-	printf "\nNode number? (e.g. 1-01) "
+	printf "\nNode number? (e.g. 001) "
 	read node
 	if [ 0$node != 0 ]; then
 	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
