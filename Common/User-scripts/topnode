@@ -2,10 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Conveniently run top on a cluster node
 #       
 #   History:
 #   Date        Name        Modification
@@ -16,10 +13,12 @@ usage()
 {
     cat << EOM
 
-Usage: $0 compute-node-index
+Usage: $0 node-name|compute-node-index
 
 Example:
     topnode 002
+    topnode compute-002
+    topnode raid-01
 
 EOM
     exit 1
@@ -36,5 +35,7 @@ fi
 
 node=$1
 shift
-ssh -t compute-$node top $*
-
+if ! echo $node | fgrep -q -e -; then
+    node=compute-$node
+fi
+ssh -t $node top $*

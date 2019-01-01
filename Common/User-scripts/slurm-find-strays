@@ -2,10 +2,8 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Find and terminate stray processes, those running outside the
+#       scheduler.
 #       
 #   History:
 #   Date        Name        Modification
@@ -37,11 +35,19 @@ pause()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
-    usage
-fi
+case $# in
+0)
+    user_name=$(whoami)
+    ;;
 
-user_name=$1
+1)
+    user_name=$1
+    ;;
+
+*)
+    usage
+    ;;
+esac
 
 cat << EOM
 
@@ -61,18 +67,22 @@ pause
 set +e
 
 for node in `cluster-compute-nodes`; do
-    printf "."
+    printf "$node\r"
 
     case `uname` in
     FreeBSD)
 	# -Y silences xauth warnings and should not pose a security risk here
-	processes=`ssh -Y -o ConnectTimeout=30 $node ps -U $user_name | \
-	    awk '$1 != "PID" && $5 != "ps" && $5 != "awk" && $5 != "sshd:" && $5 != "tcsh"'`
+	processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
+	    awk '$1 != "PID" && $5 != "ps" && $5 != "awk" && \
+		$5 != "sshd:" && $5 != "bash" && $5 != "tcsh" { print $4 }' | \
+		sort | uniq`
 	;;
 
     Linux)
 	processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
-	    awk '$1 != "PID" && $4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'`
+	    awk '$1 != "PID" && $4 != "ps" && $4 != "awk" && \
+		$4 != "sshd" && $4 != "bash" && $4 != "tcsh" { print $4 }' | \
+		sort | uniq`
 	;;
     
     *)
@@ -93,9 +103,19 @@ for node in `cluster-compute-nodes`; do
 	if echo $host_list | fgrep -q $node; then
 	    printf "\nUser $user_name has jobs running on $node.  Check for strays manually.\n"
 	else
-	    printf "\nStray processes found on $node:\n"
-	    ssh -Y -o ConnectTimeout=30 $node ps -U $user_name | \
-		awk '$4 != "ps" && $4 != "awk" && $4 != "sshd" && $4 != "tcsh"'
+	    printf "\nStray processes found on $node:\n$processes\n"
+	    printf "\nTerminate? [y]/n "
+	    read terminate
+	    if [ 0$terminate != 0n ]; then
+		#ssh -t $node top
+		for process in $processes; do
+		    ssh $node pkill $process
+		done
+		printf 'Running "top" on $node.  Verify that no strays remain.\n'
+		printf "Press 'q' to quit top.\n"
+		pause
+		ssh -t $node top
+	    fi
 	fi
     fi
 done
