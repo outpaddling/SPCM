@@ -2,10 +2,8 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Shut down all idle nodes.  Mainly useful in the event of a
+#       power outage if compute nodes are battery backed.
 #       
 #   History:
 #   Date        Name        Modification

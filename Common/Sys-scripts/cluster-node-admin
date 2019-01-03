@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Submenu for node management tasks
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-12-19  root        Begin
+#   2015-12-19  J Bacon     Begin
 ##########################################################################
 
 usage()

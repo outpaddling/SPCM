@@ -5,12 +5,11 @@
 #       Resume scheduling on one or more compute nodes.
 #
 #   Arguments:
-#       
-#   Returns:
+#       SLURM node spec
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-06-18  root        Begin
+#   2015-06-18  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -62,7 +61,7 @@ for node in $*; do
 	printf "Reboot? [y]/n "
 	read reboot
 	if [ 0$reboot != 0n ]; then
-	    ssh $node shutdown -r now
+	    ssh $node shutdown -r now || true
 	    printf "Waiting for $node to reboot...\n"
 	    sleep 20
 	    while ! ssh $node "hostname > /dev/null"; do

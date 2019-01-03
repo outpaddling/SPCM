@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Shut down the entire cluster in a rational order
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-01-16  root        Begin
+#   2014-01-16  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -66,19 +63,19 @@ fi
 printf "Shut down I/O nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" io
+    cluster-run -c "shutdown $flag now" io || true
 fi
 
 printf "Shut down backup login nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" backup
+    cluster-run -c "shutdown $flag now" backup || true
 fi
 
 printf "Shut down visualization nodes? (yes/[no]) "
 read sure
 if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" vis
+    cluster-run -c "shutdown $flag now" vis || true
 fi
 
 printf "Shut down head node? (yes/[no]) "

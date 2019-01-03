@@ -11,7 +11,7 @@
 #
 #   History:
 #   Date        Name        Modification
-#   2014-11-23  root        Begin
+#   2014-11-23  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -194,5 +194,5 @@ else
     read reboot
 fi
 if [ 0$reboot != 0n ]; then
-    ssh $node shutdown -r now
+    ssh $node shutdown -r now || true
 fi

@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Main menu for cluster admin tasks
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-01-08  root        Begin
+#   2014-01-08  J Bacon     Begin
 ##########################################################################
 
 usage()
