@@ -41,11 +41,8 @@ short_name=${node%%.*}
 ip=`awk -v hn=$node '$2 == hn { print $1 }' /etc/hosts` 
 
 if ! echo $node | fgrep -q '.'; then
-    printf "No domain name in $node.  Continue? y/[n] "
-    read continue
-    if [ 0$continue != 0y ]; then
-	exit 1
-    fi
+    printf "No domain name in $node.\n"
+    exit 1
 fi
 
 if ! awk '{ print $2 }' /etc/hosts | fgrep -q $node; then

@@ -33,20 +33,27 @@ if [ `whoami` != root ]; then
 fi
 
 host=$1
+
+if ! echo $host | fgrep -q '.'; then
+    printf "No domain name in $host.\n"
+    exit 1
+fi
+
 short_host=${host%%.*}
+ip=$(awk -v host=$host '$2 == host { print $1 }' /etc/hosts)
 
 set +e
 
 # For root user
 ssh-keygen -R $host
 ssh-keygen -R $short_host
-cd /home
-for user in *; do
-    file=$user/.ssh/known_hosts
+ssh-keygen -R $ip
+for user in $(cluster-users); do
+    file=/home/$user/.ssh/known_hosts
     if [ -e $file ]; then
-	echo $file
 	ssh-keygen -R $host -f $file
 	ssh-keygen -R $short_host -f $file
+	ssh-keygen -R $ip -f $file
 	chown $user $file
     fi
 done

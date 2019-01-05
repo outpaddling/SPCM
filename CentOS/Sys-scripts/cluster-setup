@@ -424,16 +424,7 @@ nfs_config()
 	fstab=$CONF_DIR/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
-	    while read mount; do
-		dir=`echo $mount | awk '{ print $2 }'`
-		if fgrep -qw $dir /etc/fstab; then
-		    printf "$dir is already in fstab.\n"
-		else
-		    printf "Adding $dir to fstab...\n"
-		    printf "$mount\n" >> /etc/fstab
-		    mkdir -p $dir
-		fi
-	    done < $fstab
+	    auto-amend-fstab $fstab
 	else
 	    cat << EOM
 
