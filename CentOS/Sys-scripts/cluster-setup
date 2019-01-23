@@ -132,7 +132,6 @@ ib_config()
 	libibverbs-devel \
 	libibcommon-devel \
 	infiniband-diags-devel \
-	libibcm-devel \
 	librdmacm-devel \
 	infiniband-diags \
 	perftest
@@ -614,8 +613,9 @@ slurm_install()
     case $NODE_TYPE in
     'head'|'compute')
 	pkgin install -y slurm-wlm
-	cluster-munge-enable $NODE_TYPE
-	cluster-slurm-enable $NODE_TYPE
+	# Allow finishing setup on nodes before they're in slurm.conf
+	cluster-munge-enable $NODE_TYPE || true
+	cluster-slurm-enable $NODE_TYPE || true
 	;;
     'io')
 	;;
