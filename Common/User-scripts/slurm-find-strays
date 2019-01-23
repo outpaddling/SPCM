@@ -38,6 +38,10 @@ pause()
 case $# in
 0)
     user_name=$(whoami)
+    if [ $user_name = root ]; then
+	printf "Cannot run $0 for root.\n"
+	exit 1
+    fi
     ;;
 
 1)
@@ -104,12 +108,29 @@ for node in `cluster-compute-nodes`; do
 	    printf "\nUser $user_name has jobs running on $node.  Check for strays manually.\n"
 	else
 	    printf "\nStray processes found on $node:\n$processes\n"
+	    case `uname` in
+	    FreeBSD)
+		# -Y silences xauth warnings and should not pose a security risk here
+		ssh -o ConnectTimeout=30 $node ps -u -U $user_name | \
+		    awk '$1 != "USER" && $5 != "ps" && $5 != "awk" && \
+			$5 != "sshd:" && $5 != "bash" && $5 != "tcsh" { print $0 }'
+		;;
+	    
+	    Linux)
+		ssh -o ConnectTimeout=30 $node ps -u -U $user_name | \
+		    awk '$1 != "USER" && $11 != "ps" && $4 != "awk" && \
+			$11 != "sshd" && $11 != "bash" && $11 != "tcsh" { print $0 }'
+		;;
+	    
+	    esac
 	    printf "\nTerminate? [y]/n "
 	    read terminate
 	    if [ 0$terminate != 0n ]; then
 		#ssh -t $node top
 		for process in $processes; do
-		    ssh $node pkill $process
+		    printf "Killing $process...\n"
+		    ssh $node pkill -9 $process
+		    #ssh $node killall $process
 		done
 		printf 'Running "top" on $node.  Verify that no strays remain.\n'
 		printf "Press 'q' to quit top.\n"

@@ -761,7 +761,7 @@ case $NODE_TYPE in
 esac
 
 if [ -e $CONF_DIR/node-configured ]; then
-    reconfig=`auto-ask reconfigure "Node already configured." n`
+    reconfig=`auto-ask reconfigure "Node already configured. Configure again? " n`
     if [ $reconfig != y ]; then
 	exit 0
     fi

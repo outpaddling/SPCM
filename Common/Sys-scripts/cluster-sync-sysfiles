@@ -43,7 +43,8 @@ RHEL)
     printf "root home...\n"
     for node in $root_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	rsync -av $CONF_DIR ${node}:$LOCALBASE
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab\* ${node}:$CONF_DIR
     done
     
     for node in $all_nodes; do
@@ -70,7 +71,8 @@ FreeBSD)
     printf "root home...\n"
     for node in $root_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	rsync -av $CONF_DIR ${node}:$LOCALBASE
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab\* ${node}:$CONF_DIR
     done
     
     for node in $all_nodes; do
