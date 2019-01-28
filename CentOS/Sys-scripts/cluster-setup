@@ -504,10 +504,11 @@ install_core_rpms()
 	environment-modules \
 	yum-utils \
 	dmidecode
+    
     # No such package yum install -y impitool     # Remote management and LOM
     
     if [ $NODE_TYPE = compute ]; then
-	yum install -y openmpi-devel numactl numactl-devel
+	yum install -y openmpi-devel numactl numactl-devel m4
     fi
 
     # Install compilers, etc.
