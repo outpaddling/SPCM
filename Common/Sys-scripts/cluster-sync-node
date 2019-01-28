@@ -16,7 +16,7 @@ usage()
 Usage: $0 [--use-defaults reference-node] [--infiniband] host.domain head|compute|io|vis
 
 reference-node: Source for list of binary packages to install
---infiniband: Automatically condigure infiniband
+--infiniband: Automatically configure infiniband
 
 EOM
     exit 1

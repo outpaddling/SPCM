@@ -418,7 +418,7 @@ nfs_config()
     awk '$3 == "nfs" { print $0 }' /etc/fstab
     
     case $NODE_TYPE in
-    'head'|'compute'|'io')
+    'head'|'compute'|'io'|'vis')
 	# Compute nodes
 	fstab=$CONF_DIR/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
@@ -504,11 +504,10 @@ install_core_rpms()
 	environment-modules \
 	yum-utils \
 	dmidecode
-    
     # No such package yum install -y impitool     # Remote management and LOM
     
     if [ $NODE_TYPE = compute ]; then
-	yum install -y openmpi-devel numactl numactl-devel m4
+	yum install -y openmpi-devel numactl numactl-devel
     fi
 
     # Install compilers, etc.

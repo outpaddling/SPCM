@@ -31,14 +31,11 @@ pause()
 
 ##########################################################################
 #   Function description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Collect info on hosts to be managed
 #       
 #   History:
 #   Date        Name        Modification
-#   2015-12-23  root        Begin
+#   2015-12-23  J Bacon     Begin
 ##########################################################################
 
 get_host_info()
@@ -92,6 +89,59 @@ EOM
     pause
 }
 
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-01-24  root        Begin
+##########################################################################
+
+get_node_type()
+{
+    node_type=none
+    while [ $node_type = none ]; do
+	cat << EOM
+
+1.. Backup login nodes
+2.. I/O nodes
+3.. Compute nodes
+4.. Visualization nodes
+
+EOM
+	read node_type
+	case $node_type in
+	1)
+	    node_type=backup
+	    default_digits=1
+	    default_prefix=login-
+	    ;;
+	2)
+	    node_type=io
+	    default_digits=2
+	    default_prefix=raid-
+	    ;;
+	3)
+	    node_type=compute
+	    default_digits=3
+	    default_prefix=compute-
+	    ;;
+	4)
+	    node_type=vis
+	    default_digits=1
+	    default_prefix=vis-
+	    ;;
+	*)
+	    printf "Invalid selection.\n"
+	    pause
+	esac
+    done
+    echo $node_type
+}
 
 ##########################################################################
 #   Main
@@ -119,18 +169,17 @@ while true; do
 
 1.. PXE install new nodes
 2.. Initialize new nodes
-3.. Synchronize an I/O node
-4.. Synchronize compute nodes
-5.. Install updates on backup login node
-6.. Verify scheduler restart on backup login node
-7.. Install updates on login node
-8.. Install updates on visualization nodes
-9.. Install updates on I/O nodes
-10. Install updates on idle compute nodes
-11. Restart cron updates on idle compute nodes
-12. Drain all nodes
-13. Shut down idle nodes
-14. Distribute system files
+3.. Synchronize nodes
+4.. Install updates on backup login node
+5.. Verify scheduler restart on backup login node
+6.. Install updates on login node
+7.. Install updates on visualization nodes
+8.. Install updates on I/O nodes
+9.  Install updates on idle compute nodes
+10. Restart cron updates on idle compute nodes
+11. Drain all nodes
+12. Shut down idle nodes
+13. Distribute system files
 Q.. Quit
 
 EOM
@@ -156,43 +205,7 @@ EOM
 	;;
     
     2)  # Initialize
-	node_type=none
-	while [ $node_type = none ]; do
-	    cat << EOM
-
-1.. Backup login nodes
-2.. I/O nodes
-3.. Compute nodes
-4.. Visualization nodes
-
-EOM
-	    read node_type
-	    case $node_type in
-	    1)
-		node_type=backup
-		default_digits=1
-		default_prefix=login-
-		;;
-	    2)
-		node_type=io
-		default_digits=2
-		default_prefix=raid-
-		;;
-	    3)
-		node_type=compute
-		default_digits=3
-		default_prefix=compute-
-		;;
-	    4)
-		node_type=vis
-		default_digits=1
-		default_prefix=vis-
-		;;
-	    *)
-		printf "Invalid selection.\n"
-		pause
-	    esac
-	done
+	get_node_type
 	read -p "Host name prefix? [$default_prefix] " host_prefix
 	if [ 0$host_prefix = 0 ]; then
 	    host_prefix=$default_prefix
@@ -215,51 +228,58 @@ EOM
 	done
 	;;
     
-    3)  # Sync I/O nodes
-	read -p"Fully qualified host name? " node
-	if [ 0$node != 0 ]; then
+    3)  
+	get_node_type
+	case $node_type in
+	io|vis|backup)
+	    # Sync I/O nodes
+	    read -p"Fully qualified host name? " node
+	    if [ 0$node != 0 ]; then
+		read -p "Default responses to all prompts? y/[n] " use_defaults
+		if [ 0$use_defaults = 0y ]; then
+		    read -p "Reference node for binary packages? " ref_node
+		    sync_opts="--use-defaults $ref_node"
+		fi
+		printf "Synchronizing $node...\n"
+		cluster-sync-node $sync_opts $node $node_type || true
+		printf "Done with $node...\n"
+	    fi
+	    ;;
+
+	compute)
+	    # Sync compute nodes
+	    sinfo
+	    read -p "Host name prefix? [compute-] " host_prefix
+	    if [ 0$host_prefix = 0 ]; then
+		host_prefix='compute-'
+	    fi
+	    read -p "Domain? [$default_domain] " domain
+	    if [ 0$domain = 0 ]; then
+		domain=$default_domain
+	    fi
+	    get_host_info 3
 	    read -p "Default responses to all prompts? y/[n] " use_defaults
 	    if [ 0$use_defaults = 0y ]; then
 		read -p "Reference node for binary packages? " ref_node
 		sync_opts="--use-defaults $ref_node"
+		read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
+		if [ 0$infiniband = 0y ]; then
+		    sync_opts="$sync_opts --infiniband"
+		fi
 	    fi
-	    printf "Synchronizing $node...\n"
-	    cluster-sync-node $sync_opts $node io || true
-	    printf "Done with $node...\n"
-	fi
+	    num=$first_num
+	    while [ $num -le $last_num ]; do
+		node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+		printf "Synchronizing $node...\n"
+		cluster-sync-node $sync_opts $node $node_type || true
+		printf "Done with $node...\n"
+		num=$((num + 1))
+	    done
+	    ;;
+	esac
 	;;
     
-    4)  # Sync compute nodes
-	sinfo
-	read -p "Host name prefix? [compute-] " host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
-	fi
-	read -p "Domain? [$default_domain] " domain
-	if [ 0$domain = 0 ]; then
-	    domain=$default_domain
-	fi
-	get_host_info 3
-	read -p "Default responses to all prompts? y/[n] " use_defaults
-	if [ 0$use_defaults = 0y ]; then
-	    read -p "Reference node for binary packages? " ref_node
-	    sync_opts="--use-defaults $ref_node"
-	    read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
-	    if [ 0$infiniband = 0y ]; then
-		sync_opts="$sync_opts --infiniband"
-	    fi
-	fi
-	num=$first_num
-	while [ $num -le $last_num ]; do
-	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-	    printf "Synchronizing $node...\n"
-	    cluster-sync-node $sync_opts $node compute || true
-	    printf "Done with $node...\n"
-	    num=$((num + 1))
-	done
-	;;
-    
-    5)  # Update backup login node
+    4)  # Update backup login node
 	cluster-update-backup-nodes || true
 	
 	cat << EOM
@@ -271,11 +291,11 @@ EOM
 	pause
 	;;
     
-    6)  # Verify scheduler running on backup login node
+    5)  # Verify scheduler running on backup login node
 	ssh login-2 tail /var/log/slurm/slurmctld.log || true
 	;;
     
-    7)  # Update login node
+    6)  # Update login node
 	update_warning
 	w
 	read -p 'Continue? y/[n] ' continue
@@ -315,15 +335,15 @@ EOM
 	fi
 	;;
     
-    8)
+    7)
 	cluster-update-vis-nodes || true
 	;;
     
-    9)
+    8)
 	cluster-update-io-nodes || true
 	;;
     
-    10) # Update all compute nodes
+    9) # Update all compute nodes
 	update_warning
 	cat << EOM
 
@@ -339,7 +359,7 @@ EOM
 	slurm-update-idle-nodes $updates_dir
 	;;
     
-    11) # Schedule compute node updates in cron
+    10) # Schedule compute node updates in cron
 	clear
 	update_warning
 	cat << EOM
@@ -365,18 +385,18 @@ EOM
 	fi
 	;;
 
-    12) # Drain all nodes
+    11) # Drain all nodes
 	read -p "Reason for draining all nodes? " reason
 	all_nodes=`sinfo -ho '%N'`
 	scontrol update state=drain nodename="$all_nodes" reason="$reason"
 	sinfo
 	;;
 
-    13)
+    12)
 	slurm-shutdown-idle-nodes
 	;;
 
-    14) # Synchronize system files
+    13) # Synchronize system files
 	cat << EOM
 
 This will distribute common system files such as
@@ -402,4 +422,3 @@ EOM
     esac
     pause
 done
-
