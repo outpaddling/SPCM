@@ -16,7 +16,7 @@ usage()
 Usage: $0 node-name|compute-node-index
 
 Example:
-    topnode 002
+    topnode 002         # same as topnode compute-002
     topnode compute-002
     topnode raid-01
 
@@ -35,7 +35,7 @@ fi
 
 node=$1
 shift
-if ! echo $node | fgrep -q -e -; then
+if ! echo $node | fgrep -q compute-; then
     node=compute-$node
 fi
 ssh -t $node top $*
