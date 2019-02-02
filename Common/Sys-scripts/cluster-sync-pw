@@ -61,7 +61,7 @@ if [ "0$pw" = 0 ]; then
 fi
 
 if [ $user_name = root ]; then
-    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" backup io vis compute
+    $prefix/sbin/cluster-run -c "auto-transfer-pw $user_name '$pw'" backup io vis compute
 else
-    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" backup io vis
+    $prefix/sbin/cluster-run -c "auto-transfer-pw $user_name '$pw'" backup io vis
 fi

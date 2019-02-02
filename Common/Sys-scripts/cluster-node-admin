@@ -73,16 +73,16 @@ update_warning()
 
 ================================ WARNING ===================================
 
-Rebooting the login node while slurm-update-idle-nodes is running may leave
+Rebooting the head node while slurm-update-idle-nodes is running may leave
 a compute node partially updated and orphan
 
     $updates_dir/lockfile
 
-It is best to update and reboot the login node before running
+It is best to update and reboot the head node before running
 slurm-update-idle-nodes unless you really know what you are doing.
 
 If you have already started updating idle compute nodes, it would be best
-to allow the updates to finish before updating the login node.
+to allow the updates to finish before updating the head node.
 
 ============================================================================
 EOM
@@ -107,7 +107,7 @@ get_node_type()
     while [ $node_type = none ]; do
 	cat << EOM
 
-1.. Backup login nodes
+1.. Backup head nodes
 2.. I/O nodes
 3.. Compute nodes
 4.. Visualization nodes
@@ -116,7 +116,7 @@ EOM
 	read node_type
 	case $node_type in
 	1)
-	    node_type=backup
+	    node_type=head
 	    default_digits=1
 	    default_prefix=login-
 	    ;;
@@ -170,9 +170,9 @@ while true; do
 1.. PXE install new nodes
 2.. Initialize new nodes
 3.. Synchronize nodes
-4.. Install updates on backup login node
-5.. Verify scheduler restart on backup login node
-6.. Install updates on login node
+4.. Install updates on backup head node
+5.. Verify scheduler restart on backup head node
+6.. Install updates on head node
 7.. Install updates on visualization nodes
 8.. Install updates on I/O nodes
 9.  Install updates on idle compute nodes
@@ -231,7 +231,7 @@ EOM
     3)  
 	get_node_type
 	case $node_type in
-	io|vis|backup)
+	io|vis|head)
 	    # Sync I/O nodes
 	    read -p"Fully qualified host name? " node
 	    if [ 0$node != 0 ]; then
@@ -279,19 +279,19 @@ EOM
 	esac
 	;;
     
-    4)  # Update backup login node
+    4)  # Update backup head node
 	cluster-update-backup-nodes || true
 	
 	cat << EOM
 	
-Verify that the backup login node is rebooted and fully functional before
-updating the primary login node.
+Verify that the backup head node is rebooted and fully functional before
+updating the primary head node.
 
 EOM
 	pause
 	;;
     
-    5)  # Verify scheduler running on backup login node
+    5)  # Verify scheduler running on backup head node
 	ssh login-2 tail /var/log/slurm/slurmctld.log || true
 	;;
     
@@ -302,7 +302,7 @@ EOM
 	if [ 0$continue = 0y ]; then
 		cat << EOM | wall
 
-The login node may need to be rebooted shortly to complete the installation of
+The head node may need to be rebooted shortly to complete the installation of
 important security updates.  An additional notice will follow if a reboot
 is necessary.
 
@@ -326,7 +326,7 @@ EOM
 		fi
 		cat << EOM | wall
 
-The login node will be rebooted shortly to complete the installation of
+The head node will be rebooted shortly to complete the installation of
 important security updates.  It should be available again in a few minutes.
 
 EOM

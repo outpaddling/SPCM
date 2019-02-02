@@ -2,19 +2,19 @@
 
 ##########################################################################
 #   Script description:
-#       
+#       Remove a host from all known_hosts files
+#
 #   Arguments:
-#       
-#   Returns:
+#       hostname with domain
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-07-27  root        Begin
+#   2016-07-27  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 hostname\n"
+    printf "Usage: $0 host.domain\n"
     exit 1
 }
 
@@ -40,7 +40,7 @@ if ! echo $host | fgrep -q '.'; then
 fi
 
 short_host=${host%%.*}
-ip=$(awk -v host=$host '$2 == host { print $1 }' /etc/hosts)
+ip=$(awk -v host=$host '$2 == host || $3 == host { print $1 }' /etc/hosts)
 
 set +e
 

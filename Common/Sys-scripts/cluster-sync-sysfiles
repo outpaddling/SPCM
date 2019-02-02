@@ -37,14 +37,12 @@ for node in $login_nodes; do
     rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
 done
 
+# FIXME: Are these ready to merge?
 os_type=`auto-ostype`
 case $os_type in
 RHEL)
-    printf "root home...\n"
-    for node in $root_nodes; do
+    for node in $all_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	ssh $node mkdir -p $CONF_DIR
-	rsync -av $CONF_DIR/fstab\* ${node}:$CONF_DIR
     done
     
     for node in $all_nodes; do
@@ -60,19 +58,20 @@ RHEL)
 	printf "ssh_config "
 	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
 	
-	printf "system-auth"
+	printf "system-auth "
 	rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
-	
+
+	printf "fstab fragments "
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
 	printf '\n'
     done
     ;;
 
 FreeBSD)
     printf "root home...\n"
-    for node in $root_nodes; do
+    for node in $all_nodes; do
 	rsync /root/.bash_profile ${node}:/root
-	ssh $node mkdir -p $CONF_DIR
-	rsync -av $CONF_DIR/fstab\* ${node}:$CONF_DIR
     done
     
     for node in $all_nodes; do
@@ -91,6 +90,9 @@ FreeBSD)
 	printf "system-auth"
 	rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d
 	
+	printf "fstab fragments "
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
 	printf '\n'
     done
     ;;
