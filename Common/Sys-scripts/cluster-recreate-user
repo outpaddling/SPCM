@@ -98,3 +98,18 @@ if [ -d $old_dir ]; then
     
     mv $old_dir $new_home/Pre-upgrade
 fi
+
+cat << EOM
+
+Fixing ownership over NFS will be very slow from the head node for users
+with many files on the file servers.
+
+Log into the user's file server(s) and manually run
+
+    auto-change-ownership
+
+and
+
+    auto-change-group-ownership
+    
+EOM

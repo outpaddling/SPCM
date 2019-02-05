@@ -161,12 +161,21 @@ FreeBSD)
     printf "Syncing ports...\n"
     if [ -e /usr/ports ]; then
 	rsync -a --delete /usr/ports ${node}:/usr
+    elif ssh $node stat /usr/ports; then
+	ssh -t $node portsnap fetch update
     else
 	ssh -t $node portsnap fetch extract
     fi
-    ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
-    ssh $node sh ./freebsd-wip-checkout svn
-    ssh $node 'cd /usr/ports/wip/cluster-admin && make deinstall clean reinstall clean'
+    if ssh $node stat /usr/ports/wip; then
+	ssh $node 'cd /usr/ports/wip && svn up'
+	ssh $node 'cd /usr/ports/wip/wip-tools && make deinstall distclean reinstall'
+	ssh $node wip-reinstall-port -nu -r auto-admin
+	ssh $node wip-reinstall-port -nu -r cluster-admin
+    else
+	ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
+	ssh $node sh ./freebsd-wip-checkout svn
+	ssh $node 'cd /usr/ports/wip/cluster-admin && make deinstall distclean reinstall clean'
+    fi
     
     # Pull ssh keys from node
     # FIXME: Should not be needed and security risk if compute nodes
