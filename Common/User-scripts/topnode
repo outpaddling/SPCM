@@ -13,11 +13,16 @@ usage()
 {
     cat << EOM
 
-Usage: $0 node-name|compute-node-index
+Usage: $0 complete-node-name|compute-node-index
+
+If the argument does not begin with compute-, raid-, vis-, or login-,
+then compute- is automatically prepended.
 
 Example:
     topnode 002         # same as topnode compute-002
     topnode compute-002
+    topnode 256g-004
+    topnode compute-256g-001
     topnode raid-01
 
 EOM
@@ -35,7 +40,7 @@ fi
 
 node=$1
 shift
-if ! echo $node | fgrep -q compute-; then
+if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
     node=compute-$node
 fi
 ssh -t $node top $*

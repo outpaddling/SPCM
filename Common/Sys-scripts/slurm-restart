@@ -42,8 +42,11 @@ RHEL)
 	;;
     
     RHEL7)
-	printf 'Compute and backup nodes...\n'
-	cluster-run -c 'systemctl restart munge && systemctl restart slurmd' compute backup
+	printf 'Compute nodes...\n'
+	cluster-run -c 'systemctl restart munge && systemctl restart slurmd' compute
+	
+	printf 'Backup head nodes...\n'
+	cluster-run -c 'systemctl restart munge && systemctl restart slurmctld' backup
 	
 	printf 'Head node...\n'
 	systemctl restart munge && systemctl restart slurmctld
