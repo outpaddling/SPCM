@@ -59,6 +59,9 @@ else
 fi
 
 # Check for existence of all groups
+primary_gid=$(awk -F : -v user_name=$user_name '$1 == user_name { print $4 }' $old_password_file)
+primary_group=$(awk -F : -v gid=$primary_gid '$3 == gid { print $1 }' $old_group_file)
+printf "Primary group was $primary_group.\n"
 other_groups=$(awk -F : -v user_name=$user_name '$4 ~ user_name { print $1 }' $old_group_file)
 other_gids=$(awk -F : -v user_name=$user_name '$4 ~ user_name { print $3 }' $old_group_file)
 echo $old_user_id $old_group_id $other_groups $other_gids

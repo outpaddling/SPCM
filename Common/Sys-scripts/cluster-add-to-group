@@ -15,7 +15,7 @@
 
 usage()
 {
-    printf "Usage: $0 username groupname\n"
+    printf "Usage: $0 [-c] username groupname\n"
     exit 1
 }
 
@@ -24,11 +24,14 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# -lt 2 ]; then
     usage
 fi
 
-# 
+if [ $1 = -c ]; then
+    flags=-c
+    shift
+fi
 user_name=$1
 group_name=$2
-cluster-run "auto-add-to-group $user_name $group_name" all
+cluster-run $flags "auto-add-to-group $user_name $group_name" all
