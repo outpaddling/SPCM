@@ -50,7 +50,13 @@ if is-login-node; then
  
     if [ `whoami` = $user_name ] && [ $pw_age -ge $max_pw_age ]; then
 	printf "Your password is expired.\n"
+	# Prevent user from cheating
+	# It's still possible to kill cluster-passwd by other means, but
+	# it is assumed that root will run periodic password checks and
+	# lock expired accounts.
+	stty -isig
 	cluster-passwd
+	stty isig
     fi
 else
     printf "Please run $0 on the login node.\n"
