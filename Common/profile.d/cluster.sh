@@ -1,4 +1,9 @@
 
+##########################################################################
+#   Copy this to /etc/profile.d and modify to taste or source it (or
+#   a modified copy) from /etc/profile or /etc/bashrc and similar scripts.
+##########################################################################
+
 # Set prompt to show more than just "login" for a host like
 # login.avi.hpc.uwm.edu
 first_two=`hostname | awk -F '.' ' { printf("%s.%s",$1,$2); }'`
