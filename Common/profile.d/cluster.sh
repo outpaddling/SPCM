@@ -7,3 +7,7 @@ PS1="[\u@$first_two \W] \!: "
 # Useful shortcuts
 alias f=finger
 alias dir='ls -als'
+
+if shopt -q login_shell; then
+    cluster-pw-check
+fi

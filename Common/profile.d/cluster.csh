@@ -7,3 +7,7 @@ set prompt="[%n@$first_two %c] %h: "
 # Useful shortcuts
 alias f finger
 alias dir 'ls -als'
+
+if ( $?prompt2 ) then
+    cluster-pw-check
+endif
