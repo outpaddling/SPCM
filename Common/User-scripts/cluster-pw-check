@@ -23,16 +23,16 @@ usage()
 if is-login-node; then
     case $# in
     0)
-        user_name=`whoami`
-        ;;
+	user_name=`whoami`
+	;;
     
     1)
-        user_name=$1
-        ;;
+	user_name=$1
+	;;
     
     *)
-        usage
-        ;;
+	usage
+	;;
     
     esac
 
@@ -43,7 +43,10 @@ if is-login-node; then
     today=`date +%s`
     today=$(($today / 3600 / 24))
     pw_age=$(($today - $last_pw_change))
-    printf "Max password age: $max_pw_age  Days since last change: $pw_age\n"
+    printf "\n============================\n"
+    printf "Maximum password age:   $max_pw_age\n"
+    printf "Days since last change: $pw_age\n"
+    printf "============================\n\n"
  
     if [ `whoami` = $user_name ] && [ $pw_age -ge $max_pw_age ]; then
 	printf "Your password is expired.\n"
