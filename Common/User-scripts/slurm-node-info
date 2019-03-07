@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+sinfo -N -o '%n %c %m'
