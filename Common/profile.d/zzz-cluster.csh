@@ -1,3 +1,4 @@
+#!/bin/csh -ef
 
 ##########################################################################
 #   Copy this to /etc/profile.d and modify to taste or source it (or
@@ -13,6 +14,6 @@ set prompt="[%n@$first_two %c] %h: "
 alias f finger
 alias dir 'ls -als'
 
-if ( $?prompt2 ) then
+if ( $?prompt2 && (`hostname -s` == login) ) then
     cluster-pw-check
 endif

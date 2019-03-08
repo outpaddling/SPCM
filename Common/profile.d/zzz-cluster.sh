@@ -1,3 +1,4 @@
+#!/bin/sh -e
 
 ##########################################################################
 #   Copy this to /etc/profile.d and modify to taste or source it (or
@@ -13,6 +14,6 @@ PS1="[\u@$first_two \W] \!: "
 alias f=finger
 alias dir='ls -als'
 
-if shopt -q login_shell; then
+if shopt -q login_shell && [ `hostname -s` = login ]; then
     cluster-pw-check
 fi
