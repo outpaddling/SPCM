@@ -105,7 +105,7 @@ RHEL)
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
     
     printf "Installing basic tools...\n"
-    ssh $node yum install -y gcc gcc-c++ gcc-gfortran net-tools
+    ssh $node yum install -y gcc gcc-c++ gcc-gfortran net-tools tcsh
     
     cat << EOM
 
