@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# FIXME: Utilize this script on CentOS or replace it on FreeBSD
+
 if [ $# != 2 ]; then
     printf "Usage: $0 username group{name|id}\n"
     exit 1
@@ -9,10 +11,13 @@ username=$1
 groupname=$2
 
 mkdir -p -m 0700 /home/$username/.ssh
-chown -Rh ${username}:$groupname /home/$username/.ssh
 if [ ! -e /home/$username/.ssh/id_rsa ] || \
     [ ! -e /home/$username/.ssh/id_rsa.pub ]; then
     sudo -u $username ssh-keygen -f /home/$username/.ssh/id_rsa -N ''
 fi
-cp -f /home/$username/.ssh/id_rsa.pub /home/$username/.ssh/authorized_keys2
+file=/home/$username/.ssh/authorized_keys
+if [ ! -e $file ]; then
+    cp -f /home/$username/.ssh/id_rsa.pub $file
+fi
+chown -Rh ${username}:$groupname /home/$username/.ssh
 
