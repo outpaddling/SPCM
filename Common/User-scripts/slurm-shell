@@ -1,23 +1,22 @@
 #!/bin/sh
 
 cat << EOM
-==========================================================================
-Note:
 
-slurm-shell is provided solely as a convenience for typical users.
+********************************* WARNING *********************************
 
-If you would like an interactive shell with additional memory, more
-than 1 CPU, etc., you can use salloc and srun directly.  Run
+Interactive jobs run in this manner may be terminated at any moment if
+security updates on the login node require a reboot.
 
-    more /usr/local/bin/slurm-shell
+The ability to run interactive jobs is provided as a convenience with no
+guarantees.
 
-for a basic example and
+HPC clusters are intended for running batch jobs and are not well suited
+for running interactive applications in general.
 
-    man salloc
-    man srun
+Users who require fast graphical sessions or reliable interactive sessions
+are advised to use a desktop computer rather than an HPC cluster.
 
-for full details.
-==========================================================================
+***************************************************************************
 
 EOM
 

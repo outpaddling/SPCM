@@ -24,6 +24,15 @@ for node in `cluster-vis-nodes`; do
     if [ 0$update = 0y ]; then
 	ssh $node "wall 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.'" || true
 	# CentOS 7 ssh always returns non-zero when rebooting
-	ssh -t $node auto-update-system || true
+	ssh -t $node auto-update-system --binary || true
+	ssh -t $node w
+	read -p "Reboot? [y]/n " reboot
+	if [ 0$reboot != 0n ]; then
+	    read -p "Minutes before reboot? [2] " minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    ssh $node shutdown -r +$minutes
+	fi
     fi
 done

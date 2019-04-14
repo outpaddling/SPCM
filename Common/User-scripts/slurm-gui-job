@@ -1,0 +1,78 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+cat << EOM
+
+********************************* WARNING *********************************
+
+Interactive jobs run in this manner may be terminated at any moment if
+security updates on the login node require a reboot.
+
+The ability to run interactive jobs is provided as a convenience with no
+guarantees.
+
+HPC clusters are intended for running batch jobs and are not well suited
+for running interactive applications in general.
+
+In addition, running graphical applications remotely is inherently limited
+in both performance and features, in comparison with graphical applications
+run directly on a workstation or laptop.
+
+Users who require fast graphical sessions or reliable interactive sessions
+are advised to use a desktop computer rather than an HPC cluster.
+
+***************************************************************************
+
+EOM
+pause
+printf '\n'
+
+read -p 'Partition? [batch] ' partition
+partition=${partition:=batch}
+
+read -p 'Memory (MiB) [256] ' mem
+mem=${mem:=256}
+
+read -p 'Cores? [1] ' cores
+cores=${cores:=1}
+
+read -p 'Command? ' command
+
+cat << EOM > gui-job.sbatch
+#!/bin/sh -e
+
+#SBATCH --partition=$partition --mem=$mem --ntasks=$cores --nodes=1
+
+while true; do
+    sleep 5
+done
+EOM
+
+jobid=$(sbatch gui-job.sbatch | awk '{ print $4 }')
+node=$(squeue -h -j $jobid | awk '{ print $8 }')
+sleep 1
+while [ $node = '(None)' ]; do
+    printf 'Waiting for job to start...\n'
+    sleep 1
+    node=$(squeue -h -j $jobid | awk '{ print $8 }')
+done
+
+# Example command, copy and paste to input when running this script:
+# gnuplot -e "plot exp(-x**2 / 2); pause 5"
+printf "Running jobid $jobid on $node...\n"
+command=$(printf "$command\n" | sed -e 's|"|\"|g')
+set +e  # Don't skip scancel if command fails or is killed by Ctrl+c
+ssh -t -Y $node "$command"
+scancel $jobid
