@@ -2,6 +2,18 @@
 
 cat << EOM
 
+********************************** NOTE ***********************************
+
+You can use additional "srun" flags with slurm-shell to allocate more
+cores or more memory for this session, or alter the allocation in any
+other way supported by srun.
+
+Example:
+
+slurm-shell --ntasks=4 --mem=6g
+
+Run "man srun" for a complete list of options.
+
 ********************************* WARNING *********************************
 
 Interactive jobs run in this manner may be terminated at any moment if
