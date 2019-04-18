@@ -1,0 +1,101 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Configure idrac for standard cluster-admin IP scheme
+#
+#   Arguments:
+#       shared: For idrac with shared interface
+#       dedicated: For idrac with dedicated interface
+#       (Most use a shared interface)
+#
+#   FIXME:
+#       Factor out an auto-idrac-config script to set any network
+#       parameters and call it from here.
+#
+#   History:
+#   Date        Name        Modification
+#   2016-08-24  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 network-interface-of-primary-ethernet shared|dedicated\n"
+    printf "Example: $0 bce0 shared\n"
+    printf "Example: $0 em1 dedicated\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $(whoami) != root ]; then
+    printf "Only root can do this.\n"
+    exit 1
+fi
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+nic=$1
+nic_mode=$2
+
+# Sanity check before messing with iDRAC
+case $nic_mode in
+dedicated|shared)
+    ;;
+    
+*)
+    usage
+    ;;
+esac
+
+# Run ipmi-install on all hosts first
+case `auto-ostype` in
+FreeBSD)
+    eth_addr=`ifconfig $nic | awk '$1 == "inet" { print $2 }'`
+    ;;
+
+RHEL)
+    #eth_addr=`ifconfig em1 | awk -F : '$1 ~ "inet addr" { print $2 }' | awk '{ print $1 }'`
+    eth_addr=`ip addr show $nic | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
+    ;;
+
+*)
+    printf "Unsupported OS: `auto-ostype`\n"
+    exit 1
+    ;;
+esac
+printf "Ethernet: $eth_addr\n"
+
+# These settings are specific to cluster-admin
+idrac_addr=`echo $eth_addr | awk -F . '{ printf("%s.%s.%s.%s\n", $1, $2, $3+64, $4) }'`
+printf "IDRAC:    $idrac_addr\n"
+
+ipmitool lan set 1 ipsrc static
+ipmitool lan set 1 ipaddr $idrac_addr
+# Allow -eth and -mgmt addresses to share interface
+ipmitool lan set 1 netmask 255.255.128.0
+ipmitool lan set 1 defgw ipaddr 192.168.0.1
+;;
+
+# Dedicated NIC
+case $nic_mode in
+dedicated)
+    ipmitool raw 0x30 0x24 2
+    ;;
+
+shared)
+    ipmitool raw 0x30 0x24 0
+    ;;
+    
+*)
+    usage
+    ;;
+esac
+
+# Change NIC settings
+ipmitool raw 0x30 0x25
