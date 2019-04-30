@@ -108,7 +108,7 @@ get_node_type()
 	cat << EOM
 
 1.. Backup head nodes
-2.. I/O nodes
+2.. File servers
 3.. Compute nodes
 4.. Visualization nodes
 
@@ -174,7 +174,7 @@ while true; do
 5.. Verify scheduler restart on backup head node
 6.. Install updates on head node
 7.. Install updates on visualization nodes
-8.. Install updates on I/O nodes
+8.. Install updates on File servers
 9.  Install updates on idle compute nodes
 10. Restart cron updates on idle compute nodes
 11. Drain all nodes
@@ -232,7 +232,7 @@ EOM
 	get_node_type
 	case $node_type in
 	io|vis|head)
-	    # Sync I/O nodes
+	    # Sync File servers
 	    read -p"Fully qualified host name? " node
 	    if [ 0$node != 0 ]; then
 		read -p "Default responses to all prompts? y/[n] " use_defaults
