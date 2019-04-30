@@ -340,7 +340,7 @@ EOM
 	;;
     
     8)
-	cluster-update-io-nodes || true
+	cluster-update-file-servers || true
 	;;
     
     9) # Update all compute nodes
