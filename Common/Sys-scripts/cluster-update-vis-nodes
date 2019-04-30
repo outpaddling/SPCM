@@ -22,7 +22,7 @@ for node in `cluster-vis-nodes`; do
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
-	ssh $node "wall 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.'" || true
+	ssh $node "echo 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.' | wall" || true
 	# CentOS 7 ssh always returns non-zero when rebooting
 	ssh -t $node auto-update-system --binary || true
 	ssh -t $node w

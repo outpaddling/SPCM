@@ -29,6 +29,8 @@ old_raw_pw=$2
 old_shadow_pw=$3
 old_group=$4
 old_pw_age_dir=$5
+old_pw_age=`awk '{ print $1 }' $old_pw_age_dir/$user_name`
+
 os_type=`auto-ostype`
 
 case $os_type in
@@ -73,7 +75,8 @@ if [ 0$found_user != 0$user_name ]; then
     
     NOPW=true
     export NOPW
-    if ! cluster-useradd $user_name $user_id $group_name "$gecos" $shell
+    set -x
+    if ! cluster-useradd $user_name $user_id $group_name "$gecos" $shell $old_pw_age
     then
 	printf "$cmd failed.\n"
     fi
