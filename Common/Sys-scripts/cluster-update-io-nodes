@@ -16,7 +16,7 @@ pause()
 # cluster-zfs-nodes is temporarily added to specific admin scripts for
 # testing.  When all cluster-admin components are tested in a heterogeneous
 # environment, it should be removed and those nodes included in io-nodes
-for node in `cluster-io-nodes` `cluster-zfs-nodes`; do
+for node in `cluster-file-servers`; do
     echo $node
     ssh $node w
     pause

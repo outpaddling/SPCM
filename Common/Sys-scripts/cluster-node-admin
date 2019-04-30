@@ -308,6 +308,7 @@ is necessary.
 
 EOM
 	    auto-update-system --binary
+	    read -p "Reboot? [y]/n " reboot
 	    if [ `auto-ostype` = FreeBSD ]; then
 		read -p "Update and sync ports tree to all nodes? [y]/n " portsnap
 		if [ 0$portsnap != 0n ]; then
@@ -318,7 +319,6 @@ EOM
 		fi
 	    fi
 	    w
-	    read -p "Reboot? [y]/n " reboot
 	    if [ 0$reboot != 0n ]; then
 		read -p "Minutes before reboot? [2] " minutes
 		if [ 0$minutes = 0 ]; then

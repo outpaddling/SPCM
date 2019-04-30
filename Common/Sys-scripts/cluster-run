@@ -65,7 +65,7 @@ while [ $# -gt 1 ]; do
     fi
     
     if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
-	nodes="$nodes `cluster-io-nodes`"
+	nodes="$nodes `cluster-file-servers`"
     fi
     
     if [ $node_type = 'vis' ] || [ $node_type = 'all' ]; then

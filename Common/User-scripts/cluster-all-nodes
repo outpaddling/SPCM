@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 cluster-backup-nodes
-cluster-io-nodes
+cluster-file-servers
 cluster-vis-nodes
 cluster-compute-nodes
 

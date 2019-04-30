@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+# This node list is for incremental testing if heterogeneous clusters,
+# particularly FreeBSD ZFS file servers in CentOS clusters.
+
+# Return 0 status regardless
+awk '$2 ~ "^zfs-.*[0-9]+\\." { print $3 }' /etc/hosts \
+    | egrep -ve '-ib0|-mgmt|-hpc|-aux' || true
+

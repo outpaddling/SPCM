@@ -940,6 +940,7 @@ case $NODE_TYPE in
     ;;
 
 "compute")
+    pkg install gcc llvm python
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi

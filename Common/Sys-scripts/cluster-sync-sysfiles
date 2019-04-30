@@ -17,7 +17,7 @@ LOCALBASE=/usr/local
 CONF_DIR=$LOCALBASE/cluster
 
 login_nodes="`cluster-backup-nodes`"
-root_nodes="`cluster-backup-nodes` `cluster-io-nodes`"
+root_nodes="`cluster-backup-nodes` `cluster-file-servers`"
 all_nodes="`cluster-all-nodes`"
 
 # Select nodes of each category from list

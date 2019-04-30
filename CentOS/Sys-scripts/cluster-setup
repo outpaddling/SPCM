@@ -797,7 +797,7 @@ pkgsrc_setup
 
 # Workaround: git install looks for missing older version
 pkgin install -y tcl
-pkgin install -y cvs subversion git rsync iftop nano
+pkgin install -y cvs subversion git rsync iftop nano emacs
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 
