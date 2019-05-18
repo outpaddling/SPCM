@@ -91,7 +91,7 @@ install_packages()
 	    mkdir $LOG_DIR
 	fi
 	log_file=$LOG_DIR/`echo $pkg | tr / -`
-	if ! auto-install-packages -l $pkg > $log_file 2>&1; then
+	if ! auto-install-packages -l $pkg 2>&1 | tee $log_file; then
 	    more $log_file
 	    exit 1
 	fi
@@ -172,7 +172,7 @@ slurm_config()
     chown slurm:slurm /var/log/slurm /var/run/slurm
     
     # Generate munge.key
-    $LOCALBASE/etc/rc.d/munged stop > /dev/null 2>&1 || true
+    service munged stop > /dev/null 2>&1 || true
     munge_dir="$LOCALBASE/etc/munge"
     if [ $NODE_TYPE == 'head' ]; then
 	if [ ! -e $munge_dir/munge.key ]; then
@@ -185,7 +185,7 @@ slurm_config()
     fi
     
     # Enable munge
-    auto-enable-service munged $0 > $LOG_DIR/munged_enable 2>&1
+    auto-enable-service munged $0 > $LOG_DIR/munged_enable 2>&1 || true
     service munged restart
 
     slurm_conf="$LOCALBASE/etc/slurm.conf"
@@ -481,8 +481,8 @@ ganglia_config()
 	    $LOCALBASE/etc/gmond.conf
     fi
     
-    
-    stop_service gmond
+    # Failing as of 2019-05-18: stop_service gmond
+    killall -9 gmond
     auto-enable-service gmond cluster-setup \
 	> $LOG_DIR/gmond_enable 2>&1
     service gmond restart

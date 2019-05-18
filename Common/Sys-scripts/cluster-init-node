@@ -158,14 +158,22 @@ FreeBSD)
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
 	pkg install -y subversion rsync ca_root_nss
     
-    printf "Syncing ports...\n"
+    printf "Syncing ports "
     if [ -e /usr/ports ]; then
+	printf "with rsync...\n"
 	rsync -a --delete /usr/ports ${node}:/usr
     elif ssh $node stat /usr/ports; then
+	printf "with portsnap update...\n"
 	ssh -t $node portsnap fetch update
     else
+	printf "with portsnap extract...\n"
 	ssh -t $node portsnap fetch extract
     fi
+    
+    if ! ssh $node 'fgrep -q "USE_LOCAL_MK=yes" /etc/make.conf'; then
+	ssh $node 'printf "USE_LOCAL_MK=yes\n" >> /etc/make.conf'
+    fi
+
     if ssh $node stat /usr/ports/wip; then
 	ssh $node 'cd /usr/ports/wip && svn up'
 	ssh $node 'cd /usr/ports/wip/wip-tools && make deinstall distclean reinstall'
