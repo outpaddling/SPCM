@@ -55,6 +55,8 @@ while true; do
 4.. Change user's password expiration date (to days after today)
 5.. Change password expiration date for all users (to days after today)
 6.. Add user to another group
+7.. Restore/transfer a user account (using same uid/gid)
+8.. Recreate a user account (possibly new uid/gid)
 Q.. Quit
 
 EOM
@@ -109,6 +111,27 @@ EOM
 	read group_name
 	cluster-add-to-group $user_name $group_name
 	;;
+    
+    7)
+	read -p "Username? " user_name
+	read -p "Directory with passwd, shadow, group, and pw-age? [/usr/local/cluster/Old] " \
+	    source_dir
+	: ${source_dir:=/usr/local/cluster/Old}
+	cluster-restore-user $user_name $source_dir/passwd $source_dir/shadow \
+	    $source_dir/group $source_dir/pw-age
+	;;
+    
+    8)
+	read -p "Username? " user_name
+	read -p "Directory with passwd, shadow, group, and pw-age? [/usr/local/cluster/Old] " \
+	    source_dir
+	: ${source_dir:=/usr/local/cluster/Old}
+	read -p "Old home directory? [/home/Old] " old_home
+	: ${old_home:=/home/Old}
+	cluster-recreate-user $user_name $source_dir/passwd $source_dir/shadow \
+	    $source_dir/group $source_dir/pw-age $old_home
+	;;
+    
     Q|q)
 	exit 0
 	;;
