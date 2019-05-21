@@ -126,9 +126,10 @@ EOM
 	read -p "Directory with passwd, shadow, group, and pw-age? [/usr/local/cluster/Old] " \
 	    source_dir
 	: ${source_dir:=/usr/local/cluster/Old}
-	read -p "Old home directory? [/home/Old] " old_home
-	: ${old_home:=/home/Old}
-	cluster-recreate-user $user_name $source_dir/passwd $source_dir/shadow \
+	read -p "Old home directory? [/home/Old/$user_name] " old_home
+	: ${old_home:=/home/Old/$user_name}
+	cluster-recreate-user \
+	    $user_name $source_dir/passwd $source_dir/shadow \
 	    $source_dir/group $source_dir/pw-age $old_home
 	;;
     
