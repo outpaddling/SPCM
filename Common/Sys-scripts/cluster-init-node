@@ -149,7 +149,9 @@ FreeBSD)
     repo_dir=/usr/local/etc/pkg/repos
     if [ -e $repo_dir ]; then
 	printf "Installing $repo_dir...\n"
-	scp -rp $repo_dir ${node}:/usr/local/etc
+	scp -rp $repo_dir ${node}:/usr/local/etc/pkg
+    else
+	printf "$repo_dir not found.\n"
     fi
 
     # FIXME: Add cluster-admin

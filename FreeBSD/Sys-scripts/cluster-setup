@@ -908,7 +908,8 @@ NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
 
 # The following configuration must be done on all nodes, although
 # different node types may be configured differently.
-auto-pkg-latest             # Use latest packages rather then quarterly
+# Copy repo dir from head instead:
+# auto-pkg-latest             # Use latest packages rather then quarterly
 update_system               # Start with and NTP update
 enable_procfs               # Needed for?
 get_port_install_method     # Build ports from source?
