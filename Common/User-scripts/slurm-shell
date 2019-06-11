@@ -33,7 +33,7 @@ are advised to use a desktop computer rather than an HPC cluster.
 EOM
 
 # A simpler way
-srun --mem-per-cpu=3000 --ntasks=1 --pty --preserve-env $@ $SHELL -l
+srun --mem-per-cpu=3g --pty --preserve-env $@ $SHELL -l
 
 # An overcomplicated way?
 # salloc -n1 srun -n1 -N1 --pty --preserve-env $SHELL -l
