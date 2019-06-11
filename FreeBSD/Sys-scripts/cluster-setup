@@ -482,7 +482,6 @@ ganglia_config()
     fi
     
     # Failing as of 2019-05-18: stop_service gmond
-    killall -9 gmond
     auto-enable-service gmond cluster-setup \
 	> $LOG_DIR/gmond_enable 2>&1
     service gmond restart
@@ -680,7 +679,6 @@ install_common_tools()
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion \
 	shells/bash shells/dash
-    yes | pkg install -y bsdstats
 }
 
 
@@ -932,7 +930,7 @@ case $NODE_TYPE in
     ;;
 
 "compute")
-    pkg install gcc llvm python
+    install_packages lang/gcc devel/llvm lang/python
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi
