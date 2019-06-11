@@ -167,6 +167,13 @@ while true; do
 				  Node Admin Menu
 			    **************************
 
+******************************************************************************
+				*** WARNING ***
+
+Installing updates remotely is not recommended.  Servers often fail to
+reboot, so you should be physically nearby in case of issues.
+******************************************************************************
+
 1.. PXE install new nodes
 2.. Initialize new nodes
 3.. Synchronize nodes
@@ -368,6 +375,8 @@ This will clear the updated-nodes list from the last round of cron updates.
 
 All compute nodes will be immediately set to draining state to prevent them
 from receiving any new jobs before they are updated.
+
+Be sure all head nodes and file servers are up before proceeding.
 
 Nodes will be updated one at a time shortly after they become idle.
 

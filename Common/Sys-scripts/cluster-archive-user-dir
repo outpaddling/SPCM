@@ -28,7 +28,7 @@ pause()
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0 directory\n"
     exit 1
 }
 

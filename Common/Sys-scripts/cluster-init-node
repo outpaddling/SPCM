@@ -149,6 +149,7 @@ FreeBSD)
     repo_dir=/usr/local/etc/pkg/repos
     if [ -e $repo_dir ]; then
 	printf "Installing $repo_dir...\n"
+	ssh $node mkdir -p /usr/local/etc/pkg
 	scp -rp $repo_dir ${node}:/usr/local/etc/pkg
     else
 	printf "$repo_dir not found.\n"
