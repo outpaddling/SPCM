@@ -30,9 +30,10 @@ os_release=`auto-os-release`
 ##########################################################################
 
 case $os_release in
-FreeBSD)
+FreeBSD-*)
     apache=apache24
-    pkg install $apache ganglia-webfrontend
+    php=php72
+    pkg install -y $apache ganglia-webfrontend $php mod_$php
     prefix=/usr/local
     web_root=$prefix/www/apache24/data
     ;;
@@ -50,10 +51,9 @@ esac
 
 datadir=$prefix/share/cluster-admin/WWW
 
-cp $datadir/global_styles.css \
-    $datadir/centos-power.jpg \
-    $datadir/pkgsrc.jpg \
-    $web_root
+cp $datadir/global_styles.css $web_root
+cp $datadir/*.jpg $web_root || true
+cp $datadir/*.gif $web_root || true
 chmod a+rX $web_root/*
 
 if [ ! -e $web_root/index.php ]; then
@@ -94,13 +94,14 @@ EOM
     #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
     read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
     read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
-    ip addr
+    # ip addr
     read -p "IP address on head node to receive Ganglia data? " head_node_ip
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
 	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
 	$datadir/gmond.conf.template > $gmond_conf
+    ;;
 fi
 
 chmod 644 $gmond_conf
@@ -138,17 +139,21 @@ EOM
 	ip addr
 	read -p "IP address on head node to receive Ganglia data? " head_node_ip
     fi
+    
+    # FIXME: Don't rely on template from cluster-admin as format may
+    # change with new ganglia versions
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
 	$datadir/gmetad.conf.template > $gmetad_conf
+    ;;
 fi
 
 chmod 644 $gmetad_conf
 vi $gmetad_conf
 
 case $os_release in
-FreeBSD)
+FreeBSD-*)
     auto-enable-service gmetad
     ;;
 
@@ -178,7 +183,7 @@ pause
 # https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
 # FIXME: Add this to apache package?
 case $os_release in
-FreeBSD)
+FreeBSD-*)
     ;;
 
 RHEL7)
@@ -249,8 +254,36 @@ chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
 chmod -R a+rX $prefix/share/ganglia/
 
 case $os_release in
-FreeBSD)
-    service $apache restart
+FreeBSD-*)
+    if [ ! -e $LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig ]; then
+	printf "Patching httpd.conf...\n"
+	mv $LOCALBASE/etc/$APACHE_PKG/httpd.conf \
+	    $LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig
+	awk -f $DATADIR/patch-apache.awk \
+	    $LOCALBASE/etc/$APACHE_PKG/httpd.conf.orig \
+	    > $LOCALBASE/etc/$APACHE_PKG/httpd.conf
+    fi
+
+    # Add date_default_timezone_set('America/Chicago'); to ganglia.php
+    # or update date.timezone in $LOCALBASE/etc/php.ini and restart
+    # Apache
+    if [ ! -e $LOCALBASE/etc/php.ini ]; then
+	cp $LOCALBASE/etc/php.ini-production $LOCALBASE/etc/php.ini
+    fi
+    
+    # Set timezone if not already set
+    if ! grep -q '^date.timezone' $LOCALBASE/etc/php.ini; then
+	printf "Time zone? (Example: America/Chicago) "
+	# FIXME: Find a way to validate input
+	read zone
+	sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
+	    $LOCALBASE/etc/php.ini
+    fi
+
+    # FIXME: Dying here on first run
+    # Must come after php5 install, since http.conf was patched
+    auto-enable-service $apache
+    service $APACHE_PKG reload
     ;;
 
 RHEL7)
