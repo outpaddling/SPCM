@@ -291,7 +291,7 @@ EOM
 	    printf "\nMounted filesystems:\n\n"
 	    df
 	    printf "\nCurrent mounts:\n\n"
-	    showmount -e
+	    showmount -e || true
 	    printf "\nDirectory to export? [Press enter to quit] "
 	    read share
 	    
@@ -578,11 +578,11 @@ EOM
     
     # All nodes should already accept passwordless login from the head node
     # This is set up by auto-pxe-installer-setup and left to the user
-    # is they are not using it.
-    if [ $NODE_TYPE = 'head' ]; then
-	# Disable prompting for new hosts, etc.
-	cluster-update-ssh_config
-    fi
+    # if they are not using it.
+    #if [ $NODE_TYPE = 'head' ]; then
+    #    # Disable prompting for new hosts, etc.
+    #    cluster-update-all-ssh_config
+    #fi
 }
 
 
@@ -926,7 +926,6 @@ ganglia_config              # Cluster monitoring.
 case $NODE_TYPE in
 "head")
     startup_scripts
-    cluster-update-all-ssh_config
     ;;
 
 "compute")
