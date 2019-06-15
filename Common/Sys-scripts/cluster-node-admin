@@ -143,6 +143,20 @@ EOM
     echo $node_type
 }
 
+
+default_responses_info()
+{
+    cat << EOM
+
+At least one node must be configured before using default responses to
+all prompts.
+
+/usr/local/cluster should also contain fstab fragments for all NFS mounts.
+
+EOM
+}
+
+
 ##########################################################################
 #   Main
 ##########################################################################
@@ -242,6 +256,7 @@ EOM
 	    # Sync File servers
 	    read -p"Fully qualified host name? " node
 	    if [ 0$node != 0 ]; then
+		default_responses_info
 		read -p "Default responses to all prompts? y/[n] " use_defaults
 		if [ 0$use_defaults = 0y ]; then
 		    read -p "Reference node for binary packages? " ref_node
@@ -265,6 +280,7 @@ EOM
 		domain=$default_domain
 	    fi
 	    get_host_info 3
+	    default_responses_info
 	    read -p "Default responses to all prompts? y/[n] " use_defaults
 	    if [ 0$use_defaults = 0y ]; then
 		read -p "Reference node for binary packages? " ref_node

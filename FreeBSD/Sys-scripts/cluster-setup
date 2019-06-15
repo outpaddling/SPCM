@@ -174,7 +174,7 @@ slurm_config()
     # Generate munge.key
     service munged stop > /dev/null 2>&1 || true
     munge_dir="$LOCALBASE/etc/munge"
-    if [ $NODE_TYPE == 'head' ]; then
+    if [ $NODE_TYPE = 'head' ]; then
 	if [ ! -e $munge_dir/munge.key ]; then
 	    mkdir -p -m 0700 $munge_dir
 	    touch $munge_dir/munge.key
@@ -298,7 +298,7 @@ EOM
 	    if [ 0$share != 0 ]; then
 		# FIXME: Add support for ZFS
 		fs_type=`mount | awk '$3 == "/usr/home" { print $4 }'`
-		if [ $fs_type == '(zfs,' ]; then
+		if [ $fs_type = '(zfs,' ]; then
 		    zfs_share=`mount | awk '$3 == "/usr/home" { print $1 }'`
 		    zfs set sharenfs="-maproot=root -network $subnet -mask $NETMASK" $zfs_share
 		else
@@ -831,8 +831,11 @@ NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
 ##########################################################################
 
 # cluster-init-node will copy repo dir from head to other nodes
-if [ $NODE_TYPE == head ]; then
-    auto-pkg-latest             # Use latest packages rather then quarterly
+if [ $NODE_TYPE = head ]; then
+    read -p 'Use latest packages instead of quarterly? [y]/n' latest
+    if [ 0$latest != 0n ]; then
+	auto-pkg-latest
+    fi
 fi
 # The following configuration must be done on all nodes, although
 # different node types may be configured differently.
@@ -873,6 +876,24 @@ fi
 # Required by cluster-ssh-keygen, called from cluster-adduser
 # FIXME: Remove need for sudo.  Maybe use su -m?
 install_packages security/sudo
+
+line
+image=$(auto-install-media-distname disc1)
+pxedir=/pxeserver/imags/${image%.iso}
+if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
+    read -p 'Configure PXE installer for other nodes? [y]/n' pxe
+    if [ 0$pxe != 0n ]; then
+	save_cwd=$(pwd)
+	mkdir /root/PXE
+	cd /root/PXE
+	auto-fetch-install-media disc1
+	unxz $image.xz
+	auto-pxe-installer-setup $image
+	cd $save_cwd
+    fi
+else
+    printf "$pxedir already exists.\n"
+fi
 
 # Run local site hooks
 if [ -e $CONF_DIR/site-mods.sh ]; then
