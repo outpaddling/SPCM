@@ -830,13 +830,9 @@ NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
 #   Begin setup
 ##########################################################################
 
-# cluster-init-node will copy repo dir from head to other nodes
-if [ $NODE_TYPE = head ]; then
-    read -p 'Use latest packages instead of quarterly? [y]/n' latest
-    if [ 0$latest != 0n ]; then
-	auto-pkg-latest
-    fi
-fi
+# Done by cluster-bootstrap
+# auto-pkg-latest
+
 # The following configuration must be done on all nodes, although
 # different node types may be configured differently.
 update_system               # Start with and NTP update
