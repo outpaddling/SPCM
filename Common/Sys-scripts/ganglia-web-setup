@@ -36,12 +36,14 @@ FreeBSD-*)
     pkg install -y $apache ganglia-webfrontend $php mod_$php
     prefix=/usr/local
     web_root=$prefix/www/apache24/data
+    ifconfig=ifconfig
     ;;
 
 RHEL6|RHEL7)
     pkgin install -y apache ganglia-webfrontend
     prefix=`auto-pkgsrc-prefix`
     web_root=$prefix/share/httpd/htdocs
+    ifconfig='ip addr'
     ;;
 
 *)
@@ -92,14 +94,13 @@ EOM
     pause
 
     #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
-    read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
-    read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
-    # ip addr
-    read -p "IP address on head node to receive Ganglia data? " head_node_ip
+    cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $(hostname)`
+    cluster_owner=`auto-ask cluster-owner "Owner of the cluster as it should appear in Ganglia? " $(whoami)`
+    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " $HEAD_IP`
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
-	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
+	-e "s|%%HEAD_NODE_IP%%|gmetad_ip|g" \
 	$datadir/gmond.conf.template > $gmond_conf
 fi
 
@@ -182,13 +183,11 @@ pause
 # FIXME: Add this to apache package?
 case $os_release in
 FreeBSD-*)
-    if [ ! -e $prefix/etc/$apache/httpd.conf.orig ]; then
+    httpd_conf=$prefix/etc/$apache/httpd.conf
+    if [ ! -e $httpd_conf.orig ]; then
 	printf "Patching httpd.conf...\n"
-	mv $prefix/etc/$apache/httpd.conf \
-	    $prefix/etc/$apache/httpd.conf.orig
-	awk -f $DATADIR/patch-apache.awk \
-	    $prefix/etc/$apache/httpd.conf.orig \
-	    > $prefix/etc/$apache/httpd.conf
+	mv $httpd_conf $httpd_conf.orig
+	awk -f $datadir/patch-apache.awk $httpd_conf.orig > $httpd_conf
     fi
     
     # Add date_default_timezone_set('America/Chicago'); to ganglia.php
@@ -206,8 +205,6 @@ FreeBSD-*)
 	sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
 	    $prefix/etc/php.ini
     fi
-
-    httpd_conf=$prefix/etc/$apache/httpd.conf
     ;;
 
 RHEL7)
@@ -282,7 +279,7 @@ FreeBSD-*)
     # FIXME: Dying here on first run
     # Must come after php5 install, since http.conf was patched
     auto-enable-service $apache $0
-    service $apache reload
+    service $apache restart
     ;;
 
 RHEL7)

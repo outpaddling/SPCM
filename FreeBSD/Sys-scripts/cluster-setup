@@ -751,7 +751,8 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-case $1 in
+NODE_TYPE=$1
+case $NODE_TYPE in
 head|compute)
     ;;
 *)
@@ -761,6 +762,11 @@ esac
 
 if [ `whoami` != root ]; then
     printf "$0 must be run as root.\n"
+    exit 1
+fi
+
+if ! fgrep -q $(hostname) /etc/hosts; then
+    printf "Error: /etc/hosts must contain an entry for this node.\n"
     exit 1
 fi
 
@@ -799,15 +805,6 @@ DATADIR=$LOCALBASE/share/cluster-admin
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
 
-NODE_TYPE=$1
-case $NODE_TYPE in
-"head"|"compute")
-    ;;
-*)
-    printf "Invalid installation type: $NODE_TYPE\n"
-    usage $0
-esac
-
 # Config files used by cluster-admin
 if [ $NODE_TYPE = head ]; then
     CLUSTER_DATA="$LOCALBASE/cluster"
@@ -825,6 +822,7 @@ fi
 
 HEAD_IP=`auto-ask head-ip '\nIP address of head node LOCAL interface?' 192.168.0.2`
 NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
+export HEAD_IP NETMASK  # Pass to other scripts like ganglia-web-setup
 
 ##########################################################################
 #   Begin setup
