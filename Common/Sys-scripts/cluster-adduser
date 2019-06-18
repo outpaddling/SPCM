@@ -97,6 +97,11 @@ if [ `whoami` != "root" ]; then
     exit 1
 fi
 
+if ps axw | fgrep cluster-adduser | fgrep -v grep | fgrep -v $$; then
+    printf "Another instance of cluster-adduser is running.  Please try again later.\n"
+    exit 1
+fi
+
 CONF_DIR=/usr/local/cluster
 
 os_type=`auto-ostype`
