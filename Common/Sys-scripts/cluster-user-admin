@@ -71,7 +71,9 @@ EOM
     2)
 	printf "Username? "
 	read user_name
-	cluster-passwd $user_name
+	if [ 0$user_name != 0 ] && id $user_name > /dev/null; then
+	    cluster-passwd $user_name
+	fi
 	;;
     3)
 	printf "Username? "
@@ -79,23 +81,15 @@ EOM
 	cluster-sync-pw $user_name
 	;;
     4)
-	printf "Note: This will reset the expiration date on the current password\n"
-	printf "regardless of age.  Choose the number of days accordingly.\n"
-	printf "\nAre you sure you want to proceed? y/[n] "
-	read proceed
-	if [ 0$proceed = 0y ]; then
-	    printf "Username? "
-	    read user_name
-	    printf "Expire passwords in how many days? "
-	    read days
-	    cluster-passwd-user-expiration $user_name $days
-	fi
+	printf "Username? "
+	read user_name
+	printf "Expire passwords in how many days? "
+	read days
+	cluster-passwd-user-expiration $user_name $days
 	;;
     5)
 	printf "This will reset password expiration date for ALL users.\n"
 	printf "Some users may have special expiration periods, which will be overwritten.\n"
-	printf "You may prefer to set the default password age limit.\n"
-	printf "See login.conf on FreeBSD or login.defs on Linux.\n"
 	printf "\nAre you sure you want to proceed? y/[n] "
 	read proceed
 	if [ 0$proceed = 0y ]; then
@@ -104,12 +98,17 @@ EOM
 	    cluster-passwd-expiration $days
 	fi
 	;;
+    
     6)
 	printf "Username? "
 	read user_name
-	printf "Group name? "
-	read group_name
-	cluster-add-to-group $user_name $group_name
+	if [ 0$user_name != 0 ] && id $user_name; then
+	    printf "Group name? "
+	    read group_name
+	    if [ 0$group_name != 0 ]; then
+		cluster-add-to-group $user_name $group_name
+	    fi
+	fi
 	;;
     
     7)

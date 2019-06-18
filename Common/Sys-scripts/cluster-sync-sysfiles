@@ -61,7 +61,7 @@ RHEL)
 	printf "system-auth "
 	rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
 
-	printf "fstab fragments "
+	printf "fstab-fragments "
 	ssh $node mkdir -p $CONF_DIR
 	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
 	printf '\n'

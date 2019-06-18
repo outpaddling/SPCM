@@ -28,8 +28,7 @@ while [ 0$resp != 0q ]; do
 3.. Resume a node
 4.. Show cores per user
 5.. Show cluster load
-6.. Resume all updated nodes currently marked down
-7.. Scan for stray processes
+6.. Scan for stray processes
 Q.. Quit
 
 EOM
@@ -77,11 +76,6 @@ EOM
 	pause
 	;;
     6)
-	slurm-resume-updated-nodes
-	sinfo
-	pause
-	;;
-    7)
 	printf "Username of user with suspected strays? "
 	read username
 	slurm-find-strays $username

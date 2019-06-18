@@ -2,19 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Set password expiration period for all users
 #       
 #   History:
 #   Date        Name        Modification
-#   2017-04-01  root        Begin
+#   2017-04-01  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 expire-days [warning-days, default=14]\n"
+    printf "Usage: $0 expire-days\n"
     exit 1
 }
 
@@ -23,20 +20,12 @@ usage()
 #   Main
 ##########################################################################
 
-case $# in
-1)
-    warning=14
-    ;;
-2)
-    warning=$2
-    ;;
-*)
+if [ $# != 1 ]; then
     usage
-esac
+fi
 days=$1
 
 for user in `cluster-users`; do
-    echo $user
-    
-    cluster-passwd-user-expiration $user $days $warning
+    printf "===\nUpdating pw age for $user...\n"
+    cluster-passwd-user-expiration $user $days
 done
