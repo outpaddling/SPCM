@@ -53,7 +53,6 @@ while true; do
 4.. Restart Ganglia
 5.. Diagnostics and Monitoring
 6.. Node management
-7.. Pkgsrc management
 Q.. Quit
 
 EOM
@@ -79,9 +78,6 @@ EOM
 	;;
     6)
 	cluster-node-admin
-	;;
-    7)
-	cluster-pkgsrc-admin
 	;;
     Q|q)
 	exit 0

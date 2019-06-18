@@ -35,6 +35,13 @@ pause()
 #   Main
 ##########################################################################
 
+printf "All idle nodes will be powered off.\n"
+printf "Are you sure you want to proceed? yes/[no] "
+read proceed
+if [ 0$proceed != 0yes ]; then
+    exit
+fi
+
 nodes=`sinfo -o %n -h | sort | uniq`
 
 case `auto-ostype` in

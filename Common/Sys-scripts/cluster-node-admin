@@ -48,8 +48,14 @@ get_host_info()
     
     # Remove leading zeros so printf doesn't interpret it as octal
     read -p "First host number? " first_num
+    if [ 0$first_num = 0 ]; then
+	return 1
+    fi
     first_num=`echo $first_num | sed -E 's|^0+||'`
     read -p "Last host number? " last_num
+    if [ 0$last_num = 0 ]; then
+	return 1
+    fi
     last_num=`echo $last_num | sed -E 's|^0+||'`
     return 0
 }
@@ -137,7 +143,7 @@ EOM
 	    ;;
 	*)
 	    printf "Invalid selection.\n"
-	    pause
+	    return 1
 	esac
     done
     echo $node_type
@@ -165,6 +171,7 @@ if [ $# != 0 ]; then
     usage
 fi
 
+sinfo_format='%T %u %E %N'
 updates_dir="/home/slurm/Compute-node-updates"
 for prefix in /usr/local /usr/pkg; do
     if [ -e $prefix/etc/slurm.conf ]; then
@@ -180,10 +187,8 @@ while true; do
 			    **************************
 				  Node Admin Menu
 			    **************************
-
 ******************************************************************************
 				*** WARNING ***
-
 Installing updates remotely is not recommended.  Servers often fail to
 reboot, so you should be physically nearby in case of issues.
 ******************************************************************************
@@ -196,11 +201,12 @@ reboot, so you should be physically nearby in case of issues.
 6.. Install updates on head node
 7.. Install updates on visualization nodes
 8.. Install updates on File servers
-9.  Install updates on idle compute nodes
+9.. Install updates on idle compute nodes
 10. Restart cron updates on idle compute nodes
-11. Drain all nodes
-12. Shut down idle nodes
-13. Distribute system files
+11. Drain a node
+12. Resume a node
+13. Drain all nodes
+14. Shut down idle nodes
 Q.. Quit
 
 EOM
@@ -226,80 +232,84 @@ EOM
 	;;
     
     2)  # Initialize
-	get_node_type
-	read -p "Host name prefix? [$default_prefix] " host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix=$default_prefix
-	fi
-	read -p "Domain? [$default_domain] " domain
-	if [ 0$domain = 0 ]; then
-	    domain=$default_domain
-	fi
-	get_host_info $default_digits
-	read -p "Unattended init? y/[n] " unattended
-	if [ 0$unattended = 0y ]; then
-	    flags=--unattended
-	fi
-	num=$first_num
-	while [ $num -le $last_num ]; do
-	    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-	    cluster-init-node $flags $node $node_type || true
-	    printf "Done with $node...\n"
-	    num=$((num + 1))
-	done
-	;;
-    
-    3)  
-	get_node_type
-	case $node_type in
-	io|vis|head)
-	    # Sync File servers
-	    read -p"Fully qualified host name? " node
-	    if [ 0$node != 0 ]; then
-		default_responses_info
-		read -p "Default responses to all prompts? y/[n] " use_defaults
-		if [ 0$use_defaults = 0y ]; then
-		    read -p "Reference node for binary packages? " ref_node
-		    sync_opts="--use-defaults $ref_node"
-		fi
-		printf "Synchronizing $node...\n"
-		cluster-sync-node $sync_opts $node $node_type || true
-		printf "Done with $node...\n"
-	    fi
-	    ;;
-
-	compute)
-	    # Sync compute nodes
-	    sinfo
-	    read -p "Host name prefix? [compute-] " host_prefix
+	if get_node_type; then
+	    read -p "Host name prefix? [$default_prefix] " host_prefix
 	    if [ 0$host_prefix = 0 ]; then
-		host_prefix='compute-'
+		host_prefix=$default_prefix
 	    fi
 	    read -p "Domain? [$default_domain] " domain
 	    if [ 0$domain = 0 ]; then
 		domain=$default_domain
 	    fi
-	    get_host_info 3
-	    default_responses_info
-	    read -p "Default responses to all prompts? y/[n] " use_defaults
-	    if [ 0$use_defaults = 0y ]; then
-		read -p "Reference node for binary packages? " ref_node
-		sync_opts="--use-defaults $ref_node"
-		read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
-		if [ 0$infiniband = 0y ]; then
-		    sync_opts="$sync_opts --infiniband"
+	    if get_host_info $default_digits; then
+		read -p "Unattended init? y/[n] " unattended
+		if [ 0$unattended = 0y ]; then
+		    flags=--unattended
 		fi
+		num=$first_num
+		while [ $num -le $last_num ]; do
+		    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+		    cluster-init-node $flags $node $node_type || true
+		    printf "Done with $node...\n"
+		    num=$((num + 1))
+		done
 	    fi
-	    num=$first_num
-	    while [ $num -le $last_num ]; do
-		node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-		printf "Synchronizing $node...\n"
-		cluster-sync-node $sync_opts $node $node_type || true
-		printf "Done with $node...\n"
-		num=$((num + 1))
-	    done
-	    ;;
-	esac
+	fi
+	;;
+    
+    3)  
+	if get_node_type; then
+	    case $node_type in
+	    io|vis|head)
+		# Sync File servers
+		read -p"Fully qualified host name? " node
+		if [ 0$node != 0 ]; then
+		    default_responses_info
+		    read -p "Default responses to all prompts? y/[n] " use_defaults
+		    if [ 0$use_defaults = 0y ]; then
+			read -p "Reference node for binary packages? " ref_node
+			sync_opts="--use-defaults $ref_node"
+		    fi
+		    printf "Synchronizing $node...\n"
+		    cluster-sync-node $sync_opts $node $node_type || true
+		    printf "Done with $node...\n"
+		fi
+		;;
+    
+	    compute)
+		# Sync compute nodes
+		sinfo
+		read -p "Host name prefix? [compute-] " host_prefix
+		if [ 0$host_prefix = 0 ]; then
+		    host_prefix='compute-'
+		fi
+		read -p "Domain? [$default_domain] " domain
+		if [ 0$domain = 0 ]; then
+		    domain=$default_domain
+		fi
+		if get_host_info 3; then
+		    default_responses_info
+		    read -p "Default responses to all prompts? y/[n] " use_defaults
+		    if [ 0$use_defaults = 0y ]; then
+			read -p "Reference node for binary packages? " ref_node
+			sync_opts="--use-defaults $ref_node"
+			read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
+			if [ 0$infiniband = 0y ]; then
+			    sync_opts="$sync_opts --infiniband"
+			fi
+		    fi
+		    num=$first_num
+		    while [ $num -le $last_num ]; do
+			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			printf "Synchronizing $node...\n"
+			cluster-sync-node $sync_opts $node $node_type || true
+			printf "Done with $node...\n"
+			num=$((num + 1))
+		    done
+		fi
+		;;
+	    esac
+	fi
 	;;
     
     4)  # Update backup head node
@@ -410,33 +420,52 @@ EOM
 	fi
 	;;
 
-    11) # Drain all nodes
-	read -p "Reason for draining all nodes? " reason
-	all_nodes=`sinfo -ho '%N'`
-	scontrol update state=drain nodename="$all_nodes" reason="$reason"
-	sinfo
+    11)
+	clear
+	printf "Current node status:\n\n"
+	sinfo -o "$sinfo_format"
+	printf "\nNode number? (e.g. 001) "
+	read node
+	if [ 0$node != 0 ]; then
+	    printf "Reason? "
+	    read reason
+	    if [ 0$reason != 0 ]; then
+		scontrol update State=drain NodeName=compute-$node reason="$reason"
+		sinfo --list-reasons
+		printf "Update slurm.conf if this is a long-term outage.\n"
+	    fi
+	fi
 	;;
-
     12)
-	slurm-shutdown-idle-nodes
-	;;
-
-    13) # Synchronize system files
-	cat << EOM
-
-This will distribute common system files such as
-
-    /etc/hosts
-    /etc/ssh/ssh_config
-    Local plugins for cluster-adduser
-    
-EOM
-	read -p "Proceed? y/[n] " proceed
-	if [ 0"$proceed" = 0y ]; then
-	    cluster-sync-sysfiles
+	clear
+	printf "Nodes currently down:\n\n"
+	sinfo --list-reasons
+	printf "\nNode number? (e.g. 001) "
+	read node
+	if [ 0$node != 0 ]; then
+	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
+	    slurm-resume-nodes $full_name
 	fi
 	;;
     
+    13) # Drain all nodes
+	printf "This will prevent any new jobs from running.\n"
+	printf "Are you sure you want to proceed? yes/[no] "
+	read proceed
+	if [ 0$proceed = 0yes ]; then
+	    read -p "Reason for draining all nodes? " reason
+	    all_nodes=`sinfo -ho '%N'`
+	    scontrol update state=drain nodename="$all_nodes" reason="$reason"
+	    sinfo
+	else
+	    printf "Operation canceled.\n"
+	fi
+	;;
+
+    14)
+	slurm-shutdown-idle-nodes
+	;;
+
     Q|q)
 	exit 0
 	;;

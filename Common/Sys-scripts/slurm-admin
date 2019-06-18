@@ -13,7 +13,6 @@ pause()
     read junk
 }
 
-sinfo_format='%T %u %E %N'
 resp=''
 while [ 0$resp != 0q ]; do
     clear
@@ -24,11 +23,9 @@ while [ 0$resp != 0q ]; do
 			     **********************
 
 1.. Restart scheduler daemons
-2.. Drain a node
-3.. Resume a node
-4.. Show cores per user
-5.. Show cluster load
-6.. Scan for stray processes
+2.. Show cores per user
+3.. Show cluster load
+4.. Scan for stray processes
 Q.. Quit
 
 EOM
@@ -41,41 +38,14 @@ EOM
 	pause
 	;;
     2)
-	clear
-	printf "Current node status:\n\n"
-	sinfo -o "$sinfo_format"
-	printf "\nNode number? (e.g. 001) "
-	read node
-	if [ 0$node != 0 ]; then
-	    printf "Reason? "
-	    read reason
-	    scontrol update State=drain NodeName=compute-$node reason="$reason"
-	    sinfo --list-reasons
-	    printf "Update slurm.conf if this is a long-term outage.\n"
-	    pause
-	fi
-	;;
-    3)
-	clear
-	printf "Nodes currently down:\n\n"
-	sinfo --list-reasons
-	printf "\nNode number? (e.g. 001) "
-	read node
-	if [ 0$node != 0 ]; then
-	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
-	    slurm-resume-nodes $full_name
-	    pause
-	fi
-	;;
-    4)
 	slurm-user-cores
 	pause
 	;;
-    5)
+    3)
 	slurm-cluster-load
 	pause
 	;;
-    6)
+    4)
 	printf "Username of user with suspected strays? "
 	read username
 	slurm-find-strays $username
