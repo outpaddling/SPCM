@@ -80,16 +80,27 @@ for user_name in $@; do
 	if ! ssh $node pw groupadd $group_name -g $group_id; then
 	    printf 'Group add failed.\n'
 	fi
-    
+	
+	remote_shell=$shell
+	case $shell in
+	/bin/sh|/bin/csh|/bin/tcsh)
+	    ;;
+	*)
+	    if echo $shell | grep '^/bin/'; then
+		remote_shell=/usr/local$shell
+	    fi
+	    ;;
+	esac
+	
 	# Create user
 	if [ -z "$groups" ]; then
 	    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
-		$group_id -s $shell -u $user_id
+		$group_id -s $remote_shell -u $user_id
 	else
 	    # Sync supplementary groups first
 	    node-sync-groups $node $groups
 	    ssh $node pw useradd $user_name -c "\"$gecos\"" -d $home -m -g \
-		$group_id -s $shell -u $user_id -G "$groups"
+		$group_id -s $remote_shell -u $user_id -G "$groups"
 	fi
 	;;
     
