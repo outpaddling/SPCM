@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Disable local password for user, so they must use a service
+#       such as LDAP or AD, or are locked out of the system.
+#   
+#   History:
+#   Date        Name        Modification
+#   2019-06-25  Jason Wayne Bacon - UITS/UITS - SysadminBegin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+user_name=$1
+
+cluster-run "auto-lock-local-pw $user_name" all

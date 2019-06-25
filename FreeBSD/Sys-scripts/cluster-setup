@@ -818,6 +818,13 @@ if [ $NODE_TYPE = head ]; then
     printf "\nIf you have an old $HOSTS_ALLOW to restore, do it now.\n\n"
     pause
     $EDITOR $HOSTS_ALLOW
+
+    latest=`auto-ask latest-packages 'Use latest packages instead of quarterly?' y`
+    if [ $latest != n ]; then
+	auto-pkg-latest --defaults
+    else
+	auto-update-system --defaults
+    fi
 fi
 
 HEAD_IP=`auto-ask head-ip '\nIP address of head node LOCAL interface?' 192.168.0.2`
