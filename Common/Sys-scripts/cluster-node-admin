@@ -201,12 +201,13 @@ reboot, so you should be physically nearby in case of issues.
 6.. Install updates on head node
 7.. Install updates on visualization nodes
 8.. Install updates on File servers
-9.. Install updates on idle compute nodes
-10. Restart cron updates on idle compute nodes
-11. Drain a node
-12. Resume a node
-13. Drain all nodes
-14. Shut down idle nodes
+9.. Check for down nodes
+10. Install updates on idle compute nodes
+11. Restart cron updates on idle compute nodes
+12. Drain a node
+13. Resume a node
+14. Drain all nodes
+15. Shut down idle nodes
 Q.. Quit
 
 EOM
@@ -345,12 +346,10 @@ EOM
 	    if [ `auto-ostype` = FreeBSD ]; then
 		read -p "Update and sync ports tree to all nodes? [y]/n " portsnap
 		if [ 0$portsnap != 0n ]; then
-		    # Update local wip first, then rsync the whole ports tree
-		    # to other nodes
-		    if [ -e /usr/local/sbin/wip-update ]; then
-			wip-update
-		    fi
 		    cluster-portsnap
+		    if [ -e /usr/local/sbin/wip-update ]; then
+			cluster-wip-update
+		    fi
 		fi
 	    fi
 	    w
@@ -378,7 +377,11 @@ EOM
 	cluster-update-file-servers || true
 	;;
     
-    9) # Update all compute nodes
+    9)
+	cluster-down-nodes
+	;;
+    
+    10) # Update all compute nodes
 	update_warning
 	cat << EOM
 
@@ -394,7 +397,7 @@ EOM
 	slurm-update-idle-nodes $updates_dir
 	;;
     
-    10) # Schedule compute node updates in cron
+    11) # Schedule compute node updates in cron
 	clear
 	update_warning
 	cat << EOM
@@ -422,7 +425,7 @@ EOM
 	fi
 	;;
 
-    11)
+    12)
 	clear
 	printf "Current node status:\n\n"
 	sinfo -o "$sinfo_format"
@@ -438,7 +441,7 @@ EOM
 	    fi
 	fi
 	;;
-    12)
+    13)
 	clear
 	printf "Nodes currently down:\n\n"
 	sinfo --list-reasons
@@ -450,7 +453,7 @@ EOM
 	fi
 	;;
     
-    13) # Drain all nodes
+    14) # Drain all nodes
 	printf "This will prevent any new jobs from running.\n"
 	printf "Are you sure you want to proceed? yes/[no] "
 	read proceed
@@ -464,7 +467,7 @@ EOM
 	fi
 	;;
 
-    14)
+    15)
 	slurm-shutdown-idle-nodes
 	;;
 

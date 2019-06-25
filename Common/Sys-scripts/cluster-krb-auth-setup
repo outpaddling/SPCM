@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+cluster-run 'auto-krb-auth-setup AD.UWM.EDU' head io vis
