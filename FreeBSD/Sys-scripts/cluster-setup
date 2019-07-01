@@ -827,9 +827,8 @@ if [ $NODE_TYPE = head ]; then
     fi
 fi
 
-HEAD_IP=`auto-ask head-ip '\nIP address of head node LOCAL interface?' 192.168.0.2`
 NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
-export HEAD_IP NETMASK  # Pass to other scripts like ganglia-web-setup
+export NETMASK  # Pass to other scripts like ganglia-web-setup
 
 ##########################################################################
 #   Begin setup
