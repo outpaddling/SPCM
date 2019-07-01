@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Manage user accounts
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-01-08  root        Begin
+#   2014-01-08  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -39,6 +36,22 @@ pause()
 if [ $# != 0 ]; then
     usage
 fi
+
+case $(auto-ostype) in
+FreeBSD)
+    pw_file=master.passwd
+    ;;
+
+RHEL)
+    pw_file=shadow
+    ;;
+
+*)
+    printf "Unsupported OS: $(auto-ostype)\n"
+    exit 1
+    ;;
+
+esac
 
 while true; do
 
@@ -113,22 +126,22 @@ EOM
     
     7)
 	read -p "Username? " user_name
-	read -p "Directory with passwd, shadow, group, and pw-age? [/usr/local/cluster/Old] " \
+	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
 	    source_dir
 	: ${source_dir:=/usr/local/cluster/Old}
-	cluster-restore-user $user_name $source_dir/passwd $source_dir/shadow \
+	cluster-restore-user $user_name $source_dir/passwd $source_dir/$pw_file \
 	    $source_dir/group $source_dir/pw-age
 	;;
     
     8)
 	read -p "Username? " user_name
-	read -p "Directory with passwd, shadow, group, and pw-age? [/usr/local/cluster/Old] " \
+	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
 	    source_dir
 	: ${source_dir:=/usr/local/cluster/Old}
 	read -p "Old home directory? [/home/Old/$user_name] " old_home
 	: ${old_home:=/home/Old/$user_name}
 	cluster-recreate-user \
-	    $user_name $source_dir/passwd $source_dir/shadow \
+	    $user_name $source_dir/passwd $source_dir/$pw_file \
 	    $source_dir/group $source_dir/pw-age $old_home
 	;;
     

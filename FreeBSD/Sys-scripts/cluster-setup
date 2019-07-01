@@ -27,7 +27,7 @@
 
 usage()
 {
-    printf "Usage: $0 head|compute\n"
+    printf "Usage: $0 head|compute|io|vis\n"
     exit 1
 }
 
@@ -297,9 +297,9 @@ EOM
 	    
 	    if [ 0$share != 0 ]; then
 		# FIXME: Add support for ZFS
-		fs_type=`mount | awk '$3 == "/usr/home" { print $4 }'`
+		fs_type=`mount | awk -v share=$share '$3 == share { print $4 }'`
 		if [ $fs_type = '(zfs,' ]; then
-		    zfs_share=`mount | awk '$3 == "/usr/home" { print $1 }'`
+		    zfs_share=`mount | awk -v share=$share '$3 == share { print $1 }'`
 		    zfs set sharenfs="-maproot=root -network $subnet -mask $NETMASK" $zfs_share
 		else
 		    printf "Updating /etc/exports...\n"
@@ -322,9 +322,11 @@ EOM
     *)
 	;;
     esac
-	
+    
+    pkg clean -ay   # Clean /var/cache/pkg before NFS mounting
+    
     case $NODE_TYPE in
-    "compute"|"io")
+    "compute"|"io"|"vis")
 	fstab=/usr/local/cluster/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
@@ -345,6 +347,8 @@ EOM
 		    if [ 0$mount = 0 ]; then
 			mount=$share
 		    fi
+		    
+		    # FIXME: Make sure mount dir is empty
 		    
 		    # Unmount local if necessary
 		    # First try ZFS
@@ -697,7 +701,7 @@ enable_procfs()
 #   2013-12-02  Jason Bacon Begin
 ##########################################################################
 
-reboot_maybe()
+reboot_msg()
 {
     line
     cat << EOM
@@ -706,12 +710,6 @@ You must reboot to test the new configuration.  If this is the first time
 you completed the cluster-setup $NODE_TYPE process, you should reboot now.
 
 EOM
-
-    printf "Reboot? (y/[n]) "
-    read reboot
-    if [ 0$reboot = 0y ]; then
-	shutdown -r now
-    fi
 }
 
 
@@ -729,17 +727,22 @@ EOM
 
 get_head_host()
 {
-    if [ $NODE_TYPE = "compute" ]; then
+    case $NODE_TYPE in
+    compute|io|vis)
 	# If cluster-setup was previously completed on this node,
 	# get head node from configuration, otherwise ask.
 	head_host=''
 	while [ 0$head_host = 0 ]; do
 	    head_host=`auto-ask head-hostname "\nShort hostname of head node?" login`
 	done
-    else
+	;;
+    
+    head)
 	head_host=`hostname -s`
 	hostname -s > $LOCALBASE/cluster/head_node
-    fi
+	;;
+    
+    esac
 }
 
 
@@ -753,7 +756,7 @@ fi
 
 NODE_TYPE=$1
 case $NODE_TYPE in
-head|compute)
+head|compute|io|vis)
     ;;
 *)
     usage $0
@@ -844,10 +847,14 @@ enable_procfs               # Needed for?
 get_port_install_method     # Build ports from source?
 install_common_tools        # gmake, etc.
 get_head_host
-install_scheduler           # Select and install a scheduler
+if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
+    install_scheduler           # Select and install a scheduler
+fi
 nfs_config                  # Set up head node NFS server.
 ssh_config                  # Enable keys between nodes. After nfs_config.
-scheduler_config            # Configure scheduler.  After ssh_config.
+if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
+    scheduler_config            # Configure scheduler.  After ssh_config.
+fi
 resource_limits             # Configure login.conf.  After nfs_config.
 ganglia_config              # Cluster monitoring.
 
@@ -857,7 +864,7 @@ case $NODE_TYPE in
     startup_scripts
     ;;
 
-"compute")
+"compute"|io|vis)
     install_packages lang/gcc devel/llvm lang/python
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
@@ -884,10 +891,10 @@ if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
     read -p 'Configure PXE installer for other nodes? [y]/n' pxe
     if [ 0$pxe != 0n ]; then
 	save_cwd=$(pwd)
-	mkdir /root/PXE
+	mkdir -p /root/PXE
 	cd /root/PXE
 	auto-fetch-install-media disc1
-	unxz $image.xz
+	unxz -f $image.xz
 	auto-pxe-installer-setup $image
 	cd $save_cwd
     fi
@@ -909,4 +916,4 @@ fi
 touch $CONF_DIR/node-configured
 
 # Reboot to test new config after initial setup
-reboot_maybe
+reboot_msg

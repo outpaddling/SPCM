@@ -121,26 +121,6 @@ EOM
 	cluster-sync-packages $ref_node $node
     fi
     
-    # Sync users
-    if [ 0$use_defaults = 0yes ]; then
-	sync_users=y
-    else
-	cat << EOM
----
-Answer 'y' here if you have added new users while this node was inaccessible.
----
-EOM
-	read -p "Sync users? [y]/n " sync_users
-    fi
-    if [ 0$sync_users != 0n ]; then
-	node-sync-all-users $node || true
-    fi
-    
-    # Not in the UID range for normal cluster users, so node-sync-all-users
-    # will skip it.
-    # FIXME: Don't assume slurm
-    node-sync-users $node slurm || true
-    
     # Sync sys files
     cluster-sync-sysfiles $node
     
@@ -178,6 +158,26 @@ EOM
     else
 	ssh -t $node cluster-setup $setup_flags $node_type
     fi
+    
+    # Sync users (after cluster-setup, which may NFS mount /home)
+    if [ 0$use_defaults = 0yes ]; then
+	sync_users=y
+    else
+	cat << EOM
+---
+Answer 'y' here if you have added new users while this node was inaccessible.
+---
+EOM
+	read -p "Sync users? [y]/n " sync_users
+    fi
+    if [ 0$sync_users != 0n ]; then
+	node-sync-all-users $node || true
+    fi
+    
+    # Not in the UID range for normal cluster users, so node-sync-all-users
+    # will skip it.
+    # FIXME: Don't assume slurm
+    node-sync-users $node slurm || true
 
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
@@ -187,14 +187,6 @@ FreeBSD)
 
     # Should be preinstalled by cluster-init-node
     ssh -t $node wip-update
-    
-    # Sync users
-    node-sync-all-users $node || true
-    
-    # Not in the UID range for normal cluster users, so node-sync-all-users
-    # will skip it.
-    # FIXME: Don't assume slurm
-    node-sync-users $node slurm || true
     
     # Sync sys files
     cluster-sync-sysfiles $node
@@ -237,9 +229,15 @@ FreeBSD)
 	ssh -t $node cluster-setup $setup_flags $node_type
     fi
     
-    printf "Run cluster-sync-sysfiles to update other nodes if you've updated /etc/hosts.\n"
+    # Sync users (after cluster-setup, which may NFS mount /home)
+    node-sync-all-users $node || true
+    
+    # Not in the UID range for normal cluster users, so node-sync-all-users
+    # will skip it.
+    # FIXME: Don't assume slurm
+    node-sync-users $node slurm || true
+    
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
-    pause
     ;;
 
 *)
@@ -248,3 +246,13 @@ FreeBSD)
     ;;
 
 esac
+
+if [ 0$use_defaults = 0yes ]; then
+    reboot=y
+else
+    printf "Reboot? ([y]/n) "
+    read reboot
+fi
+if [ 0$reboot != 0n ]; then
+    ssh $node shutdown -r now
+fi

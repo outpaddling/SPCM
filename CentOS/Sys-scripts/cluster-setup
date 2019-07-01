@@ -891,13 +891,9 @@ fi
 auto-update-system --binary || true
 touch $CONF_DIR/node-configured
 
-# FIXME: Add auto-ask option for not recording response?
-# We don't want the response recorded here.  Should always default to yes.
-if [ 0$AUTO_ASK_USE_DEFAULTS = 0yes ]; then
-    reboot=y
-else
-    read -p 'Reboot? [y]/n ' reboot
-fi
-if [ 0$reboot != 0n ]; then
-    shutdown -r now
-fi
+cat << EOM
+
+You must reboot to test the new configuration.  If this is the first time
+you completed the cluster-setup $NODE_TYPE process, you should reboot now.
+
+EOM

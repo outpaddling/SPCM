@@ -96,11 +96,11 @@ EOM
     #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
     cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $(hostname)`
     cluster_owner=`auto-ask cluster-owner "Owner of the cluster as it should appear in Ganglia? " $(whoami)`
-    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " $HEAD_IP`
+    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " 192.168.0.2`
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
-	-e "s|%%HEAD_NODE_IP%%|gmetad_ip|g" \
+	-e "s|%%HEAD_NODE_IP%%|$gmetad_ip|g" \
 	$datadir/gmond.conf.template > $gmond_conf
 fi
 
