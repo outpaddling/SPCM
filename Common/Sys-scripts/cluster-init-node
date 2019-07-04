@@ -159,7 +159,7 @@ FreeBSD)
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
 	pkg upgrade -y
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
-	pkg install -y subversion rsync ca_root_nss
+	pkg install -y subversion rsync ca_root_nss iftop bash
     
     printf "Syncing ports "
     if [ -e /usr/ports ]; then
