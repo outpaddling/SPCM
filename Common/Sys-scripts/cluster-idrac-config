@@ -75,6 +75,10 @@ printf "Ethernet: $eth_addr\n"
 idrac_addr=`echo $eth_addr | awk -F . '{ printf("%s.%s.%s.%s\n", $1, $2, $3+64, $4) }'`
 printf "IDRAC:    $idrac_addr\n"
 
+if ! which ipmitool; then
+    auto-ipmi-install
+fi
+
 ipmitool lan set 1 ipsrc static
 ipmitool lan set 1 ipaddr $idrac_addr
 # Allow -eth and -mgmt addresses to share interface

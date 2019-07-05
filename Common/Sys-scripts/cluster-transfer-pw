@@ -74,8 +74,5 @@ else
 fi
 
 $prefix/sbin/auto-transfer-pw $user_name "$pw"
-if [ $user_name = root ]; then
-    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" all
-else
-    $prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" backup io vis
-fi
+$prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" all
+
