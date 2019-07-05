@@ -136,7 +136,9 @@ for node in $nodes; do
 		#    reason=slurm-update-idle-nodes
 		
 		# Install all available binary updates and reboot
-		if ssh -t $node auto-update-system --binary; then
+		# Don't stall updates on a node that's swallowing ssh
+		# connections due to thrashing, NFS hangups, etc.
+		if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
 		    
 		    # --binary+reboot always returns non-zero
 		    # on CentOS 7, so reboot separately
