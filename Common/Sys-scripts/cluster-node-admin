@@ -434,7 +434,7 @@ EOM
 	if [ 0$node != 0 ]; then
 	    printf "Reason? "
 	    read reason
-	    if [ 0$reason != 0 ]; then
+	    if [ 0"$reason" != 0 ]; then
 		scontrol update State=drain NodeName=compute-$node reason="$reason"
 		sinfo --list-reasons
 		printf "Update slurm.conf if this is a long-term outage.\n"

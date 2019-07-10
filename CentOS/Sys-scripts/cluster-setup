@@ -866,12 +866,12 @@ esac
 mkdir -p $CONF_DIR
 backup_file ~/anaconda-ks.cfg $CONF_DIR
 
-if ! fgrep -q clusteradmin /etc/passwd; then
-    printf "Adding cluster-admin user...\n"
-    cluster-adduser clusteradmin
-fi
-
 if [ $NODE_TYPE = head ]; then
+    if ! fgrep -q clusteradmin /etc/passwd; then
+	printf "Adding clusteradmin user...\n"
+	cluster-adduser clusteradmin
+    fi
+
     printf "Checking/setting UID limits...\n"
     cluster-lowest-uid
     cluster-highest-uid

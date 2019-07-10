@@ -176,8 +176,8 @@ EOM
     
     # Not in the UID range for normal cluster users, so node-sync-all-users
     # will skip it.
-    # FIXME: Don't assume slurm
-    node-sync-users $node slurm || true
+    # slurm user should be created by pkgsrc
+    # node-sync-users $node slurm || true
 
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
