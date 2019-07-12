@@ -378,7 +378,7 @@ EOM
 	;;
     
     9)
-	cluster-down-nodes
+	cluster-down-nodes || true
 	;;
     
     10) # Update all compute nodes

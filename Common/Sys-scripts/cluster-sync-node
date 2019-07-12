@@ -174,11 +174,6 @@ EOM
 	node-sync-all-users $node || true
     fi
     
-    # Not in the UID range for normal cluster users, so node-sync-all-users
-    # will skip it.
-    # slurm user should be created by pkgsrc
-    # node-sync-users $node slurm || true
-
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;
 
@@ -212,13 +207,17 @@ FreeBSD)
     # Ganglia
     rsync -av /usr/local/etc/gmond.conf ${node}:/usr/local/etc
     
-    # Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
-    munge_dir="$LOCALBASE/etc/munge"
-    ssh $node mkdir -p -m 0700 $munge_dir
-    scp -p $munge_dir/munge.key ${node}:$munge_dir
-    
-    slurm_conf="$LOCALBASE/etc/slurm.conf"
-    scp $slurm_conf ${node}:$slurm_conf
+    case $node_type in
+    head|compute)
+	# Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
+	munge_dir="$LOCALBASE/etc/munge"
+	ssh $node mkdir -p -m 0700 $munge_dir
+	scp -p $munge_dir/munge.key ${node}:$munge_dir
+	
+	slurm_conf="$LOCALBASE/etc/slurm.conf"
+	scp $slurm_conf ${node}:$slurm_conf
+	;;
+    esac
     
     # Run cluster-setup $node_type
     # Do this last, since it enables the scheduler
@@ -231,11 +230,6 @@ FreeBSD)
     
     # Sync users (after cluster-setup, which may NFS mount /home)
     node-sync-all-users $node || true
-    
-    # Not in the UID range for normal cluster users, so node-sync-all-users
-    # will skip it.
-    # FIXME: Don't assume slurm
-    node-sync-users $node slurm || true
     
     printf "Be sure to wait until the node reboots before restarting SLURM.\n"
     ;;

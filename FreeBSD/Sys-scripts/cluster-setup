@@ -278,7 +278,7 @@ EOM
     auto-enable-service -s lockd rpc_lockd $0
     
     case $NODE_TYPE in
-    "head"|"io")
+    head|io)
 	# Configure NFS whether or not compute nodes will use it
 	# Export /usr (which should include /usr/home)
 	# FIXME: Make sure NFS server is enabled in rc.conf first
@@ -338,7 +338,7 @@ EOM
     pkg clean -ay   # Clean /var/cache/pkg before NFS mounting
     
     case $NODE_TYPE in
-    "compute"|"io"|"vis")
+    compute|io|vis)
 	fstab=/usr/local/cluster/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
@@ -402,7 +402,7 @@ ganglia_config()
     #   Compute nodes: host = head IP
     ##########################################################################
     
-    if [ $NODE_TYPE = "head" ]; then
+    if [ $NODE_TYPE = head ]; then
 	ganglia-web-setup
     fi
     
@@ -427,7 +427,7 @@ ganglia_config()
 	> $LOG_DIR/gmond_enable 2>&1
     service gmond restart
     
-    if [ $NODE_TYPE = "head" ]; then
+    if [ $NODE_TYPE = head ]; then
 	stop_service gmetad
 	auto-enable-service gmetad cluster-setup \
 	    > $LOG_DIR/gmetad_enable 2>&1
@@ -871,11 +871,11 @@ ganglia_config              # Cluster monitoring.
 
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in
-"head")
+head)
     startup_scripts
     ;;
 
-"compute"|io|vis)
+compute|vis)
     install_packages lang/gcc devel/llvm lang/python
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
