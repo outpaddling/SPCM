@@ -14,6 +14,6 @@ set prompt="[%n@$first_two %c] %h: "
 alias f finger
 alias dir 'ls -als'
 
-if ( $?prompt2 && (`hostname -s` == login) ) then
+if ( $?prompt2 && (`hostname -s` == login) && -e /usr/local/cluster/check-local-password-age ) then
     cluster-pw-check
 endif

@@ -14,6 +14,6 @@ PS1="[\u@$first_two \W] \!: "
 alias f=finger
 alias dir='ls -als'
 
-if shopt -q login_shell && [ `hostname -s` = login ]; then
+if shopt -q login_shell && [ `hostname -s` = login ] && [ -e /usr/local/cluster/check-local-password-age ]; then
     cluster-pw-check
 fi
