@@ -119,7 +119,13 @@ printf "$max_pw_age 0\n" > $pw_age_file
 # Sync user to all nodes
 cluster-sync-user $user_name
 if [ 0$NOPW != 0true ]; then
-    cluster-passwd $user_name
+    printf "Set local password? (Not needed if using LDAP/AD) [y]/n "
+    read local_pw
+    if [ 0$local_pw != 0n ]; then
+	cluster-passwd $user_name
+    else
+	cluster-lock-local-pw $user_name
+    fi
 fi
 
 post_setup=$CONF_DIR/useradd-post-setup

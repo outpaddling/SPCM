@@ -47,6 +47,6 @@ for dir in $dirs; do
 done
 
 auto-change-primary-group $user_name $new_group $dirs
-cluster-run "auto-change-primary-group $user_name $new_group" all
+cluster-run "auto-change-primary-group $user_name $new_group" backup io vis compute
 # FIXME: Should /usr/local/cluster be hard-coded?
 chgrp $new_group /usr/local/cluster/pw-age/$user_name

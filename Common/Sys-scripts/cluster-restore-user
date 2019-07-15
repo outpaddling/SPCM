@@ -25,9 +25,9 @@ if [ $# != 5 ]; then
 fi
 
 user_name=$1
-old_raw_pw=$2
-old_shadow_pw=$3
-old_group=$4
+old_passwd_file=$2
+old_shadow_file=$3
+old_group_file=$4
 old_pw_age_dir=$5
 old_pw_age=`awk '{ print $1 }' $old_pw_age_dir/$user_name`
 
@@ -51,12 +51,12 @@ if [ 0$found_user != 0$user_name ]; then
     # cluster-useradd specify all attributes
     # Get attributes from passwd.old rather than users.txt, since
     # chsh/chfn may have been used
-    user_id=`awk -F : '$1 == "'$user_name'" { print $3 }' $old_raw_pw`
-    group_id=`awk -F : '$1 == "'$user_name'" { print $4 }' $old_raw_pw`
-    gecos="`awk -F : '$1 == "'$user_name'" { print $5 }' $old_raw_pw`"
-    shell=`awk -F : '$1 == "'$user_name'" { print $7 }' $old_raw_pw`
+    user_id=`awk -F : '$1 == "'$user_name'" { print $3 }' $old_passwd_file`
+    group_id=`awk -F : '$1 == "'$user_name'" { print $4 }' $old_passwd_file`
+    gecos="`awk -F : '$1 == "'$user_name'" { print $5 }' $old_passwd_file`"
+    shell=`awk -F : '$1 == "'$user_name'" { print $7 }' $old_passwd_file`
     
-    group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' $old_group`
+    group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' $old_group_file`
     found_group_name=`awk -F : -v group_id=$group_id '$3 == group_id { print $1 }' /etc/group`
     
     # cluster-useradd will create a group with GID=UID if the group
@@ -75,9 +75,7 @@ if [ 0$found_user != 0$user_name ]; then
     
     NOPW=true
     export NOPW
-    set -x
-    if ! cluster-useradd $user_name $user_id $group_name "$gecos" $shell $old_pw_age
-    then
+    if ! cluster-useradd $user_name $user_id $group_name "$gecos" $shell $old_pw_age; then
 	printf "$cmd failed.\n"
     fi
 else
@@ -85,4 +83,10 @@ else
     exit 1
 fi
 
-cluster-transfer-pw $user_name $old_shadow_pw $old_pw_age_dir
+printf "Restore local password? (Not needed if using LDAP/AD) [y]/n "
+read restore_pw
+if [ 0$restore_pw != 0n ]; then
+    cluster-transfer-pw $user_name $old_shadow_file $old_pw_age_dir
+else
+    cluster-lock-local-pw $user_name
+fi

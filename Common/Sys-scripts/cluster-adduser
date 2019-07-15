@@ -352,7 +352,7 @@ while [ $valid = 0 ]; do
 done
 
 default_pw_age=90
-printf "Maximum password age (days) [$default_pw_age]? "
+printf "Maximum local password age (days) [$default_pw_age]? "
 read max_pw_age
 : ${max_pw_age:=$default_pw_age}
 

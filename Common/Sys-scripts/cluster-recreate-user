@@ -84,13 +84,21 @@ done
 
 # Add new account
 if ! awk -F : '{ print $1 }' /etc/passwd | fgrep -w $user_name; then
+    NOPW=true
+    export NOPW
     cluster-adduser $user_name
 else
     printf "User $user_name already exists.\n"
 fi
 
 # Restore old password
-cluster-transfer-pw $user_name $old_shadow_file $old_pw_age_dir
+printf "Restore local password? (Not needed if using LDAP/AD) [y]/n "
+read restore_pw
+if [ 0$restore_pw != 0n ]; then
+    cluster-transfer-pw $user_name $old_shadow_file $old_pw_age_dir
+else
+    cluster-lock-local-pw $user_name
+fi
 
 # Copy files to new home dir
 if [ -d $old_dir ]; then
