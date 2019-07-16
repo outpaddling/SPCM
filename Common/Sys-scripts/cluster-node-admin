@@ -88,7 +88,12 @@ It is best to update and reboot the head node before running
 slurm-update-idle-nodes unless you really know what you are doing.
 
 If you have already started updating idle compute nodes, it would be best
-to allow the updates to finish before updating the head node.
+to allow *ALL* updates to finish before updating the head node.
+
+Other sysadmin tasks such as new user addition are likely to fail while
+cron updates are active, as nodes may reboot at any time.  Wait until most
+nodes are updated before performing any sysadmin tasks that require access
+to all compute nodes and be prepared to correct potential failures.
 
 ============================================================================
 EOM
