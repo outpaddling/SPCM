@@ -1,10 +1,5 @@
 #!/bin/sh -e
 
-if [ `hostname -s` != 'login' ]; then
-    printf "$0 can only be run on the primary login node.\n"
-    exit 1
-fi
-
 for prefix in /usr/pkg /usr/local; do
     if [ -e $prefix/etc/slurm.conf ]; then
 	break;

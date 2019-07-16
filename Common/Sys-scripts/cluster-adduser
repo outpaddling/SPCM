@@ -103,12 +103,6 @@ if ps axw | fgrep cluster-adduser | fgrep -v grep | fgrep -v $$; then
     exit 1
 fi
 
-# FIXME: Replace all such checks with `cluster-node-type` = head|compute|...
-if [ `hostname -s` != login ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
-
 CONF_DIR=/usr/local/cluster
 
 os_type=`auto-ostype`

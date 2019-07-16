@@ -1,15 +1,7 @@
 #!/bin/sh -e
 
-if [ `hostname -s` != 'login' ]; then
-    printf "$0 can only be run on the primary login node.\n"
-    exit 1
-fi
-
-if [ `whoami` != 'root' ]; then
-    printf "$0 can only be run by root.\n"
-    exit 1
-fi
-
+auto-root-check $0
+cluster-head-check $0
 if ! cluster-check-cron-updates; then
     exit 0
 fi
