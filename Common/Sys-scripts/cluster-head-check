@@ -24,7 +24,7 @@ if [ $# != 1 ]; then
     usage
 fi
 
-if [ $(cluster-node-type) = head ]; then
+if [ $(cluster-node-type) != head ]; then
     printf "$1 can only be run on the head node.\n"
     exit 1
 fi
