@@ -92,8 +92,8 @@ if [ $# -gt 1 ]; then
     usage
 fi
 
-auto-root-check
-cluster-head-check
+auto-root-check $0
+cluster-head-check $0
 if ! cluster-check-cron-updates; then
     exit 0
 fi
