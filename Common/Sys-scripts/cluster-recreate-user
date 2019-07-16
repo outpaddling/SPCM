@@ -37,10 +37,6 @@ if [ `whoami` != "root" ]; then
     exit 1
 fi
 
-if ! cluster-check-cron-updates; then
-    exit 0
-fi
-
 user_name=$1
 old_password_file=$2
 old_shadow_file=$3
