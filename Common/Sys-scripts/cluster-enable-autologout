@@ -27,6 +27,15 @@ if [ $# != 1 ]; then
     usage
 fi
 
+if [ `whoami` != "root" ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 # Add autologout and TMOUT to non-head nodes
 minutes=$1
 cluster-run "auto-enable-autologout $minutes" all

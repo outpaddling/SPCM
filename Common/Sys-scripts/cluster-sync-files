@@ -29,6 +29,15 @@ else
     nodes="$@"
 fi
 
+if [ `whoami` != "root" ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 repo=/usr/local/cluster/sync-files
 if [ ! -d $repo ]; then
     printf "$0: No files to sync.\n"

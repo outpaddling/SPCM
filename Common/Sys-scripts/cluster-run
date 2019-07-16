@@ -16,6 +16,10 @@ EOM
     exit 1
 }
 
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 parallel=0
 flags=''
 terminal_control=on

@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+if sinfo --list-reasons | fgrep slurm-update-idle; then
+    cat << EOM
+
+The nodes listed above are awaiting cron updates and may reboot at any time.
+
+This may cause failures for any sysadmin tasks that require access to all
+compute nodes.
+
+EOM
+    printf "Are you sure you want to proceed? yes/[no] "
+    read proceed
+    if [ 0$proceed = 0yes ]; then
+	exit 0
+    else
+	exit 1
+    fi
+fi

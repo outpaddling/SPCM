@@ -26,6 +26,16 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
+
+if [ `whoami` != "root" ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 user_name=$1
 
 auto-lock-user $user_name

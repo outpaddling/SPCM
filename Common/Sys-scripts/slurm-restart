@@ -10,6 +10,10 @@ if [ `whoami` != 'root' ]; then
     exit 1
 fi
 
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 cat << EOM
 
 Restarting the scheduler may kill running jobs, depending on what changes

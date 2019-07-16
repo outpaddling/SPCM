@@ -3,7 +3,7 @@
 # Get files from a specified compute node
 
 if [ `whoami` != root ]; then
-    printf "$0 must be run as root.\n"
+    printf "$0 can only be run as root.\n"
     exit 1
 fi
 

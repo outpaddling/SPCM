@@ -27,6 +27,15 @@ if [ $# -lt 2 ]; then
     usage
 fi
 
+if [ `whoami` != 'root' ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
 group_name=$1
 new_gid=$2
 shift

@@ -8,9 +8,13 @@ if [ `hostname -s` != 'login' ]; then
     exit 1
 fi
 
-if [ `whoami` != root ]; then
-    printf "Can only be run by root.\n"
+if [ `whoami` != "root" ]; then
+    printf "$0 must be run by root.\n"
     exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
 fi
 
 LOCALBASE=/usr/local

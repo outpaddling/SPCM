@@ -23,13 +23,17 @@ usage()
 #   Main
 ##########################################################################
 
+if [ $# -lt 2 ]; then
+    usage
+fi
+
 if [ `whoami` != 'root' ]; then
-    printf "Only root can run $0.\n"
+    printf "$0 can only be run by root.\n"
     exit 1
 fi
 
-if [ $# -lt 2 ]; then
-    usage
+if ! cluster-check-cron-updates; then
+    exit 0
 fi
 
 user_name=$1

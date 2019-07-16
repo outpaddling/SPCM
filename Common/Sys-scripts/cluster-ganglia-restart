@@ -1,8 +1,12 @@
 #!/bin/sh
 
 if [ `whoami` != root ]; then
-    printf "$0 must be run as root.\n"
+    printf "$0 can only be run as root.\n"
     exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
 fi
 
 service gmetad restart

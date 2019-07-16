@@ -31,13 +31,17 @@ usage()
 #   Main
 ##########################################################################
 
+if [ $# != 2 ]; then
+    usage
+fi
+
 if [ $(whoami) != root ]; then
-    printf "Only root can do this.\n"
+    printf "$0 can only be run by root.\n"
     exit 1
 fi
 
-if [ $# != 2 ]; then
-    usage
+if ! cluster-check-cron-updates; then
+    exit 0
 fi
 
 nic=$1

@@ -93,8 +93,12 @@ if [ $# -gt 1 ]; then
 fi
 
 if [ `whoami` != "root" ]; then
-    printf "$0 must be run by root.\n"
+    printf "$0 can only be run by root.\n"
     exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
 fi
 
 if ps axw | fgrep cluster-adduser | fgrep -v grep | fgrep -v $$; then
