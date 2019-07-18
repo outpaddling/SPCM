@@ -10,6 +10,8 @@
 first_two=`hostname | awk -F '.' ' { printf("%s.%s",$1,$2); }'`
 PS1="[\u@$first_two \W] \!: "
 
+umask 027
+
 # Useful shortcuts
 alias f=finger
 alias dir='ls -als'

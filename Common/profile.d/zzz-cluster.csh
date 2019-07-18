@@ -10,6 +10,8 @@
 set first_two=`hostname|awk -F '.' ' { printf("%s.%s",$1,$2); }'`
 set prompt="[%n@$first_two %c] %h: "
 
+umask 027
+
 # Useful shortcuts
 alias f finger
 alias dir 'ls -als'
