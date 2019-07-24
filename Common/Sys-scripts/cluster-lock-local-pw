@@ -30,9 +30,7 @@ if [ `whoami` != "root" ]; then
     exit 1
 fi
 
-if ! cluster-check-cron-updates; then
-    exit 0
-fi
+# No need for cluster-check-cron-updates, done by cluster-run
 
 user_name=$1
 
