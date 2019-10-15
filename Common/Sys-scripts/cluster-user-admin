@@ -67,9 +67,10 @@ while true; do
 3.. Sync a user's password
 4.. Change user's password expiration date (to days after today)
 5.. Change password expiration date for all users (to days after today)
-6.. Add user to another group
-7.. Restore/transfer a user account (using same uid/gid)
-8.. Recreate a user account (possibly new uid/gid)
+6.. Add user to a supplemental group
+7.. Remove user from a supplemental group
+8.. Restore/transfer a user account (using same uid/gid)
+9.. Recreate a user account (possibly new uid/gid)
 Q.. Quit
 
 EOM
@@ -116,7 +117,7 @@ EOM
 	printf "Username? "
 	read user_name
 	if [ 0$user_name != 0 ] && id $user_name; then
-	    printf "Group name? "
+	    printf "Add to which group? "
 	    read group_name
 	    if [ 0$group_name != 0 ]; then
 		cluster-add-to-group $user_name $group_name
@@ -125,6 +126,18 @@ EOM
 	;;
     
     7)
+	printf "Username? "
+	read user_name
+	if [ 0$user_name != 0 ] && id $user_name; then
+	    printf "Remove from which group? "
+	    read group_name
+	    if [ 0$group_name != 0 ]; then
+		cluster-remove-from-group $user_name $group_name
+	    fi
+	fi
+	;;
+    
+    8)
 	read -p "Username? " user_name
 	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
 	    source_dir
@@ -133,7 +146,7 @@ EOM
 	    $source_dir/group $source_dir/pw-age
 	;;
     
-    8)
+    9)
 	read -p "Username? " user_name
 	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
 	    source_dir
@@ -151,4 +164,3 @@ EOM
     esac
     pause
 done
-
