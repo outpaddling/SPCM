@@ -324,6 +324,12 @@ EOM
 	printf "Updating $RC_CONF...\n"
 	# Need UDP for some PXE ROMs
 	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
+	
+	# For NFSv4.  Some configs don't need nfsuser.
+	# man nfsv4 for details
+	auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
+	auto-append-line 'nfsuserd_enable="YES"' $RC_CONF $0
+	
 	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
 	service nfsd restart
 	killall -HUP mountd

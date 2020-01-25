@@ -41,10 +41,14 @@ if [ $# != 1 ]; then
     usage
 fi
 
-if ! hostname | egrep 'data|raid'; then
-    printf "$0 should only be run on a file server, not over NFS.\n"
-    exit 1
-fi
+cat << EOM
+
+For best performance, this tool should be run on the file server housing
+most of the files, not over NFS.  Press return to continue running on this
+server, or Ctrl+C to abort.
+
+EOM
+read junk
 
 dir="$1"
 full_path=`(cd $dir && pwd)`
