@@ -20,8 +20,8 @@ usage()
 #   Main
 ##########################################################################
 
-if [ `hostname -s` != 'login' ]; then
-    printf "$0 can only be run on the primary login node.\n"
+if [ $(cluster-node-type) != head ]; then
+    printf "$0 can only be run on the head node.\n"
     exit 1
 fi
 
