@@ -285,6 +285,19 @@ EOM
 	# Does not work for multi-homed host
 	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
 	subnet=`auto-ask subnet "\nSubnet for NFS?" 192.168.0.0`
+
+	printf "Updating $RC_CONF...\n"
+	# Need UDP for some PXE ROMs
+	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
+	
+	# For NFSv4.  Some configs don't need nfsuser.
+	# man nfsv4 for details
+	auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
+	auto-append-line 'nfsuserd_enable="YES"' $RC_CONF $0
+
+	touch /etc/exports  # Must be present for NFS to start
+	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
+	auto-nfs-restart
 	
 	share='x'
 	while [ 0$share != 0 ]; do
@@ -298,7 +311,7 @@ EOM
 	    
 	    if [ 0$share != 0 ]; then
 		fs_type=`mount | awk -v share=$share '$3 == share { print $4 }'`
-		if [ $fs_type = '(zfs,' ]; then
+		if [ 0$fs_type = 0'(zfs,' ]; then
 		    zfs_share=`mount | awk -v share=$share '$3 == share { print $1 }'`
 		    zfs set sharenfs="-maproot=root -network $subnet -mask $NETMASK" $zfs_share
 		    cat << EOM
@@ -317,22 +330,12 @@ EOM
 		    printf "Updating /etc/exports...\n"
 		    auto-append-line "$share\t-maproot=0\t-network $subnet -mask $NETMASK\n" /etc/exports $0
 		fi
+		auto-nfs-restart
 	    fi
 	done
 	zfs get sharenfs
 	
-	printf "Updating $RC_CONF...\n"
-	# Need UDP for some PXE ROMs
-	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
-	
-	# For NFSv4.  Some configs don't need nfsuser.
-	# man nfsv4 for details
-	auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
-	auto-append-line 'nfsuserd_enable="YES"' $RC_CONF $0
-	
-	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
-	service nfsd restart
-	killall -HUP mountd
+	auto-nfs-restart
 	printf "\nYou may need to reboot before NFS clients can mount the new shared folder.\n\n"
 	pause
 	;;
@@ -842,8 +845,17 @@ if [ $NODE_TYPE = head ]; then
     latest=`auto-ask latest-packages 'Use latest packages instead of quarterly?' y`
     if [ $latest != n ]; then
 	auto-pkg-latest --defaults
-    else
-	auto-update-system --defaults
+    fi
+    
+    cat << EOM
+
+It's a good idea to start with a fully updated system, to ensure ports and
+package compatibility and maximize security.
+
+EOM
+    update=`auto-ask update-system 'Update system before continuing?' y`
+    if [ $update != n ]; then
+	auto-update-system  # Run interactively
     fi
 fi
 
@@ -905,7 +917,7 @@ line
 image=$(auto-install-media-distname disc1)
 pxedir=/pxeserver/imags/${image%.iso}
 if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
-    read -p 'Configure PXE installer for other nodes? [y]/n' pxe
+    read -p 'Configure PXE installer for other nodes? [y]/n ' pxe
     if [ 0$pxe != 0n ]; then
 	save_cwd=$(pwd)
 	mkdir -p /root/PXE

@@ -199,9 +199,10 @@ FreeBSD-*)
     
     # Set timezone if not already set
     if ! grep -q '^date.timezone' $prefix/etc/php.ini; then
-	printf "Time zone? (Example: America/Chicago) "
+	default_zone=$(auto-print-timezone)
 	# FIXME: Find a way to validate input
-	read zone
+	read -p "Time zone? [$default_zone] " zone
+	: ${zone:=$default_zone}
 	sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
 	    $prefix/etc/php.ini
     fi
