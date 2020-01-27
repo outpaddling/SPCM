@@ -24,10 +24,7 @@ if [ $# != 1 ]; then
     usage
 fi
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+cluster-head-check $0
 
 # This script is called from cluster-passwd, which runs suid root.
 # Prevent malicious users from running imposter programs.

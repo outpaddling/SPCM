@@ -20,10 +20,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+cluster-head-check $0
 
 case $# in
 0)

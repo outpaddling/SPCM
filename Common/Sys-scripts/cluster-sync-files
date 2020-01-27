@@ -29,10 +29,7 @@ else
     nodes="$@"
 fi
 
-if [ `whoami` != "root" ]; then
-    printf "$0 can only be run by root.\n"
-    exit 1
-fi
+auto-root-check $0
 
 if ! cluster-check-cron-updates; then
     exit 0

@@ -1,17 +1,12 @@
-#!/bin/sh
+#!/bin/sh -e
 
 # DO NOT sync /etc/passwd, /etc/ssh*, or any other file that may contain
 # different information on different node types!
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+auto-root-check $0
+cluster-head-check $0
 
-if [ `whoami` != "root" ]; then
-    printf "$0 must be run by root.\n"
-    exit 1
-fi
+set +e
 
 if ! cluster-check-cron-updates; then
     exit 0

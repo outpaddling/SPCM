@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -24,15 +24,10 @@ if [ $# != 0 ]; then
     usage
 fi
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+auto-root-check $0
+cluster-head-check $0
 
-if [ `whoami` != 'root' ]; then
-    printf "$0 can only be run by root.\n"
-    exit 1
-fi
+set +e
 
 os_type=`auto-ostype`
 case $os_type in

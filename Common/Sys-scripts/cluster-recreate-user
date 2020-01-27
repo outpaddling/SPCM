@@ -32,10 +32,7 @@ if [ $# != 6 ]; then
     usage
 fi
 
-if [ `whoami` != "root" ]; then
-    printf "$0 can only be run by root.\n"
-    exit 1
-fi
+auto-root-check $0
 
 user_name=$1
 old_password_file=$2

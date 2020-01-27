@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -23,10 +23,9 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+cluster-head-check $0
+
+set +e
 
 if [ $# != 1 ]; then
     usage

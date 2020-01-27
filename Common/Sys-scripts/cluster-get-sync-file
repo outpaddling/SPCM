@@ -1,11 +1,10 @@
-#!/bin/sh
+#!/bin/sh -e
 
 # Get files from a specified compute node
 
-if [ `whoami` != root ]; then
-    printf "$0 can only be run as root.\n"
-    exit 1
-fi
+auto-root-check $0
+
+set +e
 
 if [ $# != 2 ]; then
     cat << EOM

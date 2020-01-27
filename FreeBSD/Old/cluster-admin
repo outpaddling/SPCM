@@ -24,10 +24,7 @@ pause()
 #   Main
 ##########################################################################
 
-if [ `whoami` != root ]; then
-    printf "$0 must be run as root.\n"
-    exit 1
-fi
+auto-root-check $0
 
 resp=' '
 while [ 0$resp != 0'q' ]; do

@@ -23,18 +23,13 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $(cluster-node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+auto-root-check $0
+cluster-head-check $0
+
+set +e
 
 if [ $# -lt 4 ]; then
     usage
-fi
-
-if [ `whoami` != "root" ]; then
-    printf "$0 can only be run by root.\n"
-    exit 1
 fi
 
 if ! cluster-check-cron-updates; then

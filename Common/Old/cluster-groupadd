@@ -7,10 +7,7 @@ usage()
     exit 1
 }
 
-if [ `whoami` != root ]; then
-    printf "$0 must be run as root.\n"
-    exit 1
-fi
+auto-root-check $0
 
 if [ $# -lt 1 ] || [ `echo $1 | cut -c 1,1` = '-' ]; then
     usage
