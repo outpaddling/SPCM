@@ -922,8 +922,10 @@ if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
 	save_cwd=$(pwd)
 	mkdir -p /root/PXE
 	cd /root/PXE
-	auto-fetch-install-media disc1
-	unxz -f $image.xz
+	if [ ! -e $image ]; then
+	    auto-fetch-install-media disc1
+	    unxz -f $image.xz
+	fi
 	auto-pxe-installer-setup $image
 	cd $save_cwd
     fi

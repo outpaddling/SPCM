@@ -111,11 +111,9 @@ gmetad_conf=$prefix/etc/gmetad.conf
 if [ -e $gmetad_conf ]; then
     read -p "Overwrite gmetad.conf? y/[n] " overwrite
     if [ 0$overwrite = 0y ]; then
-	if [ ! -e $gmetad_conf.orig ]; then
-	    cp $gmetad_conf $gmetad_conf.orig
-	fi
+	auto-backup-file $gmetad_conf
+	rm $gmetad_conf
     fi
-    rm $gmetad_conf
 fi
 
 # gmetad just for head node
