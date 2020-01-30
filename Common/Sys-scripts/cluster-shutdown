@@ -55,22 +55,28 @@ if [ 0$sure = 0yes ]; then
     done
 fi
 
-printf "Shut down I/O nodes? (yes/[no]) "
-read sure
-if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" io || true
+if [ 0$(cluster-file-servers) != 0 ]; then
+    printf "Shut down file servers? (yes/[no]) "
+    read sure
+    if [ 0$sure = 0yes ]; then
+	cluster-run -c "shutdown $flag now" io || true
+    fi
 fi
 
-printf "Shut down backup login nodes? (yes/[no]) "
-read sure
-if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" backup || true
+if [ 0$(cluster-backup-nodes) != 0 ]; then
+    printf "Shut down backup login nodes? (yes/[no]) "
+    read sure
+    if [ 0$sure = 0yes ]; then
+	cluster-run -c "shutdown $flag now" backup || true
+    fi
 fi
 
-printf "Shut down visualization nodes? (yes/[no]) "
-read sure
-if [ 0$sure = 0yes ]; then
-    cluster-run -c "shutdown $flag now" vis || true
+if [ 0$(cluster-vis-nodes) != 0 ]; then
+    printf "Shut down visualization nodes? (yes/[no]) "
+    read sure
+    if [ 0$sure = 0yes ]; then
+	cluster-run -c "shutdown $flag now" vis || true
+    fi
 fi
 
 printf "Shut down head node? (yes/[no]) "
@@ -78,4 +84,3 @@ read sure
 if [ 0$sure = 0yes ]; then
     shutdown $flag now
 fi
-
