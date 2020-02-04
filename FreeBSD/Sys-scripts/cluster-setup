@@ -898,6 +898,9 @@ compute|vis)
     # Install after scheduler.  OpenMPI port has options for scheduler
     # integration.
     install_mpi
+    
+    # Limit ZFS memory use to keep RAM available for jobs
+    compute-node-set-arc-max    
     ;;
 *)
     ;;

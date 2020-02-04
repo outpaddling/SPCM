@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Monitor processes for a given job
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-03  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 job-ID\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+job_id=$1
+
+for node in $(squeue --noheader --format='%N' --jobs=$job_id); do
+    topnode $node
+done
