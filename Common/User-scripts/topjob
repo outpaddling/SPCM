@@ -26,6 +26,6 @@ fi
 
 job_id=$1
 
-for node in $(squeue --noheader --format='%N' --jobs=$job_id); do
+for node in $(squeue --noheader --format='%N' --jobs=$job_id | sort | uniq); do
     topnode $node
 done
