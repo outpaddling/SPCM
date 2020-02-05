@@ -20,9 +20,9 @@
 
 usage()
 {
-    printf "Usage: $0 network-interface-of-primary-ethernet shared|dedicated\n"
-    printf "Example: $0 bce0 shared\n"
-    printf "Example: $0 em1 dedicated\n"
+    printf "Usage: $0 network-interface-of-primary-ethernet shared|dedicated network-prefix-size gateway\n"
+    printf "Example: $0 bce0 shared 24 192.168.0.1\n"
+    printf "Example: $0 em1 dedicated 16 192.168.1.1\n"
     exit 1
 }
 
@@ -31,7 +31,7 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 2 ]; then
+if [ $# != 4 ]; then
     usage
 fi
 
@@ -43,6 +43,8 @@ fi
 
 nic=$1
 nic_mode=$2
+bits=$(( 32 - $3 ))
+gateway=$4
 
 # Sanity check before messing with iDRAC
 case $nic_mode in
@@ -61,7 +63,6 @@ FreeBSD)
     ;;
 
 RHEL)
-    #eth_addr=`ifconfig em1 | awk -F : '$1 ~ "inet addr" { print $2 }' | awk '{ print $1 }'`
     eth_addr=`ip addr show $nic | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
     ;;
 
@@ -73,7 +74,11 @@ esac
 printf "Ethernet: $eth_addr\n"
 
 # These settings are specific to cluster-admin
-idrac_addr=`echo $eth_addr | awk -F . '{ printf("%s.%s.%s.%s\n", $1, $2, $3+64, $4) }'`
+eth_hex=$(auto-octet-to-hex $eth_addr)
+addresses_per_segment=$(( (1 << bits) / 4 ))
+idrac_hex=$(( $eth_hex + $addresses_per_segment ))
+# idrac_addr=`echo $eth_addr | awk -F . '{ printf("%s.%s.%s.%s\n", $1, $2, $3+64, $4) }'`
+idrac_addr=$(auto-hex-to-octet $idrac_hex)
 printf "IDRAC:    $idrac_addr\n"
 
 if ! which ipmitool; then
@@ -82,9 +87,10 @@ fi
 
 ipmitool lan set 1 ipsrc static
 ipmitool lan set 1 ipaddr $idrac_addr
-# Allow -eth and -mgmt addresses to share interface
-ipmitool lan set 1 netmask 255.255.128.0
-ipmitool lan set 1 defgw ipaddr 192.168.0.1
+netmask=$(( (0xffffffff << $bits) & 0xffffffff ))
+# auto-hex-to-octet $netmask
+ipmitool lan set 1 netmask $(auto-hex-to-octet $netmask)
+ipmitool lan set 1 defgw ipaddr $gateway
 
 # Dedicated NIC
 case $nic_mode in
