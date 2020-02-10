@@ -791,6 +791,7 @@ boot_block_backup
 ntp_config
 install_core_rpms
 pkgsrc_setup
+auto-ipmitool-install
 
 # Workaround: git install looks for missing older version
 pkgin install -y tcl

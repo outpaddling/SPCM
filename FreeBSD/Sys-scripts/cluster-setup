@@ -828,6 +828,8 @@ DATADIR=$LOCALBASE/share/cluster-admin
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
 
+auto-ipmitool-install
+
 # Config files used by cluster-admin
 if [ $NODE_TYPE = head ]; then
     CLUSTER_DATA="$LOCALBASE/cluster"
