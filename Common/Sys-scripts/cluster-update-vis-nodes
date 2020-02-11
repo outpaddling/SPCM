@@ -13,7 +13,12 @@ pause()
     read junk
 }
 
-for node in `cluster-vis-nodes`; do
+if [ 0$(cluster-vis-nodes) = 0 ]; then
+    printf "No visualization nodes found.\n"
+    exit
+fi
+
+for node in $(cluster-vis-nodes); do
     echo $node
     ssh $node w
     pause

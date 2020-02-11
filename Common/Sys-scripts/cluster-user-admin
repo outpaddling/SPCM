@@ -59,14 +59,14 @@ while true; do
     spcm-banner
     cat << EOM
     
-1.. Add user
-2.. Change user's password
-3.. Sync a user's password
-4.. Change user's password expiration date (to days after today)
+1.. Add a new user
+2.. Change a user password
+3.. Synchronize a user password to all nodes
+4.. Change a user password expiration date (to days after today)
 5.. Change password expiration date for all users (to days after today)
-6.. Add user to a supplemental group
-7.. Remove user from a supplemental group
-8.. Restore/transfer a user account (using same uid/gid)
+6.. Add a user to a supplemental group
+7.. Remove a user from a supplemental group
+8.. Restore / transfer a user account (using same uid/gid)
 9.. Recreate a user account (possibly new uid/gid)
 Q.. Quit / Return to main menu
 

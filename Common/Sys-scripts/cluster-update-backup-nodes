@@ -13,7 +13,12 @@ pause()
     read junk
 }
 
-for node in `cluster-backup-nodes`; do
+if [ 0$(cluster-backup-nodes) = 0 ]; then
+    printf "No backup nodes found.\n"
+    exit
+fi
+
+for node in $(cluster-backup-nodes); do
     echo $node
     ssh $node w
     pause
@@ -24,4 +29,12 @@ for node in `cluster-backup-nodes`; do
     if [ 0$update = 0y ]; then
 	ssh -t $node auto-update-system || true
     fi
+	
+    cat << EOM
+	
+Verify that the backup head node is rebooted and fully functional before
+updating the primary head node.
+
+EOM
+    pause
 done

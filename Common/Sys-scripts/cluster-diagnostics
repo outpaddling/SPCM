@@ -34,14 +34,37 @@ pause()
 
 
 ##########################################################################
+#   Function description:
+#       List network interfaces on a node
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-11  J Bacon     Begin
+##########################################################################
+
+list_interfaces()
+{
+    case $(auto-ostype) in
+    FreeBSD)
+	ssh $node ifconfig | fgrep UP
+	;;
+    RHEL)
+	ssh $node ip link | fgrep UP
+	;;
+    *)
+	printf "$os_name is not yet supported.\n"
+	;;
+    esac
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
 if [ $# != 0 ]; then
     usage
 fi
-
-os_type=`auto-ostype`
 
 while true; do
 
@@ -53,6 +76,9 @@ while true; do
 2.. Monitor load with netstat
 3.. Monitor load with iostat
 4.. Monitor load with iftop
+5.. Show cores per user
+6.. Show cluster load
+7.. Scan for stray processes
 Q.. Quit / Return to main menu
 
 EOM
@@ -67,17 +93,30 @@ EOM
     2)
 	printf "Host name? "
 	read node
-	ssh -t $node netstat -i ib0 -c 1
+	case $(auto-ostype) in
+	FreeBSD)
+	    ssh -t $node netstat 1
+	    ;;
+	RHEL)
+	    ssh -t $node netstat -c 1
+	    ;;
+	*)
+	    printf "Unsupported OS: $(auto-ostype)\n"
+	esac
 	;;
     3)
 	printf "Hostname? "
-	read host_name
-	case $os_type in
+	read node
+	case $(auto-ostype) in
 	FreeBSD)
-	    ssh -t $host_name iostat -w 1
+	    if [ "$(ssh $node zpool status)" = "no pools available" ]; then
+		ssh -t $node iostat -w 1
+	    else
+		ssh -t $node zpool iostat 1
+	    fi
 	    ;;
 	RHEL)
-	    ssh -t $host_name iostat -p ALL -m 1
+	    ssh -t $node iostat -p ALL -m 1
 	    ;;
 	*)
 	    printf "$os_name is not yet supported.\n"
@@ -85,24 +124,26 @@ EOM
 	;;
     4)
 	printf "Host name? "
-	read host_name
-	case $os_type in
-	FreeBSD)
-	    ssh $host_name ifconfig | fgrep UP
-	    ;;
-	RHEL)
-	    ssh $host_name ip link | fgrep UP
-	    ;;
-	*)
-	    printf "$os_name is not yet supported.\n"
-	esac
+	read node
+	list_interfaces $node
 	printf "Network interface? "
 	read iface
 	if [ 0$iface = 0 ]; then
-	    ssh -t $host_name iftop
+	    ssh -t $node iftop
 	else
-	    ssh -t $host_name iftop -i $iface
+	    ssh -t $node iftop -i $iface
 	fi
+	;;
+    5)
+	slurm-user-cores
+	;;
+    6)
+	slurm-cluster-load
+	;;
+    7)
+	printf "Username of user with suspected strays? "
+	read username
+	slurm-find-strays $username
 	;;
     Q|q)
 	exit 0

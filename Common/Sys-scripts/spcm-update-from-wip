@@ -5,7 +5,7 @@ case 0$(which cluster-setup) in
     # FreeBSD ports
     wip-update
     pkg remove -y auto-admin
-    wip-reinstall-port -nu -r cluster-admin
+    wip-reinstall-port -nu -r spcm
     ;;
 
 0/usr/pkg/sbin/cluster-setup)

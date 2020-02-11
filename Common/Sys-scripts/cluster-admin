@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -43,13 +43,13 @@ while true; do
     clear
     spcm-banner
     cat << EOM
-				
-1.. Shut down cluster
-2.. SLURM management
-3.. User management
-4.. Restart Ganglia
-5.. Diagnostics and Monitoring
-6.. Node management
+
+1.. User management
+2.. Cluster update manager
+3.. Diagnostics and Monitoring
+4.. Cluster services
+5.. Node management
+6.. Shut down cluster
 Q.. Quit
 
 EOM
@@ -59,23 +59,22 @@ EOM
     clear
     case $selection in
     1)
-	cluster-shutdown
-	;;
-    2)
-	slurm-admin
-	;;
-    3)
 	cluster-user-admin
 	;;
-    4)
-	cluster-ganglia-restart
-	pause
+    2)
+	cluster-update-menu
 	;;
-    5)
+    3)
 	cluster-diagnostics
 	;;
-    6)
+    4)
+	cluster-services-menu
+	;;
+    5)
 	cluster-node-admin
+	;;
+    6)
+	cluster-shutdown
 	;;
     Q|q)
 	exit 0

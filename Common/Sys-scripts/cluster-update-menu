@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0\n"
+    printf "Usage: $0 \n"
     exit 1
 }
 
@@ -196,14 +196,14 @@ Installing updates remotely is not recommended.  Servers often fail to
 reboot, so you should be physically nearby in case of issues.
 ******************************************************************************
 
-1.. Configure head node
-2.. PXE install new nodes
-3.. Initialize new nodes
-4.. Synchronize nodes
-5.. Drain a node
-6.. Resume a node
-7.. Drain all nodes
-8.. Shut down idle nodes
+1.. Install updates on backup head node
+2.. Verify scheduler restart on backup head node
+3.. Install updates on head node
+4.. Install updates on visualization nodes
+5.. Install updates on File servers
+6.. Check for down nodes
+7.. Install updates on idle compute nodes
+8.. Restart cron updates on idle compute nodes
 Q.. Quit / Return to main menu
 
 EOM
@@ -212,153 +212,108 @@ EOM
     clear
     case $selection in
     
-    1)
-	cluster-setup head
-	pause
+    1)  # Update backup head node
+	cluster-update-backup-nodes || true
 	;;
     
-    2)  # PXE
-	read -p "Host name prefix? [compute-] " host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
-	fi
-	read -p "Digits in hostname #? [3] " host_digits
-	if [ 0$host_digits = 0 ]; then
-	    host_digits=3
-	fi
-	read -p "Domain? [$default_name] " domain
-	if [ 0$domain = 0 ]; then
-	    domain='$default_name'
-	fi
-	auto-pxe-node-discover $host_prefix $host_digits $domain
+    2)  # Verify scheduler running on backup head node
+	ssh login-2 tail /var/log/slurm/slurmctld.log || true
 	;;
     
-    3)  # Initialize nodes
-	if get_node_type; then
-	    read -p "Host name prefix? [$default_prefix] " host_prefix
-	    if [ 0$host_prefix = 0 ]; then
-		host_prefix=$default_prefix
-	    fi
-	    read -p "Domain? [$default_domain] " domain
-	    if [ 0$domain = 0 ]; then
-		domain=$default_domain
-	    fi
-	    if get_host_info $default_digits; then
-		read -p "Unattended init? y/[n] " unattended
-		if [ 0$unattended = 0y ]; then
-		    flags=--unattended
-		fi
-		num=$first_num
-		while [ $num -le $last_num ]; do
-		    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-		    cluster-init-node $flags $node $node_type || true
-		    printf "Done with $node...\n"
-		    num=$((num + 1))
-		done
-	    fi
-	fi
-	;;
-    
-    4)  # Sync nodes
-	if get_node_type; then
-	    case $node_type in
-	    io|vis|head)
-		# Sync File servers
-		read -p"Fully qualified host name? " node
-		if [ 0$node != 0 ]; then
-		    default_responses_info
-		    read -p "Default responses to all prompts? y/[n] " use_defaults
-		    if [ 0$use_defaults = 0y ]; then
-			read -p "Reference node for binary packages? " ref_node
-			sync_opts="--use-defaults $ref_node"
-		    fi
-		    printf "Synchronizing $node...\n"
-		    cluster-sync-node $sync_opts $node $node_type || true
-		    printf "Done with $node...\n"
-		fi
-		;;
-    
-	    compute)
-		# Sync compute nodes
-		sinfo
-		read -p "Host name prefix? [compute-] " host_prefix
-		if [ 0$host_prefix = 0 ]; then
-		    host_prefix='compute-'
-		fi
-		read -p "Domain? [$default_domain] " domain
-		if [ 0$domain = 0 ]; then
-		    domain=$default_domain
-		fi
-		if get_host_info 3; then
-		    default_responses_info
-		    read -p "Default responses to all prompts? y/[n] " use_defaults
-		    if [ 0$use_defaults = 0y ]; then
-			read -p "Reference node for binary packages? " ref_node
-			sync_opts="--use-defaults $ref_node"
-			read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
-			if [ 0$infiniband = 0y ]; then
-			    sync_opts="$sync_opts --infiniband"
-			fi
-		    fi
-		    num=$first_num
-		    while [ $num -le $last_num ]; do
-			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
-			printf "Synchronizing $node...\n"
-			cluster-sync-node $sync_opts $node $node_type || true
-			printf "Done with $node...\n"
-			num=$((num + 1))
-		    done
-		fi
-		;;
-	    esac
-	fi
-	;;
-    
-    5) # Drain node
-	clear
-	printf "Current node status:\n\n"
-	sinfo -o "$sinfo_format"
-	printf "\nNode number? (e.g. 001) "
-	read node
-	if [ 0$node != 0 ]; then
-	    printf "Reason? "
-	    read reason
-	    if [ 0"$reason" != 0 ]; then
-		scontrol update State=drain NodeName=compute-$node reason="$reason"
-		sinfo --list-reasons
-		printf "Update slurm.conf if this is a long-term outage.\n"
-	    fi
-	fi
-	;;
+    3)  # Update head node
+	update_warning
+	w
+	read -p 'Continue? y/[n] ' continue
+	if [ 0$continue = 0y ]; then
+		cat << EOM | wall
 
-    6)  # Resume node
-	clear
-	printf "Nodes currently down:\n\n"
-	sinfo --list-reasons
-	printf "\nNode number? (e.g. 001) "
-	read node
-	if [ 0$node != 0 ]; then
-	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
-	    slurm-resume-nodes $full_name
+The head node may need to be rebooted shortly to complete the installation of
+important security updates.  An additional notice will follow if a reboot
+is necessary.
+
+EOM
+	    auto-update-system --binary
+	    read -p "Reboot? [y]/n " reboot
+	    if [ `auto-ostype` = FreeBSD ]; then
+		read -p "Update and sync ports tree to all nodes? [y]/n " portsnap
+		if [ 0$portsnap != 0n ]; then
+		    cluster-portsnap
+		    if [ -e /usr/local/sbin/wip-update ]; then
+			cluster-wip-update
+		    fi
+		fi
+	    fi
+	    w
+	    if [ 0$reboot != 0n ]; then
+		read -p "Minutes before reboot? [2] " minutes
+		if [ 0$minutes = 0 ]; then
+		    minutes=2
+		fi
+		cat << EOM | wall
+
+The head node will be rebooted shortly to complete the installation of
+important security updates.  It should be available again in a few minutes.
+
+EOM
+		shutdown -r +$minutes
+	    fi
 	fi
 	;;
     
-    7)  # Drain all nodes
-	printf "This will prevent any new jobs from running.\n"
-	printf "Are you sure you want to proceed? yes/[no] "
-	read proceed
-	if [ 0$proceed = 0yes ]; then
-	    read -p "Reason for draining all nodes? " reason
-	    all_nodes=`sinfo -ho '%N'`
-	    scontrol update state=drain nodename="$all_nodes" reason="$reason"
-	    sinfo
-	else
-	    printf "Operation canceled.\n"
-	fi
+    4)
+	cluster-update-vis-nodes || true
 	;;
+    
+    5)
+	cluster-update-file-servers || true
+	;;
+    
+    6)
+	cluster-down-nodes || true
+	;;
+    
+    7) # Update all compute nodes
+	update_warning
+	cat << EOM
 
-    8)
-	slurm-shutdown-idle-nodes
+You can update all compute nodes, or just those that have not received the
+last round of updates.
+
+EOM
+	mkdir -p $updates_dir
+	read -p "Update all compute nodes? y/[n] " update_all
+	if [ 0$update_all = 0y ]; then
+	    rm -f $updates_dir/updated-nodes
+	fi
+	slurm-update-idle-nodes $updates_dir
+	;;
+    
+    8) # Schedule compute node updates in cron
+	clear
+	update_warning
+	cat << EOM
+
+This will clear the updated-nodes list from the last round of cron updates.
+
+All compute nodes will be immediately set to draining state to prevent them
+from receiving any new jobs before they are updated.
+
+Be sure all head nodes and file servers are up before proceeding.
+
+Nodes will be updated one at a time shortly after they become idle.
+
+Note: cron must be configured with an entry like the following:
+
+    0-59/15 * * * * slurm-update-idle-nodes --yes \\
+	    >> /var/log/compute-node-updates 2>&1
+
+slurm-update-idle-nodes and scripts it depends on must be in PATH.
+
+EOM
+	read -p "Proceed? y/[n] " proceed
+	if [ 0"$proceed" = 0y ]; then
+	    rm -f $updates_dir/updated-nodes $updates_dir/updates.log
+	fi
 	;;
 
     Q|q)

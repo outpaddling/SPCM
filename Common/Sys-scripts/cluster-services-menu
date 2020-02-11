@@ -20,9 +20,7 @@ while [ 0$resp != 0q ]; do
     cat << EOM
 
 1.. Restart scheduler daemons
-2.. Show cores per user
-3.. Show cluster load
-4.. Scan for stray processes
+2.. Restart Ganglia
 Q.. Quit / Return to main menu
 
 EOM
@@ -32,27 +30,16 @@ EOM
     case $resp in
     1)
 	slurm-restart
-	pause
 	;;
     2)
-	slurm-user-cores
-	pause
-	;;
-    3)
-	slurm-cluster-load
-	pause
-	;;
-    4)
-	printf "Username of user with suspected strays? "
-	read username
-	slurm-find-strays $username
-	pause
+	cluster-ganglia-restart
 	;;
     Q|q)
+	exit 0
 	;;
     *)
 	printf "Invalid selection: $resp\n"
-	pause
     esac
+    pause
 done
 

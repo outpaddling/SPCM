@@ -13,7 +13,12 @@ pause()
     read junk
 }
 
-for node in `cluster-file-servers`; do
+if [ 0$(cluster-file-servers) = 0 ]; then
+    printf "No file servers found.\n"
+    exit
+fi
+
+for node in $(cluster-file-servers); do
     echo $node
     ssh $node w
     pause
