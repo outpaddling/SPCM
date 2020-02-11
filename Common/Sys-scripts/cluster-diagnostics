@@ -46,17 +46,14 @@ os_type=`auto-ostype`
 while true; do
 
     clear
+    spcm-banner
     cat << EOM
     
-			    **************************
-			    Diagnostics and Monitoring
-			    **************************
-				
 1.. Check for down nodes
 2.. Monitor load with netstat
 3.. Monitor load with iostat
 4.. Monitor load with iftop
-Q.. Quit
+Q.. Quit / Return to main menu
 
 EOM
 

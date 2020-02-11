@@ -187,11 +187,9 @@ done
 while true; do
 
     clear
+    spcm-banner
     cat << EOM
     
-			    **************************
-				  Node Admin Menu
-			    **************************
 ******************************************************************************
 				*** WARNING ***
 Installing updates remotely is not recommended.  Servers often fail to
@@ -213,7 +211,7 @@ reboot, so you should be physically nearby in case of issues.
 13. Resume a node
 14. Drain all nodes
 15. Shut down idle nodes
-Q.. Quit
+Q.. Quit / Return to main menu
 
 EOM
 

@@ -16,17 +16,14 @@ pause()
 resp=''
 while [ 0$resp != 0q ]; do
     clear
+    spcm-banner
     cat << EOM
-    
-			     **********************
-				SLURM Admin Menu
-			     **********************
 
 1.. Restart scheduler daemons
 2.. Show cores per user
 3.. Show cluster load
 4.. Scan for stray processes
-Q.. Quit
+Q.. Quit / Return to main menu
 
 EOM
 

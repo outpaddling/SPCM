@@ -41,11 +41,8 @@ fi
 while true; do
 
     clear
+    spcm-banner
     cat << EOM
-    
-			    **************************
-				Cluster Admin Menu
-			    **************************
 				
 1.. Shut down cluster
 2.. SLURM management

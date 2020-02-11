@@ -56,12 +56,9 @@ esac
 while true; do
 
     clear
+    spcm-banner
     cat << EOM
     
-			    **************************
-			      Cluster User Management
-			    **************************
-				
 1.. Add user
 2.. Change user's password
 3.. Sync a user's password
@@ -71,7 +68,7 @@ while true; do
 7.. Remove user from a supplemental group
 8.. Restore/transfer a user account (using same uid/gid)
 9.. Recreate a user account (possibly new uid/gid)
-Q.. Quit
+Q.. Quit / Return to main menu
 
 EOM
 
