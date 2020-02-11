@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 ##########################################################################
 #   Script description:
@@ -40,8 +40,8 @@ if [ $# -lt 2 ]; then
     usage
 fi
 
-shift
-shift
+cluster-head-check $0
+set +e
 
 cat << EOM
 
@@ -72,5 +72,7 @@ EOM
 
 cores=$1
 mem=$2
+shift
+shift
 
 srun --mem=$mem --nodes=1 --cpus-per-task=$cores --pty --preserve-env $@ $SHELL -l
