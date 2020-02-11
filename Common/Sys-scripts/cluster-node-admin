@@ -190,12 +190,6 @@ while true; do
     spcm-banner
     cat << EOM
     
-******************************************************************************
-				*** WARNING ***
-Installing updates remotely is not recommended.  Servers often fail to
-reboot, so you should be physically nearby in case of issues.
-******************************************************************************
-
 1.. Configure head node
 2.. PXE install new nodes
 3.. Initialize new nodes
