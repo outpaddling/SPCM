@@ -69,6 +69,7 @@ EOM
 	;;
     4)
 	cluster-ganglia-restart
+	pause
 	;;
     5)
 	cluster-diagnostics
@@ -83,6 +84,4 @@ EOM
 	printf "Invalid selection: '$selection'\n"
 	;;
     esac
-    pause
 done
-
