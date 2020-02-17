@@ -16,5 +16,5 @@ fi
 cache_dir=`cluster-pkgdir`
 env PKG_CACHEDIR=$cache_dir pkg upgrade -y
 cluster-run "env PKG_CACHEDIR=$cache_dir pkg upgrade -y"
-cluster-portsnap
+cluster-ports-update
 

@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+: ${PORTSDIR:=/usr/ports}
+
+if [ -e $PORTSDIR/.svn ]; then
+    svn update $PORTSDIR
+else
+    portsnap fetch && portsnap update
+fi
+
+if [ -e /usr/local/sbin/wip-update ]; then
+    wip-update
+fi
+
+for node in `cluster-compute-nodes`; do
+    if ! rsync -av --delete --exclude wip /usr/ports ${node}:/usr; then
+	printf "$node\n" >> cluster-ports-update-failed-nodes
+    fi
+done
+

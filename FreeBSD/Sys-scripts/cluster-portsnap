@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-portsnap fetch && portsnap update
-for node in `cluster-compute-nodes`; do
-    if ! rsync -av --delete --exclude wip /usr/ports ${node}:/usr; then
-	printf "$node\n" >> cluster-portsnap-failed-nodes
-    fi
-done
-
