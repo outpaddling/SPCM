@@ -75,6 +75,7 @@ EOM
 	;;
     6)
 	cluster-shutdown
+	pause
 	;;
     Q|q)
 	exit 0
