@@ -217,7 +217,11 @@ EOM
 	;;
     
     2)  # Verify scheduler running on backup head node
-	ssh login-2 tail /var/log/slurm/slurmctld.log || true
+	if [ -z $(cluster-backup-nodes) ]; then
+	    printf "No backup nodes found.\n"
+	else
+	    ssh login-2 tail /var/log/slurm/slurmctld.log || true
+	fi
 	;;
     
     3)  # Update head node

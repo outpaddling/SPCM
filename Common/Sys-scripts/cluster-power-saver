@@ -1,0 +1,53 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Power down idle compute nodes to save power.
+#       PowerEdge R415 with dual Opteron 4386, dual power supplies and
+#       iDRAC Enterprise draws 14W powered off, 100W on and idle.
+#       (300W under full CPU load in case you were curious)
+#
+#       Nodes can be powered on remotely with something like the following
+#       if remote IPMI is enabled:
+#
+#           ipmitool -v -I lanplus -H IP-address [-P password] \
+#                    -U root chassis power on
+#
+#       To enable, run the following on the node while it's up:
+#
+#           ipmitool -I open lan set 1 access on
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-02-23  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+printf "Draining idle nodes...\n"
+idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 == "idle" { print $2 }')
+for node in $idle_nodes; do
+    printf "Draining idle node $node...\n"
+    scontrol update nodename=$node state=drain reason=power-save
+done
+
+sleep 5
+
+drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 == "drained" && $2 == "power-save" { print $3 }')
+for node in $drained_nodes; do
+    printf "Shutting down idle node $node...\n"
+    ssh $node shutdown -p now
+done
