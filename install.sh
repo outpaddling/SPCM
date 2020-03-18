@@ -68,7 +68,7 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
 
 src_prefix=$(dirname $(dirname $(dirname $(dirname $(pwd)))))
 printf "src_prefix = $src_prefix\n"
-for script in `fgrep -l '%%PREFIX%%' \
+for script in `fgrep -l 'prefix=%%PREFIX%%' \
 	$os/Sys-scripts/* \
 	Common/Sys-scripts/* \
 	$os/User-scripts/* \
