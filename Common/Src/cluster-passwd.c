@@ -26,7 +26,7 @@
  *  own programs as root.
  */
 
-#define SYNC_CMD    "/usr/local/sbin/cluster-sync-pw %s"
+#define SYNC_CMD    "%%PREFIX%%/sbin/cluster-sync-pw %s"
 
 int     main(int argc,char *argv[])
 
@@ -86,7 +86,7 @@ int     main(int argc,char *argv[])
      *  Record password change time
      */
     now = time(NULL) / 3600 / 24;
-    snprintf(pw_age_file, PATH_MAX, "/usr/local/cluster/pw-age/%s", user_name);
+    snprintf(pw_age_file, PATH_MAX, "%%PREFIX%%/etc/spcm/pw-age/%s", user_name);
     fp = fopen(pw_age_file, "r+");
     if ( fp == NULL )
     {

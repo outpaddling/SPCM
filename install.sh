@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 if [ -z $PREFIX ]; then
-    PREFIX=/usr/local/cluster-admin
+    PREFIX=/usr/local
 fi
 
 case `uname` in
@@ -35,15 +35,14 @@ rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
 
 cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-
 cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 
-chmod 750 ${DESTDIR}${PREFIX}/sbin/*
-chmod 755 ${DESTDIR}${PREFIX}/bin/*
+chmod 550 ${DESTDIR}${PREFIX}/sbin/*
+chmod 555 ${DESTDIR}${PREFIX}/bin/*
 
 cp cluster-passwd ${DESTDIR}${PREFIX}/bin
-chmod 6755 ${DESTDIR}${PREFIX}/bin/cluster-passwd
+chmod 6555 ${DESTDIR}${PREFIX}/bin/cluster-passwd
 
 # FIXME: Create and install man pages
 
@@ -59,10 +58,11 @@ sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
 
-sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
+mkdir ${PREFIX}/etc/spcm
+sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
-sed -e "s|cluster-admin.conf|${PREFIX}/etc/cluster-admin.conf|g" \
+sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-highest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-highest-uid
 

@@ -33,6 +33,11 @@ if ! cluster-check-cron-updates; then
     exit 0
 fi
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 user_name=$1
 new_group=$2
 shift
@@ -49,5 +54,5 @@ done
 
 auto-change-primary-group $user_name $new_group $dirs
 cluster-run "auto-change-primary-group $user_name $new_group" backup io vis compute
-# FIXME: Should /usr/local/cluster be hard-coded?
-chgrp $new_group /usr/local/cluster/pw-age/$user_name
+# FIXME: Should $prefix/etc/spcm be hard-coded?
+chgrp $new_group $prefix/etc/spcm/pw-age/$user_name

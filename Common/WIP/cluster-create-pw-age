@@ -1,8 +1,13 @@
 #!/bin/sh -e
 
-age_dir=/usr/local/cluster/pw-age
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+age_dir=$prefix/etc/spcm/pw-age
 mkdir -p $age_dir
-chmod 755 $age_dir /usr/local/cluster
+chmod 755 $age_dir $prefix/etc/spcm
 for user in `cluster-users`; do
     echo $user
     now=$(date +%s)

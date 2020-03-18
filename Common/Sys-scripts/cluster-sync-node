@@ -56,6 +56,11 @@ if [ $# != 2 ]; then
     usage
 fi
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 LOCALBASE=/usr/local
 
 long_node_name=$1
@@ -81,7 +86,7 @@ if [ -z EDITOR ]; then
     EDITOR="vi"
 fi
 
-conf_dir='/usr/local/cluster'
+conf_dir=$prefix/etc/spcm
 if ! ssh $node stat $conf_dir/init-done; then
     printf "You must run 'cluster-init-node $long_node_name $node_type' first.\n"
     exit 1
@@ -143,7 +148,7 @@ EOM
     done
     
     # Install standard software packages
-    yum_list=/usr/local/cluster/$node_type-node-yum-packages
+    yum_list=$prefix/etc/spcm/$node_type-node-yum-packages
     if [ -e $yum_list ]; then
 	printf "Installing local packages from $yum_list...\n"
 	ssh $node yum install -y `cat $yum_list`

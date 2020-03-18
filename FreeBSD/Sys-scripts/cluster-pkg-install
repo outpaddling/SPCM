@@ -11,10 +11,13 @@ if [ `whoami` != root ]; then
 fi
 
 cache_dir=`cluster-pkgdir`
-#env PKG_CACHEDIR=$cache_dir pkg upgrade -y
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
 
 pkg=$1
 cluster-run "env PKG_CACHEDIR=$cache_dir cluster-local-pkg-install $pkg" compute
 
-auto-append-line $pkg $pkg /usr/local/cluster/packages.txt nocomment
+auto-append-line $pkg $pkg $prefix/etc/spcm/packages.txt nocomment
 

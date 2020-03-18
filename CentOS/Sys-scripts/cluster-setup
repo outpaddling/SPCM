@@ -731,13 +731,13 @@ if [ $# != 1 ]; then
 fi
 
 # Caution: 
-# The line below is modified by install.sh. Be careful not to replace
+# The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/pkg
+prefix=%%PREFIX%%
 
 NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
-CONF_DIR=/usr/local/cluster
+CONF_DIR=$prefix/etc/spcm
 
 case $NODE_TYPE in
 'head')

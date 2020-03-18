@@ -53,6 +53,11 @@ RHEL)
 
 esac
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 while true; do
 
     clear
@@ -136,18 +141,18 @@ EOM
     
     8)
 	read -p "Username? " user_name
-	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
+	read -p "Directory with passwd, $pw_file, group, and pw-age? [$prefix/etc/spcm/Old] " \
 	    source_dir
-	: ${source_dir:=/usr/local/cluster/Old}
+	: ${source_dir:=$prefix/etc/spcm/Old}
 	cluster-restore-user $user_name $source_dir/passwd $source_dir/$pw_file \
 	    $source_dir/group $source_dir/pw-age
 	;;
     
     9)
 	read -p "Username? " user_name
-	read -p "Directory with passwd, $pw_file, group, and pw-age? [/usr/local/cluster/Old] " \
+	read -p "Directory with passwd, $pw_file, group, and pw-age? [$prefix/etc/spcm/Old] " \
 	    source_dir
-	: ${source_dir:=/usr/local/cluster/Old}
+	: ${source_dir:=$prefix/etc/spcm/Old}
 	read -p "Old home directory? [/home/Old/$user_name] " old_home
 	: ${old_home:=/home/Old/$user_name}
 	cluster-recreate-user \

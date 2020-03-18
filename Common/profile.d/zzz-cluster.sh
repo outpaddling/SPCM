@@ -5,6 +5,11 @@
 #   a modified copy) from /etc/profile or /etc/bashrc and similar scripts.
 ##########################################################################
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 # Set prompt to show more than just "login" for a host like
 # login.avi.hpc.uwm.edu
 first_two=`hostname | awk -F '.' ' { printf("%s.%s",$1,$2); }'`
@@ -16,6 +21,7 @@ umask 027
 alias f=finger
 alias dir='ls -als'
 
-if shopt -q login_shell && [ `hostname -s` = login ] && [ -e /usr/local/cluster/check-local-password-age ]; then
+if shopt -q login_shell && [ `hostname -s` = login ] && \
+    [ -e $prefix/etc/spcm/check-local-password-age ]; then
     cluster-pw-check
 fi

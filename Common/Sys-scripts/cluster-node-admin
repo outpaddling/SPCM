@@ -162,7 +162,7 @@ default_responses_info()
 At least one node must be configured before using default responses to
 all prompts.
 
-/usr/local/cluster should also contain fstab fragments for all NFS mounts.
+$prefix/etc/spcm should also contain fstab fragments for all NFS mounts.
 
 EOM
 }
@@ -175,6 +175,11 @@ EOM
 if [ $# != 0 ]; then
     usage
 fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
 
 sinfo_format='%T %u %E %N'
 updates_dir="/home/slurm/Compute-node-updates"

@@ -23,6 +23,12 @@ if [ $# != 1 ]; then
     printf "Usage: $0 username\n"
     exit 1
 fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 user_name=$1
 home_dir=$(awk -F : -v user_name=$user_name '$1 == user_name { print $6 }' /etc/passwd)
 
@@ -161,10 +167,10 @@ if [ 0$save_home != 0no ]; then
 fi
 
 # Save user info
-mkdir -p /usr/local/cluster
-printf "\nRemoved by $USER:\n" >> /usr/local/cluster/removed-users
-fgrep $user_name /etc/passwd >> /usr/local/cluster/removed-users
-fgrep $user_name /etc/group >> /usr/local/cluster/removed-users || true
+mkdir -p $prefix/etc/spcm
+printf "\nRemoved by $USER:\n" >> $prefix/etc/spcm/removed-users
+fgrep $user_name /etc/passwd >> $prefix/etc/spcm/removed-users
+fgrep $user_name /etc/group >> $prefix/etc/spcm/removed-users || true
 
 # Group should be removed by rmuser, but it isn't!
 cluster-run -c "auto-remove-user -y $user_name" all

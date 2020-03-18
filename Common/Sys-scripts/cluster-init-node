@@ -36,6 +36,11 @@ else
     unattended=n
 fi
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 node=$1
 short_name=${node%%.*}
 ip=`awk -v hn=$node '$2 == hn || $3 == hn { print $1 }' /etc/hosts` 
@@ -52,7 +57,7 @@ fi
 
 node_type=$2
 
-conf_dir='/usr/local/cluster'
+conf_dir=$prefix/etc/spcm
 if ssh $node ls $conf_dir/init-done; then
     cat << EOM
 

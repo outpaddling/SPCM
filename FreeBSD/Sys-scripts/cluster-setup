@@ -348,7 +348,7 @@ EOM
     
     case $NODE_TYPE in
     compute|io|vis)
-	fstab=/usr/local/cluster/fstab.$NODE_TYPE
+	fstab=$prefix/etc/spcm/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
 	    auto-amend-fstab $fstab
@@ -773,6 +773,11 @@ get_head_host()
 if [ $# != 1 ]; then
     usage $0
 fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
 
 NODE_TYPE=$1
 case $NODE_TYPE in

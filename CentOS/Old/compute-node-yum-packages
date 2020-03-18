@@ -1,6 +1,11 @@
 #!/bin/sh -e
 
-db=/usr/local/cluster/compute-node-yum-packages
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+db=$prefix/etc/spcm/compute-node-yum-packages
 
 if [ ! -e $db ]; then
     cat << EOM

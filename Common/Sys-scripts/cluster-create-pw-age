@@ -26,7 +26,12 @@ fi
 user_name=$1
 days=$2
 
-pw_age_file="/usr/local/cluster/pw-age/$user_name"
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+pw_age_file="$prefix/etc/spcm/pw-age/$user_name"
 if [ ! -e $pw_age_file ]; then
     now=$(( $(date +%s) / 3600 / 24 ))
     printf "%s %s\n" $days $now > $pw_age_file

@@ -4,6 +4,11 @@
 
 auto-root-check $0
 
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
 set +e
 
 if [ $# != 2 ]; then
@@ -22,7 +27,7 @@ fi
 
 host=$1
 path=$2
-repo=/usr/local/cluster/sync-files
+repo=$prefix/etc/spcm/sync-files
 
 mkdir -p $repo
 chown root:wheel $repo

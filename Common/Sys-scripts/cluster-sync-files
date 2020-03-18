@@ -35,7 +35,12 @@ if ! cluster-check-cron-updates; then
     exit 0
 fi
 
-repo=/usr/local/cluster/sync-files
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+repo=$prefix/etc/spcm/sync-files
 if [ ! -d $repo ]; then
     printf "$0: No files to sync.\n"
     exit 0

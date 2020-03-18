@@ -25,6 +25,7 @@ pause()
 ##########################################################################
 
 auto-root-check $0
+prefix=%%PREFIX%%
 
 resp=' '
 while [ 0$resp != 0'q' ]; do
@@ -134,7 +135,7 @@ $pathname.
 EOM
 		pause
 	    fi
-	    repo='/usr/local/cluster/sync-files'
+	    repo=$prefix/etc/spcm/sync-files
 	    if [ ! -e $repo$pathname ]; then
 		cluster-get-sync-file compute-001 $pathname
 	    fi
