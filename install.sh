@@ -71,9 +71,14 @@ printf "src_prefix = $src_prefix\n"
 for script in `fgrep -l 'prefix=%%PREFIX%%' \
 	$os/Sys-scripts/* \
 	Common/Sys-scripts/* \
+    sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
+	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
+    > ${DESTDIR}${PREFIX}/sbin/`basename $script`
+done
+for script in `fgrep -l 'prefix=%%PREFIX%%' \
 	$os/User-scripts/* \
 	Common/User-scripts/*`; do
     sed -e "s|prefix=%%PREFIX%%|prefix=${PREFIX}|g" \
 	-e "s|prefix=%%SRC_PREFIX%%|prefix=$src_prefix|g" $script \
-    > ${DESTDIR}${PREFIX}/sbin/`basename $script`
+    > ${DESTDIR}${PREFIX}/bin/`basename $script`
 done
