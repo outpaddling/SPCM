@@ -828,14 +828,14 @@ printf "Command output will be stored in $LOG_DIR.\n"
 line
 
 # Source for default files
-DATADIR=$LOCALBASE/share/cluster-admin
+DATADIR=$LOCALBASE/share/spcm
 
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
 
 auto-ipmi-install || true
 
-# Config files used by cluster-admin
+# Config files used by spcm
 if [ $NODE_TYPE = head ]; then
     CLUSTER_DATA="$LOCALBASE/cluster"
     mkdir -p $CLUSTER_DATA

@@ -15,12 +15,12 @@ case 0$(which cluster-setup) in
     svn up
     
     # Allow auto-admin deinstall
-    pkgin remove -y auto-admin cluster-admin || true
+    pkgin remove -y auto-admin spcm || true
     
     cd $pkgsrc/uwm-pkgsrc-wip/auto-admin
     bmake distclean && bmake deinstall && bmake install
     
-    cd $pkgsrc/uwm-pkgsrc-wip/cluster-admin
+    cd $pkgsrc/uwm-pkgsrc-wip/spcm
     bmake distclean && bmake deinstall && bmake install
     
     cd ..
@@ -28,6 +28,6 @@ case 0$(which cluster-setup) in
     ;;
 
 *)
-    printf "No cluster-admin installation found.\n"
+    printf "No spcm installation found.\n"
     exit 1
 esac

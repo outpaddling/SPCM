@@ -592,7 +592,7 @@ EOM
 
 cluster_startup_scripts()
 {
-    ln -sf /usr/pkg/share/cluster-admin/profile.d/* /etc/profile.d
+    ln -sf /usr/pkg/share/spcm/profile.d/* /etc/profile.d
 }
 
 

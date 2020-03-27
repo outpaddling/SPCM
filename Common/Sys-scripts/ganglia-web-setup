@@ -51,7 +51,7 @@ RHEL6|RHEL7)
     exit 1
 esac
 
-datadir=$prefix/share/cluster-admin/WWW
+datadir=$prefix/share/spcm/WWW
 
 cp $datadir/global_styles.css $web_root
 cp $datadir/*.jpg $web_root || true
@@ -138,7 +138,7 @@ EOM
 	read -p "IP address on head node to receive Ganglia data? " head_node_ip
     fi
     
-    # FIXME: Don't rely on template from cluster-admin as format may
+    # FIXME: Don't rely on template from spcm as format may
     # change with new ganglia versions
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \

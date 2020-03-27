@@ -127,7 +127,7 @@ EOM
     ssh $node 'pkgin install -y tcl'
     ssh $node 'pkgin install -y nbpatch python27 subversion git cvs mozilla-rootcerts'
     ssh -t $node 'cd /usr/pkgsrc && svn co --non-interactive --trust-server-cert-failures=unknown-ca https://github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
-    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/cluster-admin && bmake install'
+    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/spcm && bmake install'
     
     # ssh $node hostname $node
     # ssh $node \
@@ -160,7 +160,7 @@ FreeBSD)
 	printf "$repo_dir not found.\n"
     fi
 
-    # FIXME: Add cluster-admin
+    # FIXME: Add spcm
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
 	pkg upgrade -y
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
@@ -186,11 +186,11 @@ FreeBSD)
 	ssh $node 'cd /usr/ports/wip && svn up'
 	ssh $node 'cd /usr/ports/wip/wip-tools && make deinstall distclean reinstall'
 	ssh $node wip-reinstall-port -nu -r auto-admin
-	ssh $node wip-reinstall-port -nu -r cluster-admin
+	ssh $node wip-reinstall-port -nu -r spcm
     else
 	ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
 	ssh $node sh ./freebsd-wip-checkout svn
-	ssh $node 'cd /usr/ports/wip/cluster-admin && make deinstall distclean reinstall clean'
+	ssh $node 'cd /usr/ports/wip/spcm && make deinstall distclean reinstall clean'
     fi
     
     # Pull ssh keys from node
