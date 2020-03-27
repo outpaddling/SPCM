@@ -679,14 +679,14 @@ startup_scripts()
     # Install extra login logic
     line
     printf "Installing startup scripts...\n"
-    if [ ! -e $LOCALBASE/cluster/profile ]; then
-	cp $DATADIR/profile $LOCALBASE/cluster
+    if [ ! -e $LOCALBASE/etc/spcm/profile ]; then
+	cp $DATADIR/profile $LOCALBASE/etc/spcm
     fi
-    if [ ! -e $LOCALBASE/cluster/csh.login ]; then
-	cp $DATADIR/csh.login $LOCALBASE/cluster
+    if [ ! -e $LOCALBASE/etc/spcm/csh.login ]; then
+	cp $DATADIR/csh.login $LOCALBASE/etc/spcm
     fi
-    auto-append-line cluster/profile ". $LOCALBASE/cluster/profile" /etc/profile cluster-setup
-    auto-append-line cluster/csh.login "source $LOCALBASE/cluster/csh.login" /etc/csh.login cluster-setup
+    auto-append-line cluster/profile ". $LOCALBASE/etc/spcm/profile" /etc/profile cluster-setup
+    auto-append-line cluster/csh.login "source $LOCALBASE/etc/spcm/csh.login" /etc/csh.login cluster-setup
 }
 
 
@@ -759,7 +759,7 @@ get_head_host()
     
     head)
 	head_host=`hostname -s`
-	hostname -s > $LOCALBASE/cluster/head_node
+	hostname -s > $LOCALBASE/etc/spcm/head_node
 	;;
     
     esac
@@ -837,7 +837,7 @@ auto-ipmi-install || true
 
 # Config files used by spcm
 if [ $NODE_TYPE = head ]; then
-    CLUSTER_DATA="$LOCALBASE/cluster"
+    CLUSTER_DATA="$LOCALBASE/etc/spcm"
     mkdir -p $CLUSTER_DATA
 
     if [ -z $EDITOR ]; then
