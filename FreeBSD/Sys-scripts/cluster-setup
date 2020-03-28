@@ -345,7 +345,8 @@ EOM
     esac
     
     pkg clean -ay   # Clean /var/cache/pkg before NFS mounting
-    
+
+    # FIXME: Automatically eliminate local mounts that conflict
     case $NODE_TYPE in
     compute|io|vis)
 	fstab=$prefix/etc/spcm/fstab.$NODE_TYPE
