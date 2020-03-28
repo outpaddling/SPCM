@@ -571,8 +571,9 @@ Usually, something like 10 + the number of cores is a good limit for compute
 nodes.
 
 EOM
-    # default_maxproc=$(( `sysctl -n kern.smp.cpus` * 2 ))
-    default_maxproc=32
+    # Be generous, but prevent fork bombs
+    default_maxproc=$(( `sysctl -n kern.smp.cpus` * 4 ))
+    # default_maxproc=32
     maxproc=`auto-ask max-proc "Max processes for the $NODE_TYPE node?" $default_maxproc`
     
     default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
