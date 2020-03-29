@@ -22,14 +22,22 @@
 #   2020-02-23  Jason Bacon Begin
 ##########################################################################
 
-printf "Draining idle nodes...\n"
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 == "idle" { print $2 }')
+
 for node in $idle_nodes; do
     printf "Draining idle node $node...\n"
     scontrol update nodename=$node state=drain reason=power-save
 done
 
 sleep 5
+
+for node in $idle_nodes; do
+    printf "Unmounting $node on head node...\n"
+    mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
+    if [ 0$mount_point != 0 ]; then
+	umount -f $mount_point
+    fi
+done
 
 drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 == "drained" && $2 == "power-save" { print $3 }')
 for node in $drained_nodes; do
