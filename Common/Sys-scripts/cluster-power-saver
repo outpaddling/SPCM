@@ -23,24 +23,51 @@
 ##########################################################################
 
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 == "idle" { print $2 }')
+idle_nodes="$idle_nodes"
+printf "Idle nodes:\n$idle_nodes\n"
+file_servers=$(cluster-file-servers)
 
 for node in $idle_nodes; do
+    # Exclude file servers
+    if ! awk '{ print $1 }' /etc/fstab | grep -q "^${node}.*:"; then
+	compute_only_nodes="$compute_only_nodes $node"
+    else
+	file_servers="$file_servers $node"
+    fi
+done
+printf "Compute-only nodes:\n$compute_only_nodes\n"
+printf "File servers:\n$file_servers\n"
+
+for node in $compute_only_nodes; do
     printf "Draining idle node $node...\n"
     scontrol update nodename=$node state=drain reason=power-save
 done
 
 sleep 5
 
-for node in $idle_nodes; do
-    printf "Unmounting $node on head node...\n"
-    mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
-    if [ 0$mount_point != 0 ]; then
-	umount -f $mount_point
-    fi
-done
-
 drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 == "drained" && $2 == "power-save" { print $3 }')
 for node in $drained_nodes; do
     printf "Shutting down idle node $node...\n"
     ssh $node shutdown -p now
 done
+
+if [ "0$(squeue -h)" = 0 ]; then
+    printf "No jobs running.  Shutting down file servers.\n"
+    for node in $file_servers; do
+	# FIXME: Do this only for compute nodes
+	# if cluster-node-type $node = 
+	printf "Draining $node...\n"
+	scontrol update nodename=$node state=drain reason=power-save || true
+    done
+    sleep 5
+    for node in $file_servers; do
+	printf "Unmounting $node on head node...\n"
+	mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
+	if [ 0$mount_point != 0 ]; then
+	    umount -f $mount_point
+	    ssh $node shutdown -p now
+	fi
+    done
+else
+    printf "Jobs running, leaving file servers up.\n"
+fi
