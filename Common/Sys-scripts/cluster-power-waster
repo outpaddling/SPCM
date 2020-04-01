@@ -6,7 +6,7 @@ drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 ~ "drained" && $2 == "power-sav
 for node in $drained_nodes; do
     read -p "Resume $node? [y]/n " resume
     if [ 0$resume != 0n ]; then
-	ipmi-remote-power $node-mgmt on
+	auto-ipmi-remote-power $node-mgmt on
 	scontrol update nodename=$node state=resume
     fi
 done
