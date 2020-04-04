@@ -100,29 +100,6 @@ install_packages()
 }
 
 
-install_port()
-{
-    local resp category port
-    
-    if [ $# -lt 2 ]; then
-	printf "Usage: install_port category port [make flags]\n"
-	exit 1
-    fi
-    
-    category=$1
-    port=$2
-    shift
-    shift
-    
-    # FIXME: Use cluster-pkgdir
-    cd /usr/ports/$category/$port
-    make deinstall
-    make clean
-    make rmconfig
-    make reinstall
-}
-
-
 add_node_name()
 {
     if [ $# != 2 ]; then
@@ -836,6 +813,8 @@ DATADIR=$LOCALBASE/share/spcm
 auto-add-fdesc-mount
 
 auto-ipmi-install || true
+
+# FIXME: Install bsdstats?
 
 # Config files used by spcm
 if [ $NODE_TYPE = head ]; then
