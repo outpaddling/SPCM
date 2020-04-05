@@ -149,6 +149,7 @@ FreeBSD)
 	"sed -i '' -e 's|hostname=.*|hostname="$node"|' /etc/rc.conf"
     
     # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    ssh $node auto-append-line powerd 'powerd_enable="YES"' /etc/rc.conf $0
     
     printf "Installing basic tools...\n"
     repo_dir=/usr/local/etc/pkg/repos
