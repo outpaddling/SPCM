@@ -26,6 +26,7 @@ fi
 
 job_id=$1
 
-for node in $(squeue --noheader --format='%N' --jobs=$job_id | sort | uniq); do
+nodelist=$(squeue --noheader --format='%N' --jobs=$job_id | sort | uniq)
+for node in $(scontrol show hostname "$nodelist"); do
     topnode $node
 done
