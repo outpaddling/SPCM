@@ -27,7 +27,7 @@ if [ $# != 1 ]; then
     usage
 fi
 
-auto-root-check $0
+auto-operator-check $0
 
 if ! cluster-check-cron-updates; then
     exit 0
