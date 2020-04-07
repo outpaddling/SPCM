@@ -24,8 +24,10 @@ case `uname` in
 	exit 1
 esac
 
+umask 0222
+
 mkdir -p ${DESTDIR}${DATADIR}/profile.d
-cp Common/profile.d/* ${DESTDIR}${DATADIR}/profile.d
+install -c Common/profile.d/* ${DESTDIR}${DATADIR}/profile.d
 
 for dir in bin sbin libexec; do
     mkdir -p ${DESTDIR}${PREFIX}/$dir
@@ -34,31 +36,34 @@ done
 rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
 
-cp $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-cp Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
-cp Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
+install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+install -c Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+install -c Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 
 chmod 550 ${DESTDIR}${PREFIX}/sbin/*
 chmod 555 ${DESTDIR}${PREFIX}/bin/*
 
-cp cluster-passwd ${DESTDIR}${PREFIX}/bin
+install -c cluster-passwd ${DESTDIR}${PREFIX}/bin
 chmod 6555 ${DESTDIR}${PREFIX}/bin/cluster-passwd
 
 # FIXME: Create and install man pages
 
 mkdir -p ${DESTDIR}${DATADIR}/WWW
-cp Common/Share/* ${DESTDIR}${DATADIR}
+install -c Common/Share/* ${DESTDIR}${DATADIR}
 if [ -e $os/Share ]; then
-    cp $os/Share/* ${DESTDIR}${DATADIR}
+    install -c $os/Share/* ${DESTDIR}${DATADIR}
 fi
-cp Common/WWW/* $os/WWW/* ${DESTDIR}${DATADIR}/WWW
+install -c Common/WWW/* $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 
-cp Common/*.awk ${DESTDIR}${PREFIX}/libexec
+install -c Common/*.awk ${DESTDIR}${PREFIX}/libexec
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
 
-mkdir -p ${PREFIX}/etc/spcm
+mkdir -p ${DESTDIR}${PREFIX}/etc/spcm
+install -c Common/etc/slurm-node-suspend Common/etc/slurm-node-resume \
+    ${DESTDIR}${PREFIX}/etc/spcm
+
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
