@@ -24,7 +24,6 @@ if [ $# != 0 ]; then
     usage
 fi
 
-auto-root-check $0
 cluster-head-check $0
 
 set +e
@@ -32,9 +31,11 @@ set +e
 os_type=`auto-ostype`
 case $os_type in
 FreeBSD)
+    auto-wheel-check $0
     flag='-p'
     ;;
 RHEL)
+    auto-root-check $0
     flag='-h'
     ;;
 *)
