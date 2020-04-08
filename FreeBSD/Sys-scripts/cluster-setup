@@ -145,9 +145,11 @@ slurm_config()
     # FIXME: creating these directories should not be necessary
     # --syslog?
     mkdir -p /var/log/munge /var/run/munge /var/lib/munge
-    mkdir -p /var/log/slurm /var/run/slurm
-    chown slurm:slurm /var/log/slurm /var/run/slurm
-    
+    mkdir -p /var/log/slurm /var/run/slurm \
+	/var/spool/slurm/d /var/spool/slurm/ctld
+    chown slurm:slurm /var/log/slurm /var/run/slurm \
+	/var/spool/slurm/d /var/spool/slurm/ctld
+
     # Generate munge.key
     service munged stop > /dev/null 2>&1 || true
     munge_dir="$LOCALBASE/etc/munge"
