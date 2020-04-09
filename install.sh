@@ -40,8 +40,7 @@ install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 install -c Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 install -c Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 
-chmod 550 ${DESTDIR}${PREFIX}/sbin/*
-chmod 555 ${DESTDIR}${PREFIX}/bin/*
+chmod o-rwx ${DESTDIR}${PREFIX}/sbin/*
 
 install -c cluster-passwd ${DESTDIR}${PREFIX}/bin
 chmod 6555 ${DESTDIR}${PREFIX}/bin/cluster-passwd
