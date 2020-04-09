@@ -24,7 +24,7 @@ case `uname` in
 	exit 1
 esac
 
-umask 0222
+umask 022
 
 mkdir -p ${DESTDIR}${DATADIR}/profile.d
 install -c Common/profile.d/* ${DESTDIR}${DATADIR}/profile.d
