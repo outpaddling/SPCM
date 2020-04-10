@@ -44,8 +44,27 @@ RHEL)
 esac
 
 printf "Shut down compute nodes? (yes/[no]) "
-read sure
-if [ 0$sure = 0yes ]; then
+read compute
+
+if [ 0$(cluster-file-servers) != 0 ]; then
+    printf "Shut down file servers? (yes/[no]) "
+    read file_servers
+fi
+
+if [ 0$(cluster-vis-nodes) != 0 ]; then
+    printf "Shut down visualization nodes? (yes/[no]) "
+    read vis
+fi
+
+if [ 0$(cluster-backup-nodes) != 0 ]; then
+    printf "Shut down backup login nodes? (yes/[no]) "
+    read backup
+fi
+
+printf "Shut down head node? (yes/[no]) "
+read head
+
+if [ 0$compute = 0yes ]; then
     for node in `cluster-compute-nodes`; do
 	if ping -c 1 -q $node > /dev/null 2>&1; then
 	    printf "Shutting down $node...\n"
@@ -56,32 +75,18 @@ if [ 0$sure = 0yes ]; then
     done
 fi
 
-if [ 0$(cluster-file-servers) != 0 ]; then
-    printf "Shut down file servers? (yes/[no]) "
-    read sure
-    if [ 0$sure = 0yes ]; then
-	cluster-run -c "shutdown $flag now" io || true
-    fi
+if [ 0$file_servers = 0yes ]; then
+    cluster-run -c "shutdown $flag now" io || true
 fi
 
-if [ 0$(cluster-backup-nodes) != 0 ]; then
-    printf "Shut down backup login nodes? (yes/[no]) "
-    read sure
-    if [ 0$sure = 0yes ]; then
-	cluster-run -c "shutdown $flag now" backup || true
-    fi
+if [ 0$vis = 0yes ]; then
+    cluster-run -c "shutdown $flag now" vis || true
 fi
 
-if [ 0$(cluster-vis-nodes) != 0 ]; then
-    printf "Shut down visualization nodes? (yes/[no]) "
-    read sure
-    if [ 0$sure = 0yes ]; then
-	cluster-run -c "shutdown $flag now" vis || true
-    fi
+if [ 0$backup = 0yes ]; then
+    cluster-run -c "shutdown $flag now" backup || true
 fi
 
-printf "Shut down head node? (yes/[no]) "
-read sure
-if [ 0$sure = 0yes ]; then
+if [ 0$head = 0yes ]; then
     shutdown $flag now
 fi
