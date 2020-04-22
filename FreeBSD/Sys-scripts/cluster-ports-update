@@ -13,7 +13,7 @@ if [ -e /usr/local/sbin/wip-update ]; then
 fi
 
 procs=0
-for node in `cluster-compute-nodes`; do
+for node in `cluster-all-nodes`; do
     printf "Syncing ports to $node...\n"
     if ! rsync -a --size-only --inplace --delete /usr/ports ${node}:/usr; then
 	printf "$node\n" >> cluster-ports-update-failed-nodes
