@@ -1,0 +1,113 @@
+#!/bin/sh -e
+
+# DO NOT sync /etc/passwd, /etc/ssh*, or any other file that may contain
+# different information on different node types!
+
+auto-root-check $0
+cluster-head-check $0
+
+set +e
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+LOCALBASE=/usr/local
+CONF_DIR=$LOCALBASE/etc/spcm
+
+login_nodes="`cluster-backup-nodes`"
+root_nodes="`cluster-backup-nodes` `cluster-file-servers`"
+all_nodes="`cluster-all-nodes`"
+
+# Select nodes of each category from list
+if [ $# -gt 0 ]; then
+    nodes="$@"
+    login_nodes=$(printf "%s\n" $login_nodes $nodes | sort | uniq -d)
+    root_nodes=$(printf "%s\n" $root_nodes $nodes | sort | uniq -d)
+    all_nodes=$(printf "%s\n" $all_nodes $nodes | sort | uniq -d)
+fi
+
+echo $login_nodes
+echo $root_nodes
+echo $all_nodes
+
+printf "limits.d...\n"
+for node in $login_nodes; do
+    rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
+done
+
+# FIXME: Are these ready to merge?
+os_type=`auto-ostype`
+case $os_type in
+RHEL)
+    for node in $all_nodes; do
+	rsync /root/.bash_profile ${node}:/root
+    done
+    
+    for node in $all_nodes; do
+	# /etc/hosts
+	printf "$node: hosts "
+	rsync -pog /etc/hosts ${node}:/etc
+	
+	printf "hosts.allow "
+	rsync -pog /etc/hosts.allow ${node}:/etc
+	
+	# Do not sync sshd_config.  Public-facing servers are different than
+	# compute nodes.
+	printf "ssh_config "
+	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+	
+	printf "system-auth "
+	rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
+
+	printf "fstab-fragments "
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
+	printf '\n'
+    done
+    ;;
+
+FreeBSD)
+    printf "root home...\n"
+    for node in $all_nodes; do
+	rsync /root/.bash_profile ${node}:/root
+    done
+    
+    for node in $all_nodes; do
+	# /etc/hosts
+	printf "$node: hosts "
+	rsync -pog /etc/hosts ${node}:/etc
+
+	printf "$node: hosts.allow "
+	rsync -pog /etc/hosts.allow ${node}:/etc
+	
+	# Do not sync sshd_config.  Public-facing servers are different than
+	# compute nodes.
+	printf "ssh_config "
+	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+	
+	printf "system-auth"
+	rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d
+	
+	printf "fstab fragments "
+	ssh $node mkdir -p $CONF_DIR
+	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
+	printf '\n'
+    done
+    ;;
+
+*)
+    printf "Not yet implemented for $os_type.\n"
+    exit 1
+    ;;
+esac
+
+cd $CONF_DIR
+# Should have been done by cluster-init-node
+# ssh $node mkdir -p $CONF_DIR
+for file in fstab.* site-mods.sh; do
+    if [ -e $file ]; then
+	scp -p $file ${node}:$CONF_DIR
+    fi
+done
+

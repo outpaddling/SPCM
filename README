@@ -1,0 +1,23 @@
+
+Goals
+    Easy to port to any POSIX platform
+	Like the pkgsrc package manager, which is heavily utilized by
+	cluster-admin, we are committed to implementing all code in the
+	most portable way possible (limited to POSIX platforms).
+    Uniform user interface
+    Support multiple platforms in the same cluster
+    Simple - easy to build and manage a small to medium cluster
+    Fast - deploy and update nodes in minimal time
+
+Rules
+    All scripts conform to POSIX Bourne shell syntax
+    Single script supporting all platforms is preferable in most cases
+    Push most platform-dependent down to auto-admin
+    Lightweight, minimalist, like the C language
+	Nothing will be added to the base package if it can be
+	implemented as a plugin
+
+Status
+    Not many features will be added, but much work remains to be done to
+    clean up existing code, make it more robust, and support additional
+    platforms.

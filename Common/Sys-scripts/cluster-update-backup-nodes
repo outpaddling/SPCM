@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+if [ 0$(cluster-backup-nodes) = 0 ]; then
+    printf "No backup nodes found.\n"
+    exit
+fi
+
+for node in $(cluster-backup-nodes); do
+    echo $node
+    ssh $node w
+    pause
+    ssh -t $node iftop
+    ssh -t $node iftop -i ib0 || true   # May not be an IB interface
+    printf "Update? y/[n] "
+    read update
+    if [ 0$update = 0y ]; then
+	ssh -t $node auto-update-system || true
+    fi
+	
+    cat << EOM
+	
+Verify that the backup head node is rebooted and fully functional before
+updating the primary head node.
+
+EOM
+    pause
+done

@@ -1,0 +1,221 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Install basic tools, run updates, and possibly reboot before
+#       configuring node for cluster use.
+#
+#   Arguments:
+#       1. Fully qualified host name
+#       2. Host type
+#
+#   History:
+#   Date        Name        Modification
+#   2014-11-23  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--unattended] host.domain backup|compute|io|vis\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+if [ $1 = --unattended ]; then
+    unattended=y
+    shift
+else
+    unattended=n
+fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+node=$1
+short_name=${node%%.*}
+ip=`awk -v hn=$node '$2 == hn || $3 == hn { print $1 }' /etc/hosts` 
+
+if ! echo $node | fgrep -q '.'; then
+    printf "No domain name in $node.\n"
+    exit 1
+fi
+
+if ! awk '{ print $2 }' /etc/hosts | fgrep -q $node; then
+    printf "Error: $node not found in /etc/hosts.\n"
+    exit 1
+fi
+
+node_type=$2
+
+conf_dir=$prefix/etc/spcm
+if ssh $node ls $conf_dir/init-done; then
+    cat << EOM
+
+$node already initialized.
+
+Remove $conf_dir/init-done to override.
+
+EOM
+    exit
+fi
+
+case $node_type in
+backup|compute|io|vis)
+    ;;
+*)
+    usage
+esac
+
+# Hack to get around missing feature in PXE installer
+# Should be fixed now: Was apparently a dhcp.conf configuration problem on
+# login.mortimer
+# gateway=$2
+
+if [ $unattended = y ]; then
+    remove=y
+else
+    printf "Remove $node from all known_hosts files? [y]/n "
+    read remove
+fi
+
+if [ 0$remove != 0n ]; then
+    cluster-remove-from-known-hosts $node
+fi
+
+# Disable prompt for first ssh
+auto-disable-host-key-prompt $short_name $node $ip
+
+# FIXME: Run ntpdate
+
+scp $(which auto-ostype) ${node}:
+case $(ssh $node ./auto-ostype) in
+RHEL)
+    scp /etc/hosts ${node}:/etc
+
+    # FIXME: Should this be handled by DHCP?
+    ssh $node hostname $node
+    ssh $node \
+	"sed -i -e 's|HOSTNAME=.*|HOSTNAME=$node|' /etc/sysconfig/network"
+    
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    
+    printf "Installing basic tools...\n"
+    ssh $node yum install -y gcc gcc-c++ gcc-gfortran net-tools tcsh
+    
+    cat << EOM
+
+If all of your nodes run the same OS, you can use rsync to distribute 
+/usr/pkg* from the head node.  If they run different systems, /usr/pkg*
+should be maintained separatedly.
+
+EOM
+    scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
+	/usr/pkg/sbin/auto-os-release ${node}:
+    ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
+    ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
+    # Work around git dep for missing older tcl
+    ssh $node 'pkgin install -y tcl'
+    ssh $node 'pkgin install -y nbpatch python27 subversion git cvs mozilla-rootcerts'
+    ssh -t $node 'cd /usr/pkgsrc && svn co --non-interactive --trust-server-cert-failures=unknown-ca https://github.com/outpaddling/uwm-pkgsrc-wip/trunk uwm-pkgsrc-wip'
+    ssh $node 'cd /usr/pkgsrc/uwm-pkgsrc-wip/spcm && bmake install'
+    
+    # ssh $node hostname $node
+    # ssh $node \
+    #    "sed -i -e 's|HOSTNAME=.*|HOSTNAME=$node|' /etc/sysconfig/network"
+    ssh $node auto-set-hostname $node
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    
+    printf "Installing yum updates...\n"
+    ssh $node auto-update-system --defaults
+    ;;
+
+FreeBSD)
+    PORTSDIR=${PORTSDIR:-/usr/ports}
+    scp /etc/hosts ${node}:/etc
+    
+    # FIXME: Should this be handled by DHCP?
+    ssh $node hostname $node
+    ssh $node \
+	"sed -i '' -e 's|hostname=.*|hostname="$node"|' /etc/rc.conf"
+    
+    # ssh $node 'if ! fgrep GATEWAY /etc/sysconfig/network; then echo "GATEWAY='$gateway'" >> /etc/sysconfig/network; fi; service network restart'
+    ssh $node auto-append-line powerd 'powerd_enable="YES"' /etc/rc.conf $0
+    
+    printf "Installing basic tools...\n"
+    repo_dir=/usr/local/etc/pkg/repos
+    if [ -e $repo_dir ]; then
+	printf "Installing $repo_dir...\n"
+	ssh $node mkdir -p /usr/local/etc/pkg
+	scp -rp $repo_dir ${node}:/usr/local/etc/pkg
+    else
+	printf "$repo_dir not found.\n"
+    fi
+
+    # FIXME: Add spcm
+    ssh -t $node env ASSUME_ALWAYS_YES=yes \
+	pkg upgrade -y
+    ssh -t $node env ASSUME_ALWAYS_YES=yes \
+	pkg install -y subversion rsync ca_root_nss iftop bash
+    
+    printf "Syncing ports "
+    if [ -e /usr/ports ]; then
+	printf "with rsync...\n"
+	rsync -a --delete /usr/ports ${node}:/usr
+    elif ssh $node stat /usr/ports; then
+	printf "with portsnap update...\n"
+	ssh -t $node portsnap fetch update
+    else
+	printf "with portsnap extract...\n"
+	ssh -t $node portsnap fetch extract
+    fi
+    
+    if ! ssh $node 'fgrep -q "USE_LOCAL_MK=yes" /etc/make.conf'; then
+	ssh $node 'printf "USE_LOCAL_MK=yes\n" >> /etc/make.conf'
+    fi
+
+    if ssh $node stat /usr/ports/wip; then
+	ssh $node 'cd /usr/ports/wip && svn up'
+	ssh $node 'cd /usr/ports/wip/wip-tools && make deinstall distclean reinstall'
+	ssh $node wip-reinstall-port -nu -r auto-admin
+	ssh $node wip-reinstall-port -nu -r spcm
+    else
+	ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
+	ssh $node sh ./freebsd-wip-checkout svn
+	ssh $node 'cd /usr/ports/wip/spcm && make deinstall distclean reinstall clean'
+    fi
+    
+    # Pull ssh keys from node
+    # FIXME: Should not be needed and security risk if compute nodes
+    # behind on updates can access login node
+    # auto-ssh-reverse-authorize $node
+    
+    printf "Installing updates...\n"
+    ssh $node auto-update-system --binary
+    ;;
+
+*)
+    printf "Not yet implemented for `auto-ostype`.\n" >> /dev/stderr
+    ;;
+esac
+
+ssh $node "mkdir -p $conf_dir && chmod 755 $conf_dir && touch $conf_dir/init-done"
+
+if [ $unattended = y ]; then
+    reboot=y
+else
+    printf "Reboot? [y]/n "
+    read reboot
+fi
+if [ 0$reboot != 0n ]; then
+    ssh $node shutdown -r now || true
+fi

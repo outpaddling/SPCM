@@ -1,0 +1,1 @@
+00 06 * * * /root/bin/nightly > /root/cron.log 2> /root/cron.err

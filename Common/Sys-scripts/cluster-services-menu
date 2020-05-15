@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+resp=''
+while [ 0$resp != 0q ]; do
+    clear
+    spcm-banner
+    cat << EOM
+
+1.. Restart scheduler daemons
+2.. Restart Ganglia
+Q.. Quit / Return to main menu
+
+EOM
+
+    printf 'Selection? '
+    read resp
+    case $resp in
+    1)
+	slurm-restart
+	;;
+    2)
+	cluster-ganglia-restart
+	;;
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid selection: $resp\n"
+    esac
+    pause
+done
+

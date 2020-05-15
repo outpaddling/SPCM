@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+df -h
+
+# pkgsrc
+cd /usr/pkgsrc-1
+rm -rf distfiles/* */*/work
+
+# Remove files more than 6 months old from /tmp, /var/tmp, ...
+
+df -h
+

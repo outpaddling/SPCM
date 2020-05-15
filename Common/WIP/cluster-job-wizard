@@ -1,0 +1,46 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Job type
+##########################################################################
+
+job_type=0
+while [ 0$job_type != 01 ] && [ 0$job_type != 02 ] && \
+      [ 0$job_type != 03 ] &&[ 0$job_type != 04 ]; do
+    cat << EOM
+
+1.. Serial
+2.. Embarrasingly parallel
+3.. Shared memory (Multiple cores on one node: OpenMP, pthreads, etc.)
+4.. Multinode parallel (MPI, etc.)
+
+EOM
+    read job_type
+done
+
+##########################################################################
+#   Memory specification
+##########################################################################
+
+case $job_type in
+1|2)
+    mem_spec=1
+    ;;
+*)
+    mem_spec=0
+    while [ 0$mem_spec != 01 ] && [ 0$mem_spec != 02 ]; do
+	cat << EOM
+
+1.. Specify memory per core
+2.. Specify memory per node
+
+EOM
+	read mem_spec
+    done
+    ;;
+esac
+
+if [ $job_type = 1 ]; then
+    cores=1
+else
+    printf "Total cores? [default 

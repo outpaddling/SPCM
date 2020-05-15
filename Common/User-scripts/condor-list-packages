@@ -1,0 +1,100 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-11-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 opsys arch
+
+Example:
+
+    $0 FreeBSD X86_64
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+opsys=$1
+arch=$2
+
+##########################################################################
+#   Generate HTCondor executable file
+##########################################################################
+
+# Caution: 
+# The line below is modified by install.sh. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+cat << EOM > list-packages.sh
+#!/bin/sh -e
+
+hostname
+case $(uname) in
+FreeBSD)
+    /usr/sbin/pkg info
+    ;;
+*)
+    if [ -e $prefix/sbin/pkg_info ]; then
+	$prefix/sbin/pkg_info
+    else
+	printf "No package manager found\n"
+	exit 1
+    fi
+esac
+EOM
+
+##########################################################################
+#   Generate HTCondor submit file
+##########################################################################
+
+cat << EOM > list-packages.condor
+universe = vanilla 
+
+executable = list-packages.sh
+output = list-packages.out
+error = list-packages.err
+log = list-packages.log 
+
+request_memory = 1000
+requirements = (target.arch == "$arch") && (target.opsys == "$opsys")
+
+transfer_executable = true
+should_transfer_files = if_needed
+when_to_transfer_output = on_exit 
+queue 1
+EOM
+
+condor_submit list-packages.condor
+condor_wait list-packages.log
+
+printf "Packages:\n\n"
+cat list-packages.out
+
+if [ -s list-packages.err ]; then
+    printf "\nErrors:\n\n"
+    cat list-packages.err
+fi
+
+printf "\nPackage count: `wc -l list-packages.out | awk ' { print $1 }'`\n"
+

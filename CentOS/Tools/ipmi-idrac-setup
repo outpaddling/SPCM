@@ -1,0 +1,38 @@
+#!/bin/sh -e
+
+# Send thanks:
+# http://www.theprojectbot.com/ipmitool-cheatsheet-and-configuring-drac-from-ipmitool/
+
+ipmitool -I open bmc info
+# ipmitool sel
+# ipmitool raw 0x30 0x25      # Check NIC settings
+
+# DRAC
+ipmitool lan print
+# ipmitool mc reset cold     # Reset DRAC/BMC
+
+ipmitool lan set 1 ipsrc static
+
+printf "IP address? "
+read ipaddr
+ipmitool lan set 1 ipaddr $ipaddr
+
+printf "Netmask? "
+read netmask
+ipmitool lan set 1 netmask $netmask
+
+printf "Gateway? "
+read gateway
+ipmitool lan set 1 defgw ipaddr $gateway
+#ipmitool raw 0x30 0x24 0    # Shared NIC
+#ipmitool raw 0x30 0x25      # Check NIC settings
+
+printf "Password? "
+read password
+
+# ipmitool user set name 1 root
+ipmitool user set password 1 $password
+ipmitool user enable 1
+
+ipmitool mc reset warm      # Reboot idrac
+

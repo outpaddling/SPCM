@@ -1,0 +1,33 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+if [ 0$(cluster-file-servers) = 0 ]; then
+    printf "No file servers found.\n"
+    exit
+fi
+
+for node in $(cluster-file-servers); do
+    echo $node
+    ssh $node w
+    pause
+    ssh -t $node iftop
+    ssh -t $node iftop -i ib0 || true   # May not be an IB interface
+    printf "Update? y/[n] "
+    read update
+    if [ 0$update = 0y ]; then
+	# CentOS 7 ssh always returns non-zero when rebooting
+	ssh -t $node auto-update-system --binary+reboot || true
+    fi
+done

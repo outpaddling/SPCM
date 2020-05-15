@@ -1,0 +1,299 @@
+#!/bin/sh -e
+
+pause()
+{
+    printf "Press return to continue...\n"
+    read junk
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-05-03  Jason Bacon - CEAS - Facilitator,EMS 942Begin
+##########################################################################
+
+select_from_list()
+{
+    local list=($@)
+    local n=0
+    while [ $n -lt 1 ] || [ $n -gt ${#list[@]} ]; do
+	printf "\n"
+	for ((c=0; c<${#list[@]}; ++c)); do
+	    local i=$(($c + 1))
+	    printf "%d.. %s\n" $i ${list[$c]}
+	done
+	printf '\nEnter a number from the menu: '
+	read n
+    done
+    i=$(($n - 1))
+    selection=${list[$i]}
+}
+
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-03  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [username]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -gt 1 ]; then
+    usage
+fi
+
+auto-root-check $0
+
+# User information
+if [ $# = 1 ]; then
+    user_name=$1
+else
+    printf "Username? "
+    read user_name
+fi
+
+# Find next available UID
+# FIXME: Hack to get past the old UIDs intil they're cleaned up
+default_uid=501
+while [ 0`awk -F : -v uid=$default_uid '$3 == uid { print $3 }' /etc/passwd` = 0$default_uid ]; do
+    default_uid=$(($default_uid + 1))
+done
+
+cat << EOM
+
+If this user has an account on another cluster, use the same UID here to
+avoid issues with ownership within tar files, NFS servers, etc.
+
+Otherwise, accept the default UID provided.
+
+EOM
+
+printf "UID? [$default_uid] "
+read uid
+if [ 0$uid = 0 ]; then
+    uid=$default_uid
+fi
+
+# Prevent collisions
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/passwd` = 0$uid ]; then
+    printf "Error: UID $uid is not available.\n"
+    exit 1
+fi
+
+if [ -e /etc/openldap/ldap.conf ]; then
+    # Flag usernames not in LDAP
+    ldap_verified_uid=`ldapsearch -x uid=$user_name | awk '$1 == "uid:" { print $2 }'`
+    if [ 0$ldap_verified_uid != 0$user_name ]; then
+	printf "User $user_name is not in the LDAP directory.  Continue? y/[n] "
+	read resp
+	if [ 0$resp != 0'y' ]; then
+	    exit 0
+	fi
+    fi
+fi
+
+if [ -e /etc/openldap/ldap.conf ]; then
+    default_gecos=`ldapsearch -x uid=$user_name | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
+else
+    default_gecos=''
+fi
+
+printf "Full name? [$default_gecos] "
+read gecos
+if [ 0$gecos = 0 ]; then
+    gecos="$default_gecos"
+fi
+
+# Email address
+printf "Email address? [$user_name@uwm.edu] "
+read email
+if [ 0$email = 0 ]; then
+    email="$user_name@uwm.edu"
+fi
+
+# Convention
+home_dir=/home/$user_name
+
+# User's college/school
+colleges="CEAS LS LSOB SFS SPH UITS Other"
+select_from_list $colleges
+college=$selection
+
+if [ $college = 'Other' ]; then
+    printf "College abbreviation? "
+    read college
+fi
+
+# User's department
+case $college in
+CEAS)
+    depts="CIV COMPSCI ELEC IND MAT MECH NA"
+    select_from_list $depts
+    ;;
+LS)
+    depts="IT BIO CHM ECN MTH PHY POL PSY NA"
+    select_from_list $depts
+    ;;
+LSOB)
+    selection="LSOB NA"
+    ;;
+SFS)
+    selection="SFS NA"
+    ;;
+SPH)
+    selection="SPH NA"
+    ;;
+Other)
+    printf "Department abbreviation? "
+    read selection
+    ;;
+esac
+dept=$selection
+
+# User's role in the organization
+titles='Sysadmin Facilitator Faculty Postdoc Researcher Student Other'
+select_from_list $titles
+title=$selection
+
+gecos="$gecos - $college/$dept - $title"
+
+if [ $title = 'Faculty' ]; then
+    create_group='y'
+    primary_group=$user_name
+    gid=$uid
+else
+    cat << EOM
+
+A group is created for each faculty member.  Their assistants
+may be given their own group, or may be assigned the faculty's group as
+their only group.  The latter strategy ensures that all files created
+by assistants will have the PIs name attached, and that group permissions
+will allow the PI to access their assistants' files.
+
+EOM
+
+    printf "Create primary group with same name? y/[n] "
+    read create_group
+
+    if [ 0$create_group != 0y ]; then
+	# The primary group for assistants should be that of some PI
+	printf "Primary group name for this user? (usually their advisor's user name) "
+	read primary_group
+	gid=`awk -F : -v username=$primary_group '$1 == username { print $3 }' /etc/group`
+	if [ 0$gid = 0 ]; then
+	    printf "Invalid group name: $primary_group\n"
+	    exit 1
+	fi
+    else
+	primary_group=$user_name
+	
+	printf "GID for $primary_group? [$uid] "
+	read gid
+	if [ 0$gid = 0 ]; then
+	    gid=$uid
+	fi
+    fi
+fi
+
+if [ 0`awk -F : -v uid=$uid '$3 == uid { print $3 }' /etc/group` = 0$uid ]; then
+    printf "Error: GID $gid is not available.\n"
+fi
+
+# Some users may belong to multiple groups.  If so, add them here.
+group='x'
+while [ $group ]; do
+    printf "Add to additional group: [Press return to skip] "
+    read group
+    if [ $group ]; then
+	if [ $additional_groups ]; then
+	    additional_groups=$additional_groups,$group
+	else
+	    additional_groups=$group
+	fi
+    fi
+done
+
+printf "Username:       $user_name\n"
+printf "UID:            $uid\n"
+printf "GID:            $gid\n"
+printf "Comment:        $gecos\n"
+printf "Primary group:  $primary_group\n"
+printf "\nCreate account? [y]/n "
+read resp
+if [ 0$resp = 0n ]; then
+    exit
+fi
+
+if [ 0$create_group = 0'y' ]; then
+    printf "Adding group $primary_group...\n"
+    groupadd -g $gid $primary_group
+fi
+
+# Create user account
+if [ "0$additional_groups" != "0" ]; then
+    agroup_flags="-G $additional_groups"
+else
+    agroup_flags=""
+fi
+
+printf "Adding user $user_name...\n"
+useradd -n -s "/bin/bash" -c "$gecos" -u $uid -g $primary_group \
+    $agroup_flags -m $user_name
+chmod 750 /home/$user_name
+
+# If a new group was created for this user, create the directory structure
+if [ 0$create_group = 0'y' ]; then
+    df
+    if [ -e /share1 ]; then
+	default_share='/share1'
+    else
+	default_share='/raid-01'
+    fi
+    printf "Location for user's shared files? [$default_share] "
+    read share
+    if [ 0$share = 0 ]; then
+	share=$default_share
+    fi
+    data_dir=$share/$college/$user_name
+    printf "Creating $data_dir...\n"
+    mkdir -p $data_dir
+    chown -Rh ${user_name}:$user_name $data_dir
+    chmod 770 $data_dir
+
+    # Set SGID bit on Data directory so files created there will have
+    # the PI's group by default.
+    chmod g+s $data_dir
+else
+    if [ -e /share1 ]; then
+	data_dir=`echo /share[0-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+    elif [ -e /raid-01 ]; then
+	data_dir=`echo /raid-[0-9]*/$college/$primary_group* | cut -d ' ' -f 1`
+    fi
+    printf "Linking to existing data dir $data_dir...\n"
+fi
+rm -f $home_dir/Data
+ln -s $data_dir $home_dir/Data
+
+cluster-finish-user $user_name
+

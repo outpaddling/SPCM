@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+awk -F : -v lowest=`cluster-lowest-uid` -v highest=`cluster-highest-uid` \
+    '$3 >= lowest && $3 <= highest { print $1 }' /etc/passwd
+

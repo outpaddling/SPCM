@@ -1,0 +1,68 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-09-24  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+dir=$1
+
+yum install quota
+
+# Also you have to edit the edit the /etc/fstab and add:
+# usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
+cat << EOM
+
+Add the following to $dir in /etc/fstab:
+
+usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
+
+EOM
+pause
+vi /etc/fstab
+
+set -x
+rm -f /aquota.*
+#touch $dir/aquota.user $dir/aquota.group
+#chmod 600 $dir/aquota.*
+mount -o remount $dir
+
+quotacheck -cugm $dir
+quotacheck -vugm $dir
+quotaon -vug $dir
+

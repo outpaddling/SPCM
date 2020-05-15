@@ -1,0 +1,16 @@
+#!/bin/sh -e
+
+if [ `uname` == 'FreeBSD' ]; then
+    cron=/var/cron/tabs
+elif [ -e /etc/redhat-release ]; then
+    cron=/var/spool/cron
+else
+    printf "Unsupported OS.\n"
+    exit 1
+fi
+
+mkdir -p /root/bin
+cp Scripts/* /root/bin
+vi /root/bin/nightly
+cp Crontabs/root $cron
+

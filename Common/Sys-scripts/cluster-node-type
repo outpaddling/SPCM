@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+# FIXME: Separate node type from hostname
+# Maybe have cluster-setup store it in a local config file
+if [ $(hostname -s) = login ] || [ $(hostname -s) = head ]; then
+    printf "head\n"
+elif hostname -s | fgrep -q compute-; then
+    printf "compute\n"
+elif hostname -s | fgrep -q raid-; then
+    printf "io\n"
+elif hostname -s | fgrep -q vis-; then
+    printf "vis\n"
+else
+    printf "unknown\n"
+fi

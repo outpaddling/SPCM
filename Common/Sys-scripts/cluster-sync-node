@@ -1,0 +1,257 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Sync binary packages from one node to another
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-06-16  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 [--use-defaults reference-node] [--infiniband] host.domain head|compute|io|vis
+
+reference-node: Source for list of binary packages to install
+--infiniband: Automatically configure infiniband
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ 0$1 = 0--use-defaults ]; then
+    use_defaults=yes
+    ref_node=$2
+    shift
+    shift
+fi
+if [ 0$1 = 0--infiniband ]; then
+    setup_flags=--infiniband
+    shift
+fi
+
+if [ $# != 2 ]; then
+    usage
+fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+LOCALBASE=/usr/local
+
+long_node_name=$1
+if ! echo $long_node_name | fgrep -q '.'; then
+    printf "No domain name in $long_node_name.  Continue? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit 1
+    fi
+fi
+
+node_type=$2
+case $node_type in
+head|compute|io|vis)
+    ;;
+*)
+    usage
+esac
+
+node=${long_node_name%%.*}
+
+if [ -z EDITOR ]; then
+    EDITOR="vi"
+fi
+
+conf_dir=$prefix/etc/spcm
+if ! ssh $node stat $conf_dir/init-done; then
+    printf "You must run 'cluster-init-node $long_node_name $node_type' first.\n"
+    exit 1
+fi
+
+remote_ostype=$(ssh $node auto-ostype)
+if [ $remote_ostype != $(auto-ostype) ]; then
+    printf "Unsupported remote operating system: $remote_ostype\n"
+    exit 1
+fi
+
+case $(auto-ostype) in
+RHEL)
+    # FIXME: Prevent node from being enabled in the scheduler
+    # until setup is complete
+
+    ssh $node pkgin install -y rsync
+    ssh $node yum remove -y rsync
+
+    # Install basic tools and updates
+    
+    if [ 0$use_defaults = 0yes ]; then
+	sync_packages=y
+    else
+	cat << EOM
+---
+Answer 'y' here if you have distributed new Yum packages while this node
+was inaccessible.
+---
+EOM
+	read -p "Sync binary packages? y/[n] " sync_packages
+    fi
+    if [ 0$sync_packages = 0y ]; then
+	if [ 0$ref_node = 0 ]; then
+	    read -p "Reference node for binary packages? " ref_node
+	fi
+	cluster-sync-packages $ref_node $node
+    fi
+    
+    # Sync sys files
+    cluster-sync-sysfiles $node
+    
+    cluster-sync-files $node
+    
+    # hosts.allow
+    rsync -av /etc/hosts.allow ${node}:/etc
+    
+    # Munge key
+    rsync -av /usr/pkg/etc/munge ${node}:/usr/pkg/etc
+    
+    # Ganglia
+    rsync -av /usr/pkg/etc/gmond.conf ${node}:/usr/pkg/etc
+    
+    # SLURM config
+    for file in slurm.conf cgroup.conf; do
+	if [ -e /usr/pkg/etc/$file ]; then
+	    rsync -av /usr/pkg/etc/$file ${node}:/usr/pkg/etc
+	fi
+    done
+    
+    # Install standard software packages
+    yum_list=$prefix/etc/spcm/$node_type-node-yum-packages
+    if [ -e $yum_list ]; then
+	printf "Installing local packages from $yum_list...\n"
+	ssh $node yum install -y `cat $yum_list`
+    else
+	printf "No $yum_list found.\n"
+    fi
+
+    # Run cluster-setup $node_type
+    # Do this last, since it enables the scheduler
+    if [ 0$use_defaults = 0yes ]; then
+	ssh -t $node env AUTO_ASK_USE_DEFAULTS=yes cluster-setup $setup_flags $node_type
+    else
+	ssh -t $node cluster-setup $setup_flags $node_type
+    fi
+    
+    # Sync users (after cluster-setup, which may NFS mount /home)
+    if [ 0$use_defaults = 0yes ]; then
+	sync_users=y
+    else
+	cat << EOM
+---
+Answer 'y' here if you have added new users while this node was inaccessible.
+---
+EOM
+	read -p "Sync users? [y]/n " sync_users
+    fi
+    if [ 0$sync_users != 0n ]; then
+	node-sync-all-users $node || true
+    fi
+    
+    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
+    ;;
+
+FreeBSD)
+    # Install basic tools and updates
+
+    # Should be preinstalled by cluster-init-node
+    ssh -t $node wip-update
+    
+    # Sync sys files
+    cluster-sync-sysfiles $node
+    
+    cluster-sync-files $node
+    
+    # Sync core packages
+    if [ 0$use_defaults = 0yes ]; then
+	sync_packages=y
+    else
+	read -p "Sync packages? y/[n] " sync_packages
+    fi
+    if [ 0$sync_packages = 0y ]; then
+	if [ 0$ref_node = 0 ]; then
+	    read -p "Reference node for binary packages? " ref_node
+	fi
+	cluster-sync-packages $ref_node $node
+    fi
+    
+    # hosts.allow
+    rsync -av /etc/hosts.allow ${node}:/etc
+    
+    # Ganglia
+    rsync -av /usr/local/etc/gmond.conf ${node}:/usr/local/etc
+    
+    case $node_type in
+    head|compute)
+	# Could use munge_flags="--key-file $HEAD_USR/local/etc/munge/munge.key"
+	munge_dir="$LOCALBASE/etc/munge"
+	ssh $node mkdir -p -m 0700 $munge_dir
+	scp -p $munge_dir/munge.key ${node}:$munge_dir
+	
+	slurm_conf="$LOCALBASE/etc/slurm.conf"
+	scp $slurm_conf ${node}:$slurm_conf
+	;;
+    esac
+    
+    # Run cluster-setup $node_type
+    # Do this last, since it enables the scheduler
+    printf "\nRunning cluster-setup $node_type on $node...\n\n"
+    if [ 0$use_defaults = 0yes ]; then
+	ssh -t $node env AUTO_ASK_USE_DEFAULTS=yes cluster-setup $setup_flags $node_type
+    else
+	ssh -t $node cluster-setup $setup_flags $node_type
+    fi
+    
+    # Sync users (after cluster-setup, which may NFS mount /home)
+    node-sync-all-users $node || true
+    
+    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
+    ;;
+
+*)
+    printf "Not yet implemented for `auto-ostype`.\n"
+    exit 1
+    ;;
+
+esac
+
+if [ 0$use_defaults = 0yes ]; then
+    reboot=y
+else
+    printf "Reboot? ([y]/n) "
+    read reboot
+fi
+if [ 0$reboot != 0n ]; then
+    ssh $node shutdown -r now
+fi

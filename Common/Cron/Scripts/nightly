@@ -1,0 +1,8 @@
+#!/bin/sh
+
+/root/bin/megaraid-status | mail -s "`/bin/hostname` RAID Status" avi-sysadmin@uwm.edu
+/root/bin/auth-check  | mail -s "`/bin/hostname` auth failures" bacon@uwm.edu
+if [ -e /root/bin/backup ]; then
+    /root/bin/backup > /root/backup.log 2>&1
+fi
+

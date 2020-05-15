@@ -1,0 +1,372 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Submenu for node management tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-19  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    read -p "Press return to continue..." junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Collect info on hosts to be managed
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-23  J Bacon     Begin
+##########################################################################
+
+get_host_info()
+{
+    default_digits=$1
+    read -p "Digits in hostname #? [$default_digits] " host_digits
+    if [ 0$host_digits = 0 ]; then
+	host_digits=$default_digits
+    fi
+    
+    # Remove leading zeros so printf doesn't interpret it as octal
+    read -p "First host number? " first_num
+    if [ 0$first_num = 0 ]; then
+	return 1
+    fi
+    first_num=`echo $first_num | sed -E 's|^0+||'`
+    read -p "Last host number? " last_num
+    if [ 0$last_num = 0 ]; then
+	return 1
+    fi
+    last_num=`echo $last_num | sed -E 's|^0+||'`
+    return 0
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-10-27  root        Begin
+##########################################################################
+
+update_warning()
+{
+    cat << EOM
+
+================================ WARNING ===================================
+
+Rebooting the head node while slurm-update-idle-nodes is running may leave
+a compute node partially updated and orphan
+
+    $updates_dir/lockfile
+
+It is best to update and reboot the head node before running
+slurm-update-idle-nodes unless you really know what you are doing.
+
+If you have already started updating idle compute nodes, it would be best
+to allow *ALL* updates to finish before updating the head node.
+
+Other sysadmin tasks such as new user addition are likely to fail while
+cron updates are active, as nodes may reboot at any time.  Wait until most
+nodes are updated before performing any sysadmin tasks that require access
+to all compute nodes and be prepared to correct potential failures.
+
+============================================================================
+EOM
+    pause
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-01-24  root        Begin
+##########################################################################
+
+get_node_type()
+{
+    node_type=none
+    while [ $node_type = none ]; do
+	cat << EOM
+
+1.. Backup head nodes
+2.. File servers
+3.. Compute nodes
+4.. Visualization nodes
+
+EOM
+	read node_type
+	case $node_type in
+	1)
+	    node_type=head
+	    default_digits=1
+	    default_prefix=login-
+	    ;;
+	2)
+	    node_type=io
+	    default_digits=2
+	    default_prefix=raid-
+	    ;;
+	3)
+	    node_type=compute
+	    default_digits=3
+	    default_prefix=compute-
+	    ;;
+	4)
+	    node_type=vis
+	    default_digits=1
+	    default_prefix=vis-
+	    ;;
+	*)
+	    printf "Invalid selection.\n"
+	    return 1
+	esac
+    done
+    echo $node_type
+}
+
+
+default_responses_info()
+{
+    cat << EOM
+
+At least one node must be configured before using default responses to
+all prompts.
+
+$prefix/etc/spcm should also contain fstab fragments for all NFS mounts.
+
+EOM
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+sinfo_format='%T %u %E %N'
+updates_dir="/home/slurm/Compute-node-updates"
+for prefix in /usr/local /usr/pkg; do
+    if [ -e $prefix/etc/slurm.conf ]; then
+	default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $prefix/etc/slurm.conf`
+    fi
+done
+
+while true; do
+
+    clear
+    spcm-banner
+    cat << EOM
+    
+1.. Configure head node
+2.. PXE install new nodes
+3.. Initialize new nodes
+4.. Synchronize nodes
+5.. Drain a node
+6.. Resume a node
+7.. Drain all nodes
+8.. Shut down idle nodes
+Q.. Quit / Return to main menu
+
+EOM
+
+    read -p "Selection? " selection
+    clear
+    case $selection in
+    
+    1)
+	cluster-setup head
+	pause
+	;;
+    
+    2)  # PXE
+	read -p "Host name prefix? [compute-] " host_prefix
+	if [ 0$host_prefix = 0 ]; then
+	    host_prefix='compute-'
+	fi
+	read -p "Digits in hostname #? [3] " host_digits
+	if [ 0$host_digits = 0 ]; then
+	    host_digits=3
+	fi
+	read -p "Domain? [$default_name] " domain
+	if [ 0$domain = 0 ]; then
+	    domain='$default_name'
+	fi
+	auto-pxe-node-discover $host_prefix $host_digits $domain
+	;;
+    
+    3)  # Initialize nodes
+	if get_node_type; then
+	    read -p "Host name prefix? [$default_prefix] " host_prefix
+	    if [ 0$host_prefix = 0 ]; then
+		host_prefix=$default_prefix
+	    fi
+	    read -p "Domain? [$default_domain] " domain
+	    if [ 0$domain = 0 ]; then
+		domain=$default_domain
+	    fi
+	    if get_host_info $default_digits; then
+		read -p "Unattended init? y/[n] " unattended
+		if [ 0$unattended = 0y ]; then
+		    flags=--unattended
+		fi
+		num=$first_num
+		while [ $num -le $last_num ]; do
+		    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+		    cluster-init-node $flags $node $node_type || true
+		    printf "Done with $node...\n"
+		    num=$((num + 1))
+		done
+	    fi
+	fi
+	;;
+    
+    4)  # Sync nodes
+	if get_node_type; then
+	    case $node_type in
+	    io|vis|head)
+		# Sync File servers
+		read -p"Fully qualified host name? " node
+		if [ 0$node != 0 ]; then
+		    default_responses_info
+		    read -p "Default responses to all prompts? y/[n] " use_defaults
+		    if [ 0$use_defaults = 0y ]; then
+			read -p "Reference node for binary packages? " ref_node
+			sync_opts="--use-defaults $ref_node"
+		    fi
+		    printf "Synchronizing $node...\n"
+		    cluster-sync-node $sync_opts $node $node_type || true
+		    printf "Done with $node...\n"
+		fi
+		;;
+    
+	    compute)
+		# Sync compute nodes
+		sinfo
+		read -p "Host name prefix? [compute-] " host_prefix
+		if [ 0$host_prefix = 0 ]; then
+		    host_prefix='compute-'
+		fi
+		read -p "Domain? [$default_domain] " domain
+		if [ 0$domain = 0 ]; then
+		    domain=$default_domain
+		fi
+		if get_host_info 3; then
+		    default_responses_info
+		    read -p "Default responses to all prompts? y/[n] " use_defaults
+		    if [ 0$use_defaults = 0y ]; then
+			read -p "Reference node for binary packages? " ref_node
+			sync_opts="--use-defaults $ref_node"
+			read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
+			if [ 0$infiniband = 0y ]; then
+			    sync_opts="$sync_opts --infiniband"
+			fi
+		    fi
+		    num=$first_num
+		    while [ $num -le $last_num ]; do
+			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			printf "Synchronizing $node...\n"
+			cluster-sync-node $sync_opts $node $node_type || true
+			printf "Done with $node...\n"
+			num=$((num + 1))
+		    done
+		fi
+		;;
+	    esac
+	fi
+	;;
+    
+    5) # Drain node
+	clear
+	printf "Current node status:\n\n"
+	sinfo -o "$sinfo_format"
+	printf "\nNode number? (e.g. 001) "
+	read node
+	if [ 0$node != 0 ]; then
+	    printf "Reason? "
+	    read reason
+	    if [ 0"$reason" != 0 ]; then
+		scontrol update State=drain NodeName=compute-$node reason="$reason"
+		sinfo --list-reasons
+		printf "Update slurm.conf if this is a long-term outage.\n"
+	    fi
+	fi
+	;;
+
+    6)  # Resume node
+	clear
+	printf "Nodes currently down:\n\n"
+	sinfo --list-reasons
+	printf "\nNode number? (e.g. 001) "
+	read node
+	if [ 0$node != 0 ]; then
+	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
+	    slurm-resume-nodes $full_name
+	fi
+	;;
+    
+    7)  # Drain all nodes
+	printf "This will prevent any new jobs from running.\n"
+	printf "Are you sure you want to proceed? yes/[no] "
+	read proceed
+	if [ 0$proceed = 0yes ]; then
+	    read -p "Reason for draining all nodes? " reason
+	    all_nodes=`sinfo -ho '%N'`
+	    scontrol update state=drain nodename="$all_nodes" reason="$reason"
+	    sinfo
+	else
+	    printf "Operation canceled.\n"
+	fi
+	;;
+
+    8)
+	slurm-shutdown-idle-nodes
+	;;
+
+    Q|q)
+	exit 0
+	;;
+    
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+    pause
+done

@@ -1,0 +1,288 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+os_release=`auto-os-release`
+
+# selinux attempted fixes
+#chcon -R -t httpd_sys_rw_content_t $ganglia_web
+#setsebool -P allow_httpd_sys_script_anon_write 1
+#restorecon -R -v $ganglia_web
+#setsebool -P allow_httpd_anon_write=1
+# FIXME: Temporary hack
+# OK with pkgsrc apache24
+# setenforce Permissive
+# setenforce Enforcing
+
+##########################################################################
+#   Generate landing page
+##########################################################################
+
+case $os_release in
+FreeBSD-*)
+    apache=apache24
+    php=php72
+    pkg install -y $apache ganglia-webfrontend $php mod_$php
+    prefix=/usr/local
+    web_root=$prefix/www/apache24/data
+    ifconfig=ifconfig
+    ;;
+
+RHEL6|RHEL7)
+    pkgin install -y apache ganglia-webfrontend
+    prefix=`auto-pkgsrc-prefix`
+    web_root=$prefix/share/httpd/htdocs
+    ifconfig='ip addr'
+    ;;
+
+*)
+    printf "Unsupported OS: $os_release\n"
+    exit 1
+esac
+
+datadir=$prefix/share/spcm/WWW
+
+cp $datadir/global_styles.css $web_root
+cp $datadir/*.jpg $web_root || true
+cp $datadir/*.gif $web_root || true
+chmod a+rX $web_root/*
+
+if [ ! -e $web_root/index.php ]; then
+    printf "Cluster name as it should appear on the main web page? "
+    read name
+    sed -e "s|%%HOSTNAME%%|$name|g" $datadir/index.php > $web_root/index.php
+fi
+
+##########################################################################
+#   Generate basic Ganglia config
+##########################################################################
+
+# Just set up gmond.conf on the head node and distribute to other nodes
+# gmond already enabled by cluster-setup on all nodes
+
+gmond_conf=$prefix/etc/gmond.conf
+if [ -e $gmond_conf ]; then
+    read -p "Overwrite gmond.conf? y/[n] " overwrite
+    if [ 0$overwrite = 0y ]; then
+	if [ ! -e $gmond_conf.orig ]; then
+	    cp $gmond_conf $gmond_conf.orig
+	fi
+	rm -f $gmond_conf
+    fi
+fi
+
+if [ ! -e $gmond_conf ]; then
+    cat << EOM
+===
+
+If you have a working gmond.conf, install it in $prefix/etc now.
+Otherwise, one will be generated for you.
+
+===
+EOM
+    pause
+
+    #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+    cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $(hostname)`
+    cluster_owner=`auto-ask cluster-owner "Owner of the cluster as it should appear in Ganglia? " $(whoami)`
+    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " 192.168.0.2`
+    sed \
+	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
+	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
+	-e "s|%%HEAD_NODE_IP%%|$gmetad_ip|g" \
+	$datadir/gmond.conf.template > $gmond_conf
+fi
+
+chmod 644 $gmond_conf
+vi $gmond_conf
+
+gmetad_conf=$prefix/etc/gmetad.conf
+if [ -e $gmetad_conf ]; then
+    read -p "Overwrite gmetad.conf? y/[n] " overwrite
+    if [ 0$overwrite = 0y ]; then
+	auto-backup-file $gmetad_conf
+	rm $gmetad_conf
+    fi
+fi
+
+# gmetad just for head node
+if [ ! -e $gmetad_conf ]; then
+    #cp $prefix/share/examples/ganglia/gmetad.conf $prefix/etc
+    cat << EOM
+===
+
+If you have a working gmetad.conf, install it in $prefix/etc now.
+Otherwise, one will be generated for you.
+
+===
+EOM
+    pause
+
+    #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
+    # Use values from gmond.conf if available
+    if [ -z "$cluster_name" ]; then
+	read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
+	read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
+	# ip addr
+	read -p "IP address on head node to receive Ganglia data? " head_node_ip
+    fi
+    
+    # FIXME: Don't rely on template from spcm as format may
+    # change with new ganglia versions
+    sed \
+	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
+	-e "s|%%HEAD_NODE_IP%%|$head_node_ip|g" \
+	$datadir/gmetad.conf.template > $gmetad_conf
+fi
+
+chmod 644 $gmetad_conf
+vi $gmetad_conf
+
+case $os_release in
+FreeBSD-*)
+    auto-enable-service gmetad $0
+    ;;
+
+RHEL6)
+    cp $prefix/share/examples/ganglia/gmetad.init.linux /etc/init.d/gmetad
+    chkconfig --add gmetad
+    chkconfig gmetad on       # probably redundant
+    service gmetad restart
+    ;;
+
+RHEL7)
+    # FIXME: ganglia pkg should create this
+    mkdir -p $prefix/var/run/
+    systemctl disable gmetad.service || true
+    systemctl enable $prefix/share/examples/ganglia/gmetad.service
+    systemctl daemon-reload
+    systemctl restart gmetad.service
+    ;;
+
+esac
+pause
+
+##########################################################################
+#   Configure apache
+##########################################################################
+
+# https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
+# FIXME: Add this to apache package?
+case $os_release in
+FreeBSD-*)
+    httpd_conf=$prefix/etc/$apache/httpd.conf
+    if [ ! -e $httpd_conf.orig ]; then
+	printf "Patching httpd.conf...\n"
+	mv $httpd_conf $httpd_conf.orig
+	awk -f $datadir/patch-apache.awk $httpd_conf.orig > $httpd_conf
+    fi
+    
+    # Add date_default_timezone_set('America/Chicago'); to ganglia.php
+    # or update date.timezone in $prefix/etc/php.ini and restart
+    # Apache
+    if [ ! -e $prefix/etc/php.ini ]; then
+	cp $prefix/etc/php.ini-production $prefix/etc/php.ini
+    fi
+    
+    # Set timezone if not already set
+    if ! grep -q '^date.timezone' $prefix/etc/php.ini; then
+	default_zone=$(auto-print-timezone)
+	# FIXME: Find a way to validate input
+	read -p "Time zone? [$default_zone] " zone
+	: ${zone:=$default_zone}
+	sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
+	    $prefix/etc/php.ini
+    fi
+    ;;
+
+RHEL7)
+    apache_init_script=$prefix/etc/apache.service
+    if [ ! -e $apache_init_script ]; then
+	cat << EOM > $apache_init_script
+[Unit]
+Description=The Apache HTTP Server
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=$prefix/sbin/apachectl -k start
+ExecReload=$prefix/sbin/apachectl -k graceful
+ExecStop=$prefix/sbin/apachectl -k graceful-stop
+PIDFile=$prefix/var/run/httpd.pid
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOM
+    fi
+
+    systemctl disable apache.service || true
+    systemctl enable $apache_init_script || true
+    systemctl daemon-reload
+    
+    httpd_conf=$prefix/etc/httpd/httpd.conf
+    sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' $httpd_conf
+    
+    # Disable threaded MPM, conflicts with non-threaded mod_php
+    sed -i'' -e 's|^LoadModule mpm_event_module|#LoadModule mpm_event_module|' $httpd_conf
+    sed -i'' -e 's|#LoadModule mpm_prefork_module|LoadModule mpm_prefork_module|' $httpd_conf
+    
+    if ! fgrep -q '/ganglia/' $httpd_conf; then
+	cat << EOM >> $httpd_conf
+
+# www/ap-php/MESSAGE
+LoadModule php7_module lib/httpd/mod_php7.so
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# www/ganglia-webfrontend/MESSAGE
+Include $prefix/etc/ganglia/apache.conf
+EOM
+
+	# Appears to be unnecessary
+	cat << EOM >> /dev/null
+<Directory "$prefix/share/httpd/htdocs/ganglia/">
+    Options Indexes FollowSymlinks MultiViews
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+    <IfModule dir_module>
+	DirectoryIndex index.php
+    </IfModule>
+</Directory>
+EOM
+    fi
+    ;;
+
+esac
+vi $httpd_conf
+
+# Make sure everything is readable by apache_user
+chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
+chmod -R a+rX $prefix/share/ganglia/
+
+case $os_release in
+FreeBSD-*)
+    # FIXME: Dying here on first run
+    # Must come after php5 install, since http.conf was patched
+    auto-enable-service $apache $0
+    service $apache restart
+    ;;
+
+RHEL7)
+    systemctl restart apache.service
+    ;;
+
+esac

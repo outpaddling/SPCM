@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+cat << EOM
+
+$0 is obsolete.
+
+Please use "slurm-cluster-load".
+
+EOM
+

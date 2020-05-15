@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+if [ 0$(cluster-vis-nodes) = 0 ]; then
+    printf "No visualization nodes found.\n"
+    exit
+fi
+
+for node in $(cluster-vis-nodes); do
+    echo $node
+    ssh $node w
+    pause
+    ssh -t $node iftop
+    ssh -t $node iftop -i ib0 || true   # May not be an IB interface
+    printf "Update? y/[n] "
+    read update
+    if [ 0$update = 0y ]; then
+	ssh $node "echo 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.' | wall" || true
+	# CentOS 7 ssh always returns non-zero when rebooting
+	ssh -t $node auto-update-system --binary || true
+	ssh -t $node w
+	read -p "Reboot? [y]/n " reboot
+	if [ 0$reboot != 0n ]; then
+	    read -p "Minutes before reboot? [2] " minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    ssh $node shutdown -r +$minutes
+	fi
+    fi
+done

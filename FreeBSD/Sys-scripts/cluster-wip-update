@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+: ${PORTSDIR:=/usr/ports}
+
+wip-update
+for node in $(cluster-all-nodes); do
+    echo $node
+    rsync -a --delete ${PORTSDIR}/wip ${node}:${PORTSDIR}
+done

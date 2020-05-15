@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Change username for a cluster user
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-09-05  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 old-user-name new-user-name [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+if [ `whoami` != "root" ]; then
+    printf "$0 can only be run by root.\n"
+    exit 1
+fi
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+user_name=$1
+new_uid=$2
+shift
+shift
+dirs="$@"
+
+# Verify that uid is available on this host
+auto-change-uid $user_name $new_uid $dirs || true
+cluster-run "auto-change-uid --silent $user_name $new_uid" backup io vis compute

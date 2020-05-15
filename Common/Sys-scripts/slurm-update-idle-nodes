@@ -1,0 +1,191 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Run system updates on idle nodes
+#       First drain all nodes and then update nodes in a drained state
+#
+#   Arguments:
+#       Log directory
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-05  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 output-directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+case $# in
+1)
+    ;;
+*)
+    usage
+    ;;
+esac
+
+readonly log_dir="$1"
+readonly lock_file="$log_dir/lockfile"
+if [ -e "$lock_file" ]; then
+    printf "Another instance of $0 is currently running.\n"
+    printf "Remove $lock_file to override.\n"
+    exit
+fi
+touch "$lock_file"
+
+readonly updated_nodes_file="$log_dir/updated-nodes"
+if [ ! -e "$updated_nodes_file" ]; then
+    touch "$updated_nodes_file"
+fi
+
+# Don't advertise which nodes are behind on updates.  Directory should
+# not be world-readable either.
+chmod 640 "$updated_nodes_file" `dirname "$updated_nodes_file"`
+
+if test -t 0; then
+    cat << EOM
+
+All nodes will be set to a draining state and will not accept new jobs
+until they have been updated.
+
+If there are jobs currently running, this script will need to be run
+repeatedly until all current jobs are finished in order to update all nodes.
+
+To ensure that all future jobs run on nodes at the same patch level, you
+must allow this round of updates to complete before starting a new round.
+
+To start a new round of updates, simply delete the file
+
+    $updated_nodes_file
+
+EOM
+    pause
+fi
+
+cd "$log_dir"
+sinfo -o '%n %T %E' -h | sort | uniq
+wc -l "$updated_nodes_file"
+updated=0
+
+# Why is this here?
+# rm -f "$lock_file"
+
+if [ `squeue | awk '$5 == "S"' | wc -l` != 0 ]; then
+    printf "There are suspended jobs.  It is not safe to run updates.\n"
+    exit 1
+fi
+
+nodes=`sinfo -o %n -h | sort | uniq`
+
+# First pass simply drains as many nodes as possible, as quickly as possible,
+# to prevent jobs from allocating them before they're updated.
+for node in $nodes; do
+    # Update node if it's not in the updated list
+    if ! fgrep -q $node "$updated_nodes_file"; then
+	state=`sinfo -n $node -o %T -h`
+	case $state in
+	'drained'|'drained*')
+	    ;;
+	
+	'down'|'down*')
+	    # Don't change state of down nodes!
+	    ;;
+	
+	*)
+	    scontrol update nodename=$node state=drain \
+		reason=slurm-update-idle-nodes
+	    ;;
+	esac
+    fi
+done
+
+# Second pass will update already drained nodes.
+for node in $nodes; do
+    # Update drained nodes not in the updated list
+    if ! fgrep -q $node "$updated_nodes_file"; then
+	state=`sinfo -n $node -o %T -h`
+	case $state in
+	'drained'|'drained*')
+	    reason=`sinfo -o %E -h --nodes=$node`
+	    if [ $reason = slurm-update-idle-nodes ]; then
+		printf "Updating $node...\n"
+		# Why was this here?
+		#scontrol update nodename=$node state=down \
+		#    reason=slurm-update-idle-nodes
+		
+		# Install all available binary updates and reboot
+		# Don't stall updates on a node that's swallowing ssh
+		# connections due to thrashing, NFS hangups, etc.
+		if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
+		    
+		    # --binary+reboot always returns non-zero
+		    # on CentOS 7, so reboot separately
+		    ssh $node shutdown -r now || true
+		    
+		    # shutdown may take some time to disable sshd
+		    # This will prevent slurm-resume-updated-nodes from
+		    # resuming the node before the reboot.
+		    while ping -c 1 -q $node > /dev/null 2>&1; do
+			printf "Waiting for shutdown of $node...\n"
+			sleep 5
+		    done
+		    
+		    # Checked by slurm-resume-updated-nodes.  Node should
+		    # be unresponsive to ssh before adding to
+		    # updated_nodes_file as slurm-resume-updated-nodes will
+		    # resume it if it responds to ssh and is listed here.
+		    printf "$node `date`\n" >> "$updated_nodes_file"
+		    
+		    # This should cause the node to get set to down state
+		    # without changing "reason", assuming the node is unreachable
+		    # when this is run.
+		    # Not functioning as expected on Mortimer
+		    # scontrol update nodename=$node state=resume
+		else
+		    printf "Update failed.\n"
+		fi
+	    else
+		printf "Skipping $node, down for $reason.\n"
+	    fi
+	    ;;
+
+	'down')
+	    # Don't change state of down nodes!
+	    ;;
+	    
+	*)
+	    # If not updated and not drained, drain it now
+	    scontrol update nodename=$node state=drain \
+		reason=slurm-update-idle-nodes
+	    ;;
+	esac
+    fi
+    
+    # Resume all nodes that have been updated but are still marked down
+    # or drained, but respond to ssh.
+    slurm-resume-updated-nodes "$log_dir" || true
+done
+wc -l $updated_nodes_file
+rm -f "$lock_file"

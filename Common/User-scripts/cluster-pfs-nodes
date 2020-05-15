@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+# Return 0 status regardless
+
+# Empty for now, populate when parallel file system is available

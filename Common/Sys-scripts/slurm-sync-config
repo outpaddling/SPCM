@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+for prefix in /usr/pkg /usr/local; do
+    if [ -e $prefix/etc/slurm.conf ]; then
+	break;
+    fi
+done
+
+files=$prefix/etc/slurm.conf
+if [ -e $prefix/etc/cgroup.conf ]; then
+    files="$files $prefix/etc/cgroup.conf"
+fi
+for node in $(cluster-compute-nodes); do
+    printf "\n$node...\n"
+    scp -p $files ${node}:$prefix/etc
+done
+slurm-sync-backup
+

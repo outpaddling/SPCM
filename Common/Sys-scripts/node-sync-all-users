@@ -1,0 +1,36 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-04-14  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 node\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+node=$1
+
+for user in `cluster-users`; do
+    echo $user
+    node-sync-users $node $user
+done
+

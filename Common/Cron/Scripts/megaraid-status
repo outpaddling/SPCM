@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+case `uname` in
+    Linux)
+	export PATH=${PATH}:/opt/MegaRAID/storcli
+	storcli='storcli64'
+	;;
+    FreeBSD)
+	export PATH=${PATH}:/usr/local/sbin
+	storcli='storcli-mr'
+	;;
+    *)
+	printf "Unsupported OS: `uname`\n"
+	exit 1
+	;;
+esac
+
+ctrlcount=`$storcli show ctrlcount | awk '$1 == "Controller" { print $4 }'`
+
+printf "RAID errors:\n\n"
+c=0
+while [ $c -lt $ctrlcount ]; do
+    $storcli /c$c show | \
+	awk '($6 ~ "RAID" && $7 != "Optl") || ($6 == "DRIVE" && $7 != "Onln")'
+    c=$((c + 1))
+done
+
+printf "Drive warnings:\n\n"
+
+drives=`$storcli /call/eall/sall show all | \
+    egrep 's[0-9] State' | awk ' { print $2 }'`
+
+for drive in $drives; do
+    if ! $storcli $drive show all | \
+	    grep 'Media Error Count' | awk '$5 != "0" { exit 1 }'; then
+	printf "\nWarning: media errors for drive $drive:\n\n"
+	$storcli $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+    
+    if ! $storcli $drive show all | \
+	    grep 'Predictive Failure Count' | awk '$5 != "0" { exit 1 }'; then
+	printf "\nWarning: predictive failures for drive $drive:\n\n"
+	$storcli $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+
+    if $storcli $drive show all | \
+	    grep 'S.M.A.R.T' | fgrep -v "No"; then
+	printf "\nWarning: S.M.A.R.T alert for drive $drive:\n\n"
+	$storcli $drive show all | \
+	    egrep -A 8 's[0-9] State'
+    fi
+done
+
+printf "Full report:\n\n"
+
+c=0
+while [ $c -lt $ctrlcount ]; do
+    $storcli /c$c show
+    c=$((c + 1))
+done
+

@@ -1,0 +1,49 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-04-23  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+##
+## NAT Setup
+##
+
+# Set up routing thru head node. Pass em1 (node-facing) traffic thru eth1 (Internet-facing).
+
+# Ask which internal/external interfaces on head node.
+# External should already be known and in use.
+printf "Which NIC is the public interface (eth0, eth1, em1, etc..)? [em2]: "
+read public_iface
+public_iface="${public_iface:=em2}"
+
+sed -i '/net.ipv4.ip_forward = 0/ c\net.ipv4.ip_forward = 1' /etc/sysctl.conf
+
+if [ ! `iptables-save | grep -- "MASQUERADE" | awk '{print $1}'` ];then
+    iptables -I FORWARD 1 -i $public_iface -o $private_iface -m state --state RELATED,ESTABLISHED -j ACCEPT
+    iptables -I FORWARD 2 -i $private_iface -o $public_iface -j ACCEPT
+    iptables -t nat -A POSTROUTING -o $public_iface -j MASQUERADE
+fi
+

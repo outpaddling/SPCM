@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+cluster-wip-update
+cluster-run 'pkg remove -y auto-admin && wip-reinstall-port -nu -r spcm' all

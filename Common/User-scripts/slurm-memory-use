@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+squeue -o '%7i %8u %2t %3C %3D %6m %8j %11M %5P %N'
+
+printf '\n'
+
+slurm-load-summary
+

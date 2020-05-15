@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+# http://www.open-mpi.org/faq/?category=openfabrics#ib-locked-pages
+# https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General%20Parallel%20File%20System%20%28GPFS%29/page/Using%20RDMA%20with%20pagepool%20larger%20than%208GB
+# http://linuxtoolkit.blogspot.com/2013/08/registering-sufficent-memory-for-openib.html
+# https://community.mellanox.com/docs/DOC-1120
+# https://linuxcluster.wordpress.com/2013/08/11/registering-sufficent-memory-for-openib-when-using-mellanox-hca/
+
+if ! lsmod | fgrep -q mlx4_core; then
+    printf "$0: No mlx4_core module present.\n"
+    exit 1
+fi
+
+ram_size=`awk '$1 == "MemTotal:" { print $2 }' /proc/meminfo`
+page_size=`getconf PAGESIZE`
+pages=$((ram_size / page_size * 1024))
+
+printf "RAM size = $((ram_size / 1024)) MiB\n"
+
+log_pages=`printf "l($pages)/l(2)\n" | bc -l`
+log_pages=`printf "scale=0\n($log_pages + 1) / 1\n" | bc`
+reg_mem=`printf "2 ^ $log_pages * $page_size / 1024 / 1024\n" | bc`
+printf "Using log = $log_pages to set $reg_mem MiB registerable memory.\n"
+
+log_mtts_per_seg=`cat /sys/module/mlx4_core/parameters/log_mtts_per_seg`
+log_num_mtt=$((log_pages - log_mtts_per_seg))
+
+printf "Setting log_num_mtt to $log_num_mtt.\n"
+
+# https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General%20Parallel%20File%20System%20%28GPFS%29/page/Using%20RDMA%20with%20pagepool%20larger%20than%208GB
+# gives wrong filename (mlx4_core.conf)
+auto-append-line \
+    "options mlx4_core log_num_mtt=$log_num_mtt log_mtts_per_seg=3" \
+    /etc/modprobe.d/mlx4.conf $0
+
+# Reboot
+

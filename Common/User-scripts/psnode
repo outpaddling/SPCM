@@ -1,0 +1,46 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Conveniently run ps on a cluster node
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-05-01  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 complete-node-name|compute-node-index
+
+If the argument does not begin with compute-, raid-, vis-, or login-,
+then compute- is automatically prepended.
+
+Example:
+    psnode 002         # same as psnode compute-002
+    psnode compute-002
+    psnode 256g-004
+    psnode compute-256g-001
+    psnode raid-01
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+node=$1
+shift
+if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
+    node=compute-$node
+fi
+ssh -t $node ps auxw "$@" | fgrep $(whoami)

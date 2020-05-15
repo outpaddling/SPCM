@@ -1,0 +1,150 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Change names from Jim's kickstart convention to match Avi
+#       compute node labels
+#
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-28  root        Begin
+##########################################################################
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-28  root        Begin
+##########################################################################
+
+change_name()
+{
+    if [ $# != 2 ]; then
+	printf "Usage: change_name old-hostname new-hostname\n"
+	exit 1
+    fi
+    
+    old_hostname=$1
+    new_hostname=$2
+    printf "$old_hostname -> $new_hostname\n"
+    sed -i -e "s|$old_hostname|$new_hostname|g" /etc/hosts
+    sed -i -e "s|$old_hostname|$new_hostname|g" /etc/ssh/ssh_config
+    sed -i -e "s|$old_hostname|$new_hostname|g" /etc/dhcp/dhcpd.conf
+    ssh $new_hostname sed -i -e "'s|$old_hostname|$new_hostname|g'" \
+	/etc/sysconfig/network-scripts/ifcfg-em1
+    ssh $new_hostname sed -i -e "'s|localhost.localdomain|$new_hostname|g'" \
+	/etc/sysconfig/network
+    ssh $new_hostname sed -i -e "'s|$old_hostname|$new_hostname|g'" \
+	/etc/sysconfig/network
+    ssh $new_hostname hostname $new_hostname
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+# Rack    Names
+# 1       002-037     012 & 013 switched
+# 2       038-073
+# 3       074-093
+# 4       094-107
+# 5       108-147     Skipped 110, 143-145
+
+if false; then  # Already done
+# Rack 1
+host=2
+while [ $host -le 37 ]; do
+    old_hostname=`printf 'compute-%03d' $host`
+    new_hostname=`printf "compute-1-%02d" $(($host - 1))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+# Rack 2
+host=38
+while [ $host -le 73 ]; do
+    #old_hostname=`printf 'compute-%03d' $host`
+    old_hostname=`printf "compute-2-%02d" $(($host - 1))`
+    new_hostname=`printf "compute-2-%02d" $(($host - 37))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+# Rack 3
+host=74
+while [ $host -le 93 ]; do
+    #old_hostname=`printf 'compute-%03d' $host`
+    old_hostname=`printf "compute-3-%02d" $(($host - 1))`
+    new_hostname=`printf "compute-3-%02d" $(($host - 73))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+# Rack 4
+host=94
+while [ $host -le 107 ]; do
+    #old_hostname=`printf 'compute-%03d' $host`
+    old_hostname=`printf "compute-4-%02d" $(($host - 1))`
+    new_hostname=`printf "compute-4-%02d" $(($host - 93))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+# Rack 5
+# 108-109
+host=108
+while [ $host -le 109 ]; do
+    old_hostname=`printf 'compute-%03d' $host`
+    new_hostname=`printf "compute-5-%02d" $(($host - 107))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+# Hosts below need some IP changes as well
+
+# 111-142   Subtract 1 from IP
+host=113
+while [ $host -le 142 ]; do
+    old_hostname=`printf 'compute-%03d' $host`
+    new_hostname=`printf "compute-5-%02d" $(($host - 108))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+fi
+
+# 146-147   Subtract 4 from IP
+host=146
+while [ $host -le 147 ]; do
+    old_hostname=`printf 'compute-%03d' $host`
+    new_hostname=`printf "compute-5-%02d" $(($host - 111))`
+    change_name $old_hostname $new_hostname
+    host=$(($host + 1))
+done
+
+service dhcpd restart
+exit
+

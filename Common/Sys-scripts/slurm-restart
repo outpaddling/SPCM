@@ -1,0 +1,64 @@
+#!/bin/sh -e
+
+auto-root-check $0
+cluster-head-check $0
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+cat << EOM
+
+Restarting the scheduler may kill running jobs, depending on what changes
+have been made to the configuation.
+
+EOM
+
+printf "Are you sure you want to restart the scheduler? (yes/[no]) "
+read sure
+if [ 0$sure != 0yes ]; then
+    exit 0
+fi
+
+slurm-sync-config
+
+case `auto-ostype` in
+FreeBSD)
+    cluster-run 'service munged restart && sleep 1 && service slurmd restart' compute
+    service slurmctld restart
+    ;;
+
+RHEL)
+    case `auto-os-release` in
+    RHEL6)
+	printf 'Compute and backup nodes...\n'
+	cluster-run -c 'service munge restart && sleep 1 && service slurm restart' compute backup
+	
+	printf 'Head node...\n'
+	service munge restart && sleep 1 && service slurm restart
+	;;
+    
+    RHEL7)
+	printf 'Compute nodes...\n'
+	cluster-run -c 'systemctl restart munge && sleep 1 && systemctl restart slurmd' compute
+	
+	printf 'Backup head nodes...\n'
+	cluster-run -c 'systemctl restart munge && sleep 1 && systemctl restart slurmctld' backup
+	
+	printf 'Head node...\n'
+	systemctl restart munge && systemctl restart slurmctld
+	;;
+
+    *)
+	printf "Unsupported OS release: `auto-os-release`\n"
+	exit 1
+	;;
+    
+    esac
+    ;;
+
+*)
+    printf "Unsupported OS: `auto-ostype`\n"
+    exit 1
+    ;;
+
+esac

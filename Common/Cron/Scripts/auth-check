@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Latest archived file
+case `uname` in
+    Linux)
+	files="`ls /var/log/secure-* | tail -1` /var/log/secure"
+	egrep "Failed password | Invalid user" $files
+	;;
+
+    FreeBSD)
+	bzgrep "authentication error" /var/log/auth.log.1.bz2
+	bzgrep "authentication error" /var/log/auth.log.0.bz2
+	fgrep "authentication error" /var/log/auth.log
+	;;
+    
+    *)
+	printf "Invalid OS: `uname`\n"
+	exit 1
+	;;
+esac
+

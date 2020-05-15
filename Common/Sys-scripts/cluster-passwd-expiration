@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set password expiration period for all users
+#       
+#   History:
+#   Date        Name        Modification
+#   2017-04-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 expire-days\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+days=$1
+
+for user in `cluster-users`; do
+    printf "===\nUpdating pw age for $user...\n"
+    cluster-passwd-user-expiration $user $days
+done

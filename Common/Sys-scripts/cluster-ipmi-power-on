@@ -1,0 +1,124 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Power on groups of nodes using remote IPMI.
+#       Unlike cluster-power-waster, current node state is not considered.
+#       FIXME: May want to add exemptions for some drain reasons.
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-04-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+Usage: $0 [-f first-host] [-l last-host] head|backup|io|compute|vis|all
+EOM
+    exit 1
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+auto-operator-check $0
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
+    if [ $1 = '-f' ]; then
+	shift
+	first_node=$1
+	shift
+    elif [ $1 = '-l' ]; then
+	shift
+	last_node=$1
+	shift
+    else
+	usage $0
+    fi
+done
+
+if [ $# -lt 1 ]; then
+    usage $0
+fi
+
+while [ $# -ge 1 ]; do
+    node_type=$1
+    
+    if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `cluster-backup-nodes`"
+    fi
+    
+    if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `cluster-file-servers`"
+    fi
+    
+    if [ $node_type = 'vis' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `cluster-vis-nodes`"
+    fi
+    
+    if [ $node_type = 'compute' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `cluster-compute-nodes`"
+    fi
+    shift
+done
+
+if [ -z "$nodes" ]; then
+    exit
+fi
+
+if [ -z $first_node ]; then
+    first_node=`echo $nodes | awk '{ print $1 }'`
+fi
+if [ -z $last_node ]; then
+    last_node=`echo $nodes | awk '{ print $NF }'`
+fi
+if ! echo $nodes | fgrep -q $first_node; then
+    printf "$first_node is not among the selected nodes.\n"
+    exit 1
+fi
+if ! echo $nodes | fgrep -q $last_node; then
+    printf "$last_node is not among the selected nodes.\n"
+    exit 1
+fi
+
+in_range=0
+for node in $nodes; do
+    if [ $node = $first_node ]; then
+	in_range=1
+    fi
+    if [ $in_range = 1 ]; then
+	selected_nodes="$selected_nodes $node "
+    fi
+    if [ $node = $last_node ]; then
+	in_range=0
+    fi
+done
+
+for node in $selected_nodes; do
+    printf "\n============================================================\n"
+    printf "Starting $node...\n"
+    printf "============================================================\n\n"
+    
+    auto-ipmi-remote-power $node-mgmt on
+
+    # Explicitly use mount_nfs, which supports -b (background mounting)
+    host_path=$(awk -v node=$node '$1 ~ node { print $1 }' /etc/fstab)
+    mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
+    if [ 0$mount_point != 0 ]; then
+	printf "Mounting $node on head node...\n"
+	mount_nfs -b $host_path $mount_point || true
+    fi
+    
+    # FIXME: Do this only for compute nodes
+    scontrol update nodename=$node state=resume || true
+done

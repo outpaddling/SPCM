@@ -1,0 +1,77 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-08  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    cat << EOM
+    
+			    **************************
+			    Cluster Pkgsrc Admin Menu
+			    **************************
+				
+1.. Install a new pkgsrc tree
+2.. Sync local pkgsrc installations
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	auto-pkgsrc-setup
+	;;
+    2)
+	cluster-sync-pkgsrc
+	;;
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+done
+

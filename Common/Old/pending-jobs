@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cat << EOM
+
+$0 is obsolete.
+
+Please use "slurm-pending-jobs".
+
+EOM
+
+

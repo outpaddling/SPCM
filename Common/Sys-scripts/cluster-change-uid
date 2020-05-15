@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-10-06  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name new-uid [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+auto-root-check $0
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+user_name=$1
+new_uid=$2
+shift
+shift
+dirs="$@"
+
+cat << EOM
+
+1.  Make sure $new_uid is available on all systems that share UIDs.
+
+2.  Make sure $user_name is not currently logged in or running jobs.
+
+3.  Locate all files owned by $user_name.  This script will fix ownership
+    on those found under ~$user_name.  You must manually run chown on
+    any others.
+
+EOM
+
+printf 'Type "Proceed" to continue or anything else to abort: '
+read proceed
+if [ 0$proceed != 0Proceed ]; then
+    printf "Aborting.\n"
+    exit
+fi
+
+# Verify that uid is available on this host
+auto-change-uid $user_name $new_uid $dirs || true
+cluster-run "auto-change-uid --silent $user_name $new_uid" backup io vis compute

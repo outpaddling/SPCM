@@ -1,0 +1,62 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-05-21  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 group-name new-gid [directory ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+auto-root-check $0
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+group_name=$1
+new_gid=$2
+shift
+shift
+dirs="$@"
+
+cat << EOM
+
+1.  Make sure $new_gid is available on all systems that share GIDs.
+
+2.  Make there are no jobs running that depend on group $group_name.
+
+3.  Locate all files owned by the group $group_name.  This script will fix
+    ownership on those found under $dirs.  You must manually run
+    chgrp on any others.
+
+EOM
+
+printf 'Type "Proceed" to continue or anything else to abort: '
+read proceed
+if [ 0$proceed != 0Proceed ]; then
+    printf "Aborting.\n"
+    exit
+fi
+
+auto-change-group-gid $group_name $new_gid $dirs || true
+cluster-run "auto-change-group-gid --silent $group_name $new_gid" backup io vis compute

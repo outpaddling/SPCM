@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+chmod 750 /usr/bin/scp /usr/bin/sftp /usr/bin/rsync
+

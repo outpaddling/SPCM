@@ -1,0 +1,64 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-08-15  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [node ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# = 0 ]; then
+    nodes=$(cluster-compute-nodes)
+else
+    nodes="$@"
+fi
+
+auto-root-check $0
+
+if ! cluster-check-cron-updates; then
+    exit 0
+fi
+
+# Caution: 
+# The line below is modified by install. Be careful not to replace
+# %%PREFIX%% with a hard-coded prefix from an installed script.
+prefix=%%PREFIX%%
+
+repo=$prefix/etc/spcm/sync-files
+if [ ! -d $repo ]; then
+    printf "$0: No files to sync.\n"
+    exit 0
+fi
+
+cd $repo
+set +e  # Rsync may return non-zero status
+for node in $nodes; do
+    rsync -avR * ${node}:/
+done
+
+case `auto-ostype` in
+FreeBSD)
+    # Assume login.conf was modified.  No harm in this.
+    printf "Rebuilding login.conf db...\n"
+    cluster-run 'cap_mkdb /etc/login.conf' compute
+    ;;
+*)
+    ;;
+esac
+

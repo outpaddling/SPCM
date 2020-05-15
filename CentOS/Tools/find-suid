@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+find /var \( -perm -4000 -fprintf /root/suid.txt '%#m %u %p\n' \)
+cat /root/suid.txt
+

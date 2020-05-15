@@ -1,0 +1,75 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Shut down all idle nodes.  Mainly useful in the event of a
+#       power outage if compute nodes are battery backed.
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-05  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 output-directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+printf "All idle nodes will be powered off.\n"
+printf "Are you sure you want to proceed? yes/[no] "
+read proceed
+if [ 0$proceed != 0yes ]; then
+    exit
+fi
+
+nodes=`sinfo -o %n -h | sort | uniq`
+
+case `auto-ostype` in
+FreeBSD)
+    power_off=-p
+    ;;
+RHEL)
+    power_off=-h
+    ;;
+*)
+    printf "Unsupported OS: `auto-ostype`\n"
+    exit 1
+    ;;
+esac
+
+for node in $nodes; do
+    state=`sinfo -n $node -o %T -h`
+    # printf "$node = $state\n"
+    case $state in
+    'drained'|'drained*'|'idle'|'idle*'|'down'|'down*')
+	printf "$node\n"
+	if ping -c 1 -q $node > /dev/null 2>&1; then
+	    printf "Shutting down $node...\n"
+	    ssh $node shutdown $power_off now || true
+	fi
+	;;
+    *)
+	;;
+    esac
+done
+

@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+for node in `cluster-all-nodes`; do
+    scontrol update state=drain nodename=$node reason=upgrade
+    sinfo
+    ssh $node uname -r
+    read -p "Upgrade $node? y/[n] " upgrade
+    if [ 0$upgrade = 0y ]; then
+	#ssh -t $node auto-update-system --binary
+	ssh $node auto-update-system --binary+reboot
+	sleep 5
+	printf "Waiting for $node to reboot...\n"
+	while ! ssh $node hostname; do
+	    sleep 5
+	done
+	ssh -t $node /usr/sbin/freebsd-update upgrade -r 11.2-RELEASE
+	ssh -t $node /usr/sbin/freebsd-update install
+	ssh $node shutdown -r now
+	sleep 5
+	printf "Waiting for $node to reboot...\n"
+	while ! ssh $node hostname; do
+	    sleep 5
+	done
+	ssh -t $node /usr/sbin/freebsd-update install
+	# Paranoid
+	ssh -t $node auto-update-system --binary
+    fi
+    scontrol update state=resume nodename=$node
+done

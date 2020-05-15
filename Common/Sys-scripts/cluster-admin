@@ -1,0 +1,87 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Main menu for cluster admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-08  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    spcm-banner
+    cat << EOM
+
+1.. User management
+2.. Cluster update manager
+3.. Diagnostics and Monitoring
+4.. Cluster services
+5.. Node management
+6.. Shut down cluster
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	cluster-user-admin
+	;;
+    2)
+	cluster-update-menu
+	;;
+    3)
+	cluster-diagnostics
+	;;
+    4)
+	cluster-services-menu
+	;;
+    5)
+	cluster-node-admin
+	;;
+    6)
+	cluster-shutdown
+	pause
+	;;
+    Q|q)
+	exit 0
+	;;
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+done

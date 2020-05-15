@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+cluster-head-check $0
+
+set +e  # Tolerate non-zero transfers?
+
+for node in `cluster-backup-nodes`; do
+    echo $node
+
+    # Syncing .ssh could kill ssh keys.
+    rsync -av --exclude slurm --exclude .ssh /root ${node}:/
+    rsync -av --exclude slurm /home ${node}:/
+    ssh ${node} 'restorecon -R -v /home/*/.ssh'
+    rsync -av /etc/security/limits.d ${node}:/etc/security
+    rsync -av /usr/local ${node}:/usr
+    
+    # FIXME: Sync pkgsrc installs
+    
+    # Back up crontabs, but don't activate
+    ssh $node mkdir -p Crontabs
+    rsync -av /var/spool/cron/* ${node}:Crontabs
+    
+    # This causes updates to be installed.  Use cached RPMs instead?
+    # pkgs=`yum list installed | awk ' { print $1 }'`
+    # ssh ${node} yum install $pkgs
+done
+
+slurm-sync-backup
+

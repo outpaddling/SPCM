@@ -1,0 +1,51 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set password using piped stdin.  FreeBSD passwd command
+#       does not allow this for security reasons.  It can be done
+#       safely if care is taken not to allow credentials to appear
+#       in "ps" output by providing them as arguments to a command.
+#
+#       E.g., bad: echo "My-cat's-name" | piped-passwd
+#
+#       "ps" and other process monitoring tools will display the arguments
+#       to echo, i.e. the raw password.  BTW, it's also dumb to use your
+#       cat's name as your password.
+#
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-12-01  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 \n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+# Check for interactive use
+
+read user_name
+read pw         # FIXME: guard special characters like old cluster-passwd?
+
+expect << EOF > /dev/null
+spawn passwd $user_name
+expect "New Password:"
+send "${pw}\r"
+expect "Retype New Password:"
+send "${pw}\r"
+expect eof;

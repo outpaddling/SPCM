@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+auto-operator-check $0
+
+drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 ~ "drained" && $2 == "power-save" { print $3 }')
+
+for node in $drained_nodes; do
+    read -p "Resume $node? [y]/n " resume
+    if [ 0$resume != 0n ]; then
+	auto-ipmi-remote-power $node-mgmt on
+	scontrol update nodename=$node state=resume
+    fi
+done

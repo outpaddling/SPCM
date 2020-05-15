@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+export PATH=${PATH}:/usr/local/bin:/usr/local/sbin
+nodelist=$(scontrol show hostnames $@)
+for node in $nodelist; do
+    auto-ipmi-remote-power $node-mgmt on
+done
+log=/home/slurm/node-resume.log
+printf "Resuming $1 at $(date)\n" >> $log
+tail -100 $log > $log.tmp
+mv -f $log.tmp $log
