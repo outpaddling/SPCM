@@ -11,8 +11,8 @@ case 0$(which cluster-setup) in
 0/usr/pkg/sbin/cluster-setup)
     # pkgsrc
     pkgsrc=$(auto-pkgsrc-dir)
-    cd $pkgsrc/uwm-pkgsrc-wip
-    svn up
+    cd $pkgsrc/wip
+    git pull
     
     # Allow auto-admin deinstall
     pkgin remove -y auto-admin spcm || true
