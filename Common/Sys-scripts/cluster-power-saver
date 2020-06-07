@@ -22,7 +22,7 @@
 #   2020-02-23  Jason Bacon Begin
 ##########################################################################
 
-auto-operator-check
+auto-operator-check $0
 
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 ~ "idle" { print $2 }')
 idle_nodes="$idle_nodes"
