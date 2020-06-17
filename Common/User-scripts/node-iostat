@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       Conveniently run ps on a cluster node
+#       Conveniently run top on a cluster node
 #       
 #   History:
 #   Date        Name        Modification
@@ -19,11 +19,11 @@ If the argument does not begin with compute-, raid-, vis-, or login-,
 then compute- is automatically prepended.
 
 Example:
-    psnode 002         # same as psnode compute-002
-    psnode compute-002
-    psnode 256g-004
-    psnode compute-256g-001
-    psnode raid-01
+    node-iostat 002         # same as node-iostat compute-002
+    node-iostat compute-002
+    node-iostat 256g-004
+    node-iostat compute-256g-001
+    node-iostat raid-01
 
 EOM
     exit 1
@@ -40,7 +40,25 @@ fi
 
 node=$1
 shift
-if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
+if ! echo $node | egrep -q '^compute-|^raid-|^zfs-|^vis-|^login-'; then
     node=compute-$node
 fi
-ssh -t $node ps auxw "$@" | fgrep $(whoami)
+
+case $(auto-ostype) in
+FreeBSD)
+    if ssh $node mount | fgrep 'zfs,'; then
+	ssh -t node zpool iostat 1
+    else
+	ssh $node iostat 1
+    fi
+    ;;
+
+RHEL)
+    ssh $node iostat -dm 1
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+esac
