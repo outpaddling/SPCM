@@ -46,8 +46,8 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    if ssh $node mount | fgrep 'zfs,'; then
-	ssh -t node zpool iostat 1
+    if ssh $node mount | fgrep -q 'zfs,'; then
+	ssh -t $node zpool iostat 1
     else
 	ssh $node iostat 1
     fi
