@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+cat << EOM
+
+"topnode" has been renamed to "node-top".
+
+EOM

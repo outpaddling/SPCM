@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+cat << EOM
+
+"psnode" has been renamed to "node-ps".
+
+EOM
