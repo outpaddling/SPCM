@@ -50,7 +50,7 @@ sleep 5
 drained_nodes=$(sinfo -h -o '%T %E %n' | awk '$1 ~ "drained" && $2 == "power-save" { print $3 }')
 for node in $drained_nodes; do
     printf "Shutting down idle node $node...\n"
-    ssh $node shutdown -p now
+    ssh -o ConnectTimeout=10 $node shutdown -p now
 done
 
 if [ "0$(squeue -h)" = 0 ]; then
@@ -67,7 +67,7 @@ if [ "0$(squeue -h)" = 0 ]; then
 	mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
 	if [ 0$mount_point != 0 ]; then
 	    umount -f $mount_point
-	    ssh $node shutdown -p now
+	    ssh -o ConnectTimeout=10 $node shutdown -p now
 	fi
     done
 else
