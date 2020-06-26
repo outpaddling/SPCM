@@ -23,6 +23,7 @@
 ##########################################################################
 
 auto-operator-check $0
+auto-root-check $0      # For scontrol
 
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 ~ "idle" { print $2 }')
 idle_nodes="$idle_nodes"
