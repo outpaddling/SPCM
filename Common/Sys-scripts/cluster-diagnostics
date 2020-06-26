@@ -129,9 +129,9 @@ EOM
 	printf "Network interface? "
 	read iface
 	if [ 0$iface = 0 ]; then
-	    ssh -t $node iftop
+	    node-iftop $node
 	else
-	    ssh -t $node iftop -i $iface
+	    node-iftop $node -i $iface
 	fi
 	;;
     5)

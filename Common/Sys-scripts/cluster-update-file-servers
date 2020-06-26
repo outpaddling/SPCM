@@ -22,8 +22,8 @@ for node in $(cluster-file-servers); do
     echo $node
     ssh $node w
     pause
-    ssh -t $node iftop
-    ssh -t $node iftop -i ib0 || true   # May not be an IB interface
+    node-iftop $node
+    node-iftop $node -i ib0 || true   # May not be an IB interface
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
