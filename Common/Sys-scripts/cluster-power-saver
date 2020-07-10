@@ -22,7 +22,6 @@
 #   2020-02-23  Jason Bacon Begin
 ##########################################################################
 
-auto-operator-check $0
 auto-root-check $0      # For scontrol
 
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 ~ "idle" { print $2 }')

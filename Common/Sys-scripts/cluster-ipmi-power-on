@@ -27,7 +27,7 @@ if [ $# != 1 ]; then
     usage
 fi
 
-auto-operator-check $0
+auto-root-check $0 "Needs to resume compute nodes."
 
 if ! cluster-check-cron-updates; then
     exit 0
