@@ -15,7 +15,8 @@ fi
 procs=0
 for node in `cluster-all-nodes`; do
     printf "Syncing ports to $node...\n"
-    if ! rsync -a --size-only --inplace --delete /usr/ports ${node}:/usr; then
+    if ! rsync --archive --inplace --delete \
+	    /usr/ports ${node}:/usr; then
 	printf "$node\n" >> cluster-ports-update-failed-nodes
     fi
 done

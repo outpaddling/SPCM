@@ -265,7 +265,10 @@ EOM
 	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
 	subnet=`auto-ask subnet "\nSubnet for NFS?" 192.168.0.0`
 
+	# FIXME: Use auto-nfs-client/server-setup and sysrc when nfsuserd
+	# option exists.  Must use nfsuserd for hybrid clusters.
 	printf "Updating $RC_CONF...\n"
+	
 	# Need UDP for some PXE ROMs
 	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
 	
