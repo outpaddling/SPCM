@@ -9,5 +9,8 @@ for node in $drained_nodes; do
     if [ 0$resume != 0n ]; then
 	auto-ipmi-remote-power $node-mgmt on
 	scontrol update nodename=$node state=resume
+	
+	# Avoid power surge from powering on too many nodes at once
+	sleep 4
     fi
 done

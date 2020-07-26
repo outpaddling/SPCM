@@ -121,4 +121,7 @@ for node in $selected_nodes; do
     
     # FIXME: Do this only for compute nodes
     scontrol update nodename=$node state=resume || true
+    
+    # Avoid power surge from powering on too many nodes at once
+    sleep 4
 done
