@@ -59,10 +59,6 @@ sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
     Common/Sys-scripts/slurm-usage-report \
     > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
 
-mkdir -p ${DESTDIR}${PREFIX}/etc/spcm
-install -c Common/etc/slurm-node-suspend Common/etc/slurm-node-resume \
-    ${DESTDIR}${PREFIX}/etc/spcm
-
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
