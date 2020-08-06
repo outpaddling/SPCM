@@ -197,7 +197,7 @@ while true; do
     
 ******************************************************************************
 				*** WARNING ***
-Installing updates remotely is not recommended.  Servers often fail to
+Installing updates remotely is not recommended.  Servers occasionally fail to
 reboot, so you should be physically nearby in case of issues.
 ******************************************************************************
 
