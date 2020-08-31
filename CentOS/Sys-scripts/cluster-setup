@@ -791,10 +791,12 @@ boot_block_backup
 ntp_config
 install_core_rpms
 pkgsrc_setup
-auto-ipmitool-install
+auto-ipmi-install
 
 # Workaround: git install looks for missing older version
 pkgin install -y tcl
+# Workaround lvm* dep issue
+pkgin install -y llvm
 pkgin install -y cvs subversion git rsync iftop nano emacs
 yum remove -y cvs subversion git rsync
 yum autoremove -y
