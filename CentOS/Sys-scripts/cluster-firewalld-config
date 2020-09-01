@@ -55,6 +55,7 @@ case $node_type in
 head|backup)
     # Allow http traffic from outside the cluster
     firewall-cmd --permanent --add-service=http
+    firewall-cmd --permanent --add-service=tftp
     firewall-cmd --permanent --list-services
     firewall-cmd --zone=public --list-ports
     
