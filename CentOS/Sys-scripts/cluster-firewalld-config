@@ -62,19 +62,26 @@ head|backup)
     # If we want to add special ports
     
     # NFS
-    # firewall-cmd --permanent --add-service=mountd
-    # firewall-cmd --permanent --add-service=rpc-bind
-    # firewall-cmd --permanent --add-service=nfs
+    firewall-cmd --permanent --add-service=mountd
+    firewall-cmd --permanent --add-service=rpc-bind
+    firewall-cmd --permanent --add-service=nfs
     
     # SLURM
-    # firewall-cmd --permanent --add-port=6817/udp    # slurmctld
-    # firewall-cmd --permanent --add-port=6817/tcp    # slurmd
+    firewall-cmd --permanent --add-port=6817/udp    # slurmctld
+    firewall-cmd --permanent --add-port=6817/tcp    # slurmd
     ;;
 
 compute)
+    # SLURM
+    firewall-cmd --permanent --add-port=6817/udp    # slurmctld
+    firewall-cmd --permanent --add-port=6817/tcp    # slurmd
     ;;
 
 io)
+    # NFS
+    firewall-cmd --permanent --add-service=mountd
+    firewall-cmd --permanent --add-service=rpc-bind
+    firewall-cmd --permanent --add-service=nfs
     ;;
 
 vis)
