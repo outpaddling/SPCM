@@ -82,7 +82,7 @@ while [ $# -gt 1 ]; do
     shift
 done
 
-if [ -z "$nodes" ]; then
+if [ -z "$nodes" ] || [ "$nodes" = ' ' ]; then
     exit
 fi
 

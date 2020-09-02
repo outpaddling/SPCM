@@ -185,7 +185,7 @@ sinfo_format='%T %u %E %N'
 updates_dir="/home/slurm/Compute-node-updates"
 for prefix in /usr/local /usr/pkg; do
     if [ -e $prefix/etc/slurm.conf ]; then
-	default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $prefix/etc/slurm.conf`
+	default_domain=$(hostname | cut -d . -f 2-)
     fi
 done
 
