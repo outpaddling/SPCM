@@ -191,11 +191,11 @@ EOM
 	$EDITOR $slurm_conf
 	stop_service slurmctld
 	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
-	service slurmctld restart
+	service slurmctld restart || true
     else
 	stop_service slurmd
 	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
-	service slurmd restart
+	service slurmd restart || true
     fi
 }
 
@@ -837,7 +837,7 @@ if [ $NODE_TYPE = head ]; then
 
     latest=`auto-ask latest-packages 'Use latest packages instead of quarterly?' y`
     if [ $latest != n ]; then
-	auto-pkg-latest --defaults
+	auto-pkg-latest --no-reboot
     fi
     
     cat << EOM

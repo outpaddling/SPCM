@@ -54,7 +54,6 @@ esac
 datadir=$prefix/share/spcm/WWW
 
 cp $datadir/global_styles.css $web_root
-cp $datadir/*.jpg $web_root || true
 cp $datadir/*.gif $web_root || true
 chmod a+rX $web_root/*
 
