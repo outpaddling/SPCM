@@ -112,16 +112,15 @@ for node in $selected_nodes; do
     auto-ipmi-remote-power $node-mgmt on
 
     # Explicitly use mount_nfs, which supports -b (background mounting)
-    host_path=$(awk -v node=$node '$1 ~ node { print $1 }' /etc/fstab)
-    mount_point=$(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab)
-    if [ 0$mount_point != 0 ]; then
-	printf "Mounting $node on head node...\n"
+    for host_path in $(awk -v node=$node '$1 ~ node { print $1 }' /etc/fstab); do
+	mount_point=$(awk -v host_path=$host_path '$1 == host_path { print $2 }' /etc/fstab)
+	printf "Mounting $host_path on $mount_point...\n"
 	mount_nfs -b $host_path $mount_point || true
-    fi
+    done
     
     # FIXME: Do this only for compute nodes
     scontrol update nodename=$node state=resume || true
     
     # Avoid power surge from powering on too many nodes at once
-    sleep 4
+    sleep 5
 done
