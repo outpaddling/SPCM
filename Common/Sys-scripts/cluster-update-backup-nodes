@@ -18,6 +18,7 @@ if [ 0$(cluster-backup-nodes) = 0 ]; then
     exit
 fi
 
+# FIXME: Warn if cron updates are running
 for node in $(cluster-backup-nodes); do
     echo $node
     ssh $node w

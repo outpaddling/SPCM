@@ -230,6 +230,7 @@ EOM
 	;;
     
     3)  # Update head node
+	# FIXME: Warn if cron updates are running
 	update_warning
 	w
 	read -p 'Continue? y/[n] ' continue
@@ -279,7 +280,8 @@ EOM
 	cluster-down-nodes || true
 	;;
     
-    7) # Update all compute nodes
+    7)  # Update all compute nodes
+	# FIXME: Warn if cron updates are running
 	update_warning
 	cat << EOM
 
