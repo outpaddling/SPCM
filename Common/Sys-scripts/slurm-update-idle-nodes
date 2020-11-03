@@ -51,6 +51,7 @@ readonly lock_file="$log_dir/lockfile"
 if [ -e "$lock_file" ]; then
     printf "Another instance of $0 is currently running.\n"
     printf "Remove $lock_file to override.\n"
+    slurm-resume-updated-nodes "$log_dir" || true
     exit
 fi
 touch "$lock_file"
