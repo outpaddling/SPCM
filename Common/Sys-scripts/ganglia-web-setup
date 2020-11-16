@@ -32,7 +32,8 @@ os_release=`auto-os-release`
 case $os_release in
 FreeBSD-*)
     apache=apache24
-    php=php72
+    # FIXME: Find a way to auto-detect the current mainstream version
+    php=php74
     pkg install -y $apache ganglia-webfrontend $php mod_$php
     prefix=/usr/local
     web_root=$prefix/www/apache24/data
