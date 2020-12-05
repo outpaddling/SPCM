@@ -45,9 +45,9 @@ while true; do
     cat << EOM
 
 1.. User management
-2.. Cluster update manager
+2.. Update manager
 3.. Diagnostics and Monitoring
-4.. Cluster services
+4.. Services
 5.. Node management
 6.. Shut down cluster
 Q.. Quit
