@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+cat << EOM
+
+"cluster-down-nodes" has been renamed to "cluster-node-status".
+
+EOM
