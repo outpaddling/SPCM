@@ -1,7 +1,7 @@
 #!/bin/sh
 
 status=0
-tmpfile=cluster-down-nodes-uptime
+tmpfile=cluster-node-status-uptime
 printf "%-20s %-10s %s\n" "Host" "Ping" "ssh node uptime"
 for node in `cluster-all-nodes`; do
     printf "%-20s " $node

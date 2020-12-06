@@ -88,7 +88,7 @@ EOM
     clear
     case $selection in
     1)
-	cluster-down-nodes
+	cluster-node-status
 	;;
     2)
 	printf "Host name? "
