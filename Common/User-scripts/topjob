@@ -4,4 +4,6 @@ cat << EOM
 
 "topjob" has been renamed to "job-top".
 
+This reminder will be removed after December 2021.
+
 EOM

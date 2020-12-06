@@ -4,4 +4,6 @@ cat << EOM
 
 "psnode" has been renamed to "node-ps".
 
+This reminder will be removed after December 2021.
+
 EOM
