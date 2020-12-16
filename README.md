@@ -9,4 +9,6 @@ SPCM automates the process of configuring a head node, compute nodes, file serve
 
 SPCM automatically installs and integrates the SLURM scheduler and the Ganglia web-based network monitoring suite with the Apache web server. 
 
+Developed by Jason W. Bacon and James F. Wagner
+
 http://acadix.biz/spcm.php
