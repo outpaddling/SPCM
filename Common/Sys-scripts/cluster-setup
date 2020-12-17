@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+cat << EOM
+
+SPCM has not yet been ported to $(auto-ostype).
+
+Doing so will require adding $(auto-ostype)-specific cases to some scripts
+in SPCM and auto-admin with and writing a new cluster-setup script specific
+for $(auto-ostype).
+
+EOM
+exit 1

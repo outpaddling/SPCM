@@ -33,12 +33,17 @@ for dir in bin sbin libexec; do
     mkdir -p ${DESTDIR}${PREFIX}/$dir
 done
 
+# FIXME: What's this for?  Does it predate the use of DESTDIR?
 rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
 rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
 
-install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 install -c Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 install -c Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
+
+# Overwrite Common scripts from above with OS-specific scripts if both exist.
+# Most scripts should be in Common, but a few such as cluster-setup are so
+# OS-specific that it doesn't make sense to unify them.
+install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 
 chmod o-rwx ${DESTDIR}${PREFIX}/sbin/*
 
