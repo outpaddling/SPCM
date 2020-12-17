@@ -13,7 +13,7 @@ pause()
     read junk
 }
 
-os_release=`auto-os-release`
+os_release=$(auto-os-release)
 
 # selinux attempted fixes
 #chcon -R -t httpd_sys_rw_content_t $ganglia_web
@@ -42,7 +42,7 @@ FreeBSD-*)
 
 RHEL6|RHEL7)
     pkgin install -y apache ganglia-webfrontend
-    prefix=`auto-pkgsrc-prefix`
+    prefix=$(auto-pkgsrc-prefix)
     web_root=$prefix/share/httpd/htdocs
     ifconfig='ip addr'
     ;;

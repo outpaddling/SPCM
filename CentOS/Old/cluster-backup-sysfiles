@@ -1,8 +1,0 @@
-#!/bin/sh -e
-
-tar zcvf /sharedapps/Backup/login.tgz /etc /var/log
-chmod 600 /sharedapps/Backup/*
-
-ssh data tar zcvf /sharedapps/Backup/arkeia.tgz /opt/arkeia
-chmod 600 /sharedapps/Backup/*
-

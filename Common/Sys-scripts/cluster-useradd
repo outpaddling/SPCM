@@ -85,20 +85,21 @@ case $os_type in
 RHEL)
     useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
 	$user_name
-    # FIXME: Merge ssh-keygen-for-user with cluster-ssh-keygen
-    ssh-keygen-for-user $user_name
     ;;
 
 FreeBSD)
     pw useradd $user_name -c "$gecos" -g $group_name -m \
 	-s $shell -u $user_id $@
-    cluster-ssh-keygen $user_name $group_name
     ;;
 
 *)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
     ;;
 
 esac
+
+cluster-ssh-keygen $user_name $group_name
 
 # Record password age info
 # Simple file with two fields:

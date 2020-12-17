@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+RHEL)
+    # Set per-process memory limits to match RAM
+    total_mem=`awk '$1 == "MemTotal:" { print $2 }' /proc/meminfo`
+    auto-set-memory-limits $total_mem
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

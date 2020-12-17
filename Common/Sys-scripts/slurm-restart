@@ -28,7 +28,7 @@ FreeBSD)
     ;;
 
 RHEL)
-    case `auto-os-release` in
+    case $(auto-os-release) in
     RHEL6)
 	printf 'Compute and backup nodes...\n'
 	cluster-run -c 'service munge restart && sleep 1 && service slurm restart' compute backup
@@ -49,7 +49,7 @@ RHEL)
 	;;
 
     *)
-	printf "Unsupported OS release: `auto-os-release`\n"
+	printf "Unsupported OS release: $(auto-os-release)\n"
 	exit 1
 	;;
     
@@ -57,7 +57,7 @@ RHEL)
     ;;
 
 *)
-    printf "Unsupported OS: `auto-ostype`\n"
+    printf "Unsupported OS: $(auto-ostype)\n"
     exit 1
     ;;
 

@@ -1,0 +1,14 @@
+#!/bin/sh -ex
+
+case $(auto-ostype) in
+FreeBSD)
+    pw usermod $@
+    cluster-run "pw usermod $*" all
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-# Head node
-pkg install -y emacs24 nano vim tmux screen bash pdksh zsh vim nano \
-	    gedit nedit gnuplot grace
-
-# Compute nodes
-cluster-run 'pkg install -y emacs24 nano vim tmux screen' compute
-

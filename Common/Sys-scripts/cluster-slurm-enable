@@ -1,0 +1,111 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Enable SLURM on head or compute node
+#
+#   Arguments:
+#       head|compute
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-11-25  root        Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 head|compute\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+NODE_TYPE=$1
+if [ -z "$EDITOR" ]; then
+    EDITOR=vi
+    export EDITOR
+fi
+
+case $(auto-ostype) in
+RHEL)
+    prefix=`auto-pkgsrc-prefix`
+    
+    dirs="/var/log/slurm /home/slurm /var/spool/slurm /var/spool/slurm/ctld /var/spool/slurm/d"
+    mkdir -p $dirs
+    chown slurm:slurm $dirs
+    
+    if [ ! -e $prefix/etc/slurm.conf ]; then
+	cp $prefix/share/examples/slurm/slurm.conf.example $prefix/etc/slurm.conf
+    fi
+    chmod 644 $prefix/etc/slurm.conf
+    
+    case `auto-os-release` in
+    RHEL6)
+	rm -f /etc/init.d/slurm
+	ln -s $prefix/share/examples/slurm/init.d.slurm /etc/init.d/slurm
+	chmod 755 /etc/init.d/slurm
+    
+	chkconfig slurm on
+	service slurm restart
+	;;
+    
+    RHEL7)
+	case $NODE_TYPE in
+	head)
+	    printf "Install/edit $prefix/etc/slurm.conf.\n"
+	    printf "(and $prefix/etc/cgroup.conf if needed)\n"
+	    pause
+	    $EDITOR $prefix/etc/slurm.conf
+	    init_script=$prefix/share/examples/slurm/slurmctld.service
+	    # FIXME: Why?
+	    sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
+	    systemctl disable slurmctld.service || true
+	    systemctl enable $init_script || true
+	    systemctl daemon-reload
+	    systemctl restart slurmctld.service
+	    ;;
+	
+	compute)
+	    init_script=$prefix/share/examples/slurm/slurmd.service
+	    # FIXME: Why?
+	    sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
+	    systemctl disable slurmd.service || true
+	    systemctl enable $init_script || true
+	    systemctl daemon-reload
+	    systemctl restart slurmd.service
+	    ;;
+	
+	esac
+	;;
+    
+    esac
+    sinfo
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

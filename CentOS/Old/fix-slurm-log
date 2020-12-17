@@ -1,8 +1,0 @@
-#!/bin/sh
-
-mkdir -p /var/log/slurm
-chown slurm:slurm /var/log/slurm
-
-cluster-run 'mkdir -p /var/log/slurm' all
-cluster-run 'chown slurm:slurm /var/log/slurm' all
-

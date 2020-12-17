@@ -1,0 +1,55 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set arc_max to 1/8 of availale RAM, max 1G
+#       
+#   FIXME: Generalize and move to auto-admin?
+#
+#   History:
+#   Date        Name        Modification
+#   2017-03-05  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    bytes=$(sysctl -n hw.physmem)
+    mb=$(($bytes / 1024 / 1024))
+    
+    # Set to 1/4 of available RAM
+    arc_max=$(($mb / 8))
+    echo $mb $arc_max
+    if [ $arc_max -gt 1024 ]; then
+	arc_max=1024
+    fi
+    echo $mb $arc_max
+    
+    if ! fgrep -q vfs.zfs.arc_max /boot/loader.conf; then
+	auto-append-line vfs.zfs.arc_max vfs.zfs.arc_max="${arc_max}M" /boot/loader.conf $0
+    else
+	printf "arc_max is already set: "
+	fgrep vfs.zfs.arc_max /boot/loader.conf
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

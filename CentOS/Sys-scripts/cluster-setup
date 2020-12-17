@@ -612,7 +612,7 @@ slurm_install()
 {
     case $NODE_TYPE in
     'head'|'compute')
-        pkgin install -y hdf5	# Work around dep issue with slurm-wlm
+	pkgin install -y hdf5   # Work around dep issue with slurm-wlm
 	pkgin install -y slurm-wlm
 	# Allow finishing setup on nodes before they're in slurm.conf
 	cluster-munge-enable $NODE_TYPE || true
@@ -804,7 +804,7 @@ yum autoremove -y
 
 # Configure firewall
 auto-enable-passwdqc
-cluster-firewalld-config $NODE_TYPE
+cluster-firewall-config $NODE_TYPE
 
 # May be set by --infiniband
 if [ 0$ib != 0y ]; then

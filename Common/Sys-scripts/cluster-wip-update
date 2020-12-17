@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    
+    wip-update
+    for node in $(cluster-all-nodes); do
+	echo $node
+	rsync -a --delete ${PORTSDIR}/wip ${node}:${PORTSDIR}
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
