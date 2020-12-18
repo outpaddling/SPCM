@@ -5,8 +5,12 @@ cat << EOM
 SPCM has not yet been ported to $(auto-ostype).
 
 Doing so will require adding $(auto-ostype)-specific cases to some scripts
-in SPCM and auto-admin with and writing a new cluster-setup script specific
-for $(auto-ostype).
+in SPCM and in auto-admin and writing a new cluster-setup script specific
+to $(auto-ostype).  Model cluster-setup scripts are available in the
+source distribution under FreeBSD/Sys-scripts and CentOS/Sys-scripts.
+
+Please edit scripts in-place in \$PREFIX/bin and \$PREFIX/sbin and fully
+test before sending patches.
 
 EOM
 exit 1
