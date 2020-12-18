@@ -4,26 +4,10 @@ if [ -z $PREFIX ]; then
     PREFIX=/usr/local
 fi
 
-case `uname` in
-    FreeBSD)
-	os='FreeBSD'
-	;;
-
-    Linux)
-	#
-	if [ -e /etc/redhat-release ]; then
-	    os='CentOS'
-	else
-	    printf "Only RHEL-based Linux is supported.\n"
-	    exit 1
-	fi
-	;;
-
-    *)
-	printf "Unsupported OS: `uname`\n"
-	exit 1
-esac
-
+os=$(auto-ostype)
+if [ $os = RHEL ]; then
+    os=CentOS
+fi
 umask 022
 
 mkdir -p ${DESTDIR}${DATADIR}/profile.d
@@ -43,7 +27,9 @@ install -c Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 # Overwrite Common scripts from above with OS-specific scripts if both exist.
 # Most scripts should be in Common, but a few such as cluster-setup are so
 # OS-specific that it doesn't make sense to unify them.
-install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+if [ -e $os/Sys-scripts ]; then
+    install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
+fi
 
 chmod o-rwx ${DESTDIR}${PREFIX}/sbin/*
 
@@ -57,7 +43,10 @@ install -c Common/Share/* ${DESTDIR}${DATADIR}
 if [ -e $os/Share ]; then
     install -c $os/Share/* ${DESTDIR}${DATADIR}
 fi
-install -c Common/WWW/* $os/WWW/* ${DESTDIR}${DATADIR}/WWW
+install -c Common/WWW/* ${DESTDIR}${DATADIR}/WWW
+if [ -e $os/WWW ]; then
+    install -c Common/WWW/* $os/WWW/* ${DESTDIR}${DATADIR}/WWW
+fi
 
 install -c Common/*.awk ${DESTDIR}${PREFIX}/libexec
 sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \

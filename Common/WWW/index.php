@@ -51,7 +51,7 @@ but will generally take longer to install.
 Powered by...
 
 <p>
-<img src="centos-power.jpg" alt="[Powered by CentOS]">
+<img src="powered-by.png" alt="[Powered By]">
 <img src="pkgsrc.jpg" alt="[Powered by pkgsrc]">
 
 </body>

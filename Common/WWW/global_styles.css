@@ -37,3 +37,8 @@ pre
     padding: 2cm; /* distance from border edge to text */
 }
 
+/* This was in the original CentOS version of this script but not FreeBSD */
+img {
+    width: auto;
+    height: 10%;
+}
