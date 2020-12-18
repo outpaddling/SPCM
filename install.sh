@@ -45,7 +45,7 @@ if [ -e $os/Share ]; then
 fi
 install -c Common/WWW/* ${DESTDIR}${DATADIR}/WWW
 if [ -e $os/WWW ]; then
-    install -c Common/WWW/* $os/WWW/* ${DESTDIR}${DATADIR}/WWW
+    install -c $os/WWW/* ${DESTDIR}${DATADIR}/WWW
 fi
 
 install -c Common/*.awk ${DESTDIR}${PREFIX}/libexec
