@@ -48,6 +48,7 @@ RHEL)
 
 *)
     printf "Unsupported OS: $(auto-ostype)\n"
+    pause
     exit 1
     ;;
 
