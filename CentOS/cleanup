@@ -1,5 +1,0 @@
-#!/bin/sh
-
-find . -name '.*.bak' -exec svn rm '{}' \;
-find . -name '.*.bak' -exec rm '{}' \;
-

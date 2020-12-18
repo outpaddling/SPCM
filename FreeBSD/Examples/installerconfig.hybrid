@@ -1,0 +1,177 @@
+##########################################################################
+# PREAMBLE: Executed before install
+# Use this section only to set up the environment for bsdinstall.
+##########################################################################
+
+# Pick one or the other
+fs=UFS2
+# fs=ZFS
+
+case $fs in
+UFS2)
+    # ada = SATA/IDE, da = SAS/USB/etc, mfi = LSI MegaRAID
+    # Use the first ATA, SCSI, or RAID disk found
+    # Add additional potential boot devices here if needed
+    for DISK in ada0 da0 mfid0; do
+	if [ -e /dev/$DISK ]; then
+	    break
+	fi
+    done
+
+    # Note: / must come first in PARTITIONS, or the new system will not boot
+    # Reasonable default partitions for most users.  Edit to taste.
+    # PARTITIONS="$DISK gpt { 4G freebsd-ufs /, 4G freebsd-swap, 32G freebsd-ufs /tmp, 32G freebsd-ufs /var, auto freebsd-ufs /usr }"
+    
+    # Alternative: Very basic partition scheme with auto-sized swap and / only.
+    # PARTITIONS="$DISK gpt"
+
+    # UFS2 boot, ZFS for workhorse filesystems
+    PARTITIONS="$DISK gpt { 128G freebsd-ufs /, 4G freebsd-swap }"
+    # FIXME: Add ZFS setup here?
+    ;;
+
+ZFS)
+    # Build a list of all ATA, SCSI, or RAID disks and create a stripe, mirror
+    # or raidz1, depending on how many disks of the same type are found.
+    # RAID or JBOD volumes must be created before PXE booting, or the devices
+    # will not be in /dev/.
+    # Make sure there are no external disks plugged in unless you want them
+    # as part of the boot volume.
+    
+    export nonInteractive="YES"
+    
+    # Override default 2g swap
+    export ZFSBOOT_SWAP_SIZE=4g
+    # export ZFSBOOT_SWAP_MIRROR=yes
+    
+    # Not sure is bsdinstall cares about CWD,so playing it safe
+    save_cwd=$(pwd)
+    cd /dev
+    for driver in ada da mfid; do
+	if [ -e ${driver}0 ]; then
+	    disk=0
+	    while [ -e $driver$disk ]; do
+		ZFSBOOT_DISKS="$ZFSBOOT_DISKS $driver$disk"
+		disk=$((disk + 1))
+	    done
+	    break
+	fi
+    done
+    cd $save_cwd
+    export ZFSBOOT_DISKS
+    
+    # awk removes leading space from wc -l output
+    disk_count=$(echo $ZFSBOOT_DISKS | wc -w | awk '{ print $1 }')
+
+    case $disk_count in
+    1)
+	export ZFSBOOT_VDEV_TYPE=stripe
+	;;
+    
+    2)
+	export ZFSBOOT_VDEV_TYPE=mirror
+	;;
+    
+    *)
+	export ZFSBOOT_VDEV_TYPE=raidz1
+	;;
+    
+    esac
+    ;;
+
+esac    # UFS2 or ZFS
+
+# Remove DISTRIBUTIONS you don't need to speed up install.
+# ports can be installed later with svn or portsnap.
+# src is only needed if you plan to rebuild the kernel or userland.
+# DISTRIBUTIONS="base.txz doc.txz kernel.txz lib32.txz ports.txz src.txz"
+
+# These should be sufficient for most users.
+DISTRIBUTIONS="base.txz kernel.txz lib32.txz"
+
+#!/bin/sh
+
+##########################################################################
+#   Post-install
+#
+#   Commands below are executed on the newly installed system after
+#   installation is complete and before the first reboot.
+#
+#   If you want to unplug the keyboard and display before installation
+#   completes and never come back, do not add interactive commands
+#   below, like pkg install, tzsetup.
+#
+#   With the default non-interactive config below, the new node will
+#   accept passwordless root login from this host via ssh after the first
+#   reboot, so you can immediately run more post-install options over the
+#   network.  If you are running DHCP on this host, the IP address
+#   will be in /var/db/dhcpd/dhcpd.leases.  If your network supports it,
+#   the hostname should also self-register in DNS.
+##########################################################################
+
+
+# Installing any packages here used to require another interaction with the
+# new node after installation.  The first run of 'pkg' required keyboard
+# input to confirm initialization.  Does not seem to be the case anymore
+# so this should work.
+
+pkg install -y rsync
+
+##########################################################################
+#   Set a hostname
+##########################################################################
+
+# Use IP as a unique hostname temporarily
+# Not sure where the 0.0.0.0 is coming from during PXE install.  It's not
+# in ifconfig output after install.
+hostname=`ifconfig | awk '$1 == "inet" { print $2 }' | fgrep -v 127.0.0 | fgrep -v 0.0.0.0 | sed -e 's|\.|-|g'`'.local'
+echo "hostname=$hostname" >> /etc/rc.conf
+
+##########################################################################
+#   Set time zone
+##########################################################################
+
+# Change this to your own timezone
+cp /usr/share/zoneinfo/America/Chicago /etc/localtime
+
+# Set timezone interactively during PXE install
+# tzsetup
+
+# Set all available interfaces to DHCP for now.
+for iface in `dmesg | awk '$2 == "Ethernet" { print $1 }'`; do
+    iface=${iface%:}
+    echo "ifconfig_$iface=DHCP" >> /etc/rc.conf
+done
+
+# Configure basic services.  Most configuration can be done after reboot, but
+# a few basics here will save a little hassle.
+echo 'sshd_enable=YES' >> /etc/rc.conf
+echo 'ntpd_enable=YES' >> /etc/rc.conf
+echo 'ntpdate_enable=YES' >> /etc/rc.conf
+echo 'ntpdate_flags="-u pool.ntp.org"' >> /etc/rc.conf
+echo 'dumpdev=NO' >> /etc/rc.conf
+
+sed -i '' 's|#PermitRootLogin no|PermitRootLogin prohibit-password|g' /etc/ssh/sshd_config
+mkdir -p /root/.ssh
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeTQn27GIeXWMs1wfA5mMLMqLMNaKb1s5WgnydZwYqI5Omxw4hfsWyKzvyXw6Q2NtXeXz+lZQbpOIhTGrTXEe6Fue9ik/YZMOz3+0ZOKtr4pU37hXg5kZ55ijwgR9LOnAvhubrbO3svhhi8pOJOWJ2/Usb8iwuB1b68+IY2ftCvH0fQ9YRhMu47rG5aAfJF27iZv/axxunIOiCb6iR6mjlYKlgHSvCdg3BL+xeV3DvmarbjRARKKNql6Km98WHm/p5MHSc3IIPrrJYX0EmEdKAZhSIrA2L7MWrJM6Dn56pDauyTVqUOSiZ225S6PsoUvbGeI5yVwDkYac3Yjntr735 root@albacore.acadix.biz' >> /root/.ssh/authorized_keys
+
+touch /etc/fstab
+
+# Install root password
+awk -F : -v pw='$6$8vaYYqXQgWJiAxU6$XwUWAp.R..e5tRSgJ9KaiOtFt8tHWPscYyQ5ZSnN9/ZADDJSNSUAhnoMPO/Mm0plM2ZsPqMswJ4do44CVYZ5O0' ' {
+    if ( $1 == "root" )
+    {
+	printf("%s:%s:%s:%s:%s:%s:%s:%s:%s:%s\n",
+	    $1,pw,$3,$4,$5,$6,$7,$8,$9,$10);
+    }
+    else
+    {
+	print $0;
+    }
+}' /etc/master.passwd > /etc/master.passwd.tmp
+
+# Install updated master password file if it passes sanity test
+if pwd_mkdb -C /etc/master.passwd.tmp; then
+    pwd_mkdb /etc/master.passwd.tmp
+fi
+
