@@ -55,6 +55,7 @@ list_interfaces()
 
     *)
 	printf "$0: Not supported on $os_name.\n"
+	pause
 	exit 1
 	;;
 
