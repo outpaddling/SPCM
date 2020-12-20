@@ -49,15 +49,15 @@ RHEL)
 	;;
 
     *)
-	printf "Unsupported OS release: $(auto-os-release)\n"
+	printf "$0: Not supported on $(auto-os-release).\n"
 	exit 1
 	;;
-    
+
     esac
     ;;
 
 *)
-    printf "Unsupported OS: $(auto-ostype)\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
 

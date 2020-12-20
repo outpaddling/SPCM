@@ -148,6 +148,7 @@ ib_config()
 	service rdma restart
 	service ibacm start
 	;;
+    
     RHEL7)
 	systemctl enable ibacm.service
 	systemctl enable rdma.service
@@ -163,9 +164,12 @@ ib_config()
 	    sleep 5
 	done
 	;;
+    
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE.\n"
 	exit 1
+	;;
+
     esac
     
     # SCSI RDMA protocol
@@ -231,7 +235,7 @@ EOM
 	systemctl restart network.service
 	;;
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
     esac
     
@@ -272,7 +276,7 @@ ntp_config()
 	systemctl restart ntpd.service
 	;;
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
     esac
 }
@@ -338,7 +342,7 @@ nfs_config()
 	systemctl restart rpcidmapd.service
 	;;
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
     esac
 
@@ -355,7 +359,7 @@ nfs_config()
 	systemctl enable nfs-idmap
 	;;
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
     esac
 
@@ -402,7 +406,7 @@ nfs_config()
 	    ;;
 	
 	*)
-	    printf "Unsupported RHEL version: $OS_RELEASE\n"
+	    printf "$0: Not supported on $OS_RELEASE\n"
 	    exit 1
 	    ;;
 	
@@ -461,7 +465,7 @@ EOM
 	    systemctl restart nfs
 	    ;;
 	*)
-	    printf "Unsupported RHEL version: $OS_RELEASE\n"
+	    printf "$0: Not supported on $OS_RELEASE\n"
 	    exit 1
 	esac
 
@@ -551,7 +555,7 @@ ssh_config()
 	systemctl restart sshd.service
 	;;
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
     esac
 
@@ -670,7 +674,7 @@ ganglia_install()
 	;;
     
     *)
-	printf "Unsupported RHEL version: $OS_RELEASE\n"
+	printf "$0: Not supported on $OS_RELEASE\n"
 	exit 1
 	;;
     
@@ -719,6 +723,17 @@ disable_overcommit()
 set -e
 
 : ${EDITOR:=vi}
+
+case $(auto-os-release) in
+RHEL6|RHEL7)
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-os-release).\n"
+    exit 1
+    ;;
+
+esac
 
 auto-root-check $0
 

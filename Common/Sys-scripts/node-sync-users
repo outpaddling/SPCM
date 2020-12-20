@@ -54,8 +54,10 @@ for user_name in $@; do
 	;;
     
     *)
-	printf "$0: Invalid OS: `auto-ostype`"
+	printf "$0: Not supported on $(auto-ostype).\n"
 	exit 1
+	;;
+
     esac
     
     remote_os=`ssh $node auto-ostype`
@@ -105,7 +107,9 @@ for user_name in $@; do
 	;;
     
     *)
-	printf "$0: Invalid OS: `auto-ostype`"
+	printf "$0: Not supported on $remote_os.\n"
 	exit 1
+	;;
+
     esac
 done

@@ -112,8 +112,10 @@ RHEL)
 	;;
     
     *)
-	printf "Unsupported RHEL version: $RHEL_VERSION\n"
+	printf "$0: Not supported on $RHEL_VERSION.\n"
 	exit 1
+	;;
+
     esac
     ;;
 

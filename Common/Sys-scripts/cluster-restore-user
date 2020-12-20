@@ -43,12 +43,16 @@ case $os_type in
 FreeBSD)
     shadow_pw='/etc/master.passwd'
     ;;
+
 RHEL)
     shadow_pw='/etc/shadow'
     ;;
+
 *)
-    printf "Unsupported OS: $os_type\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
+    ;;
+
 esac
 
 # Create account if it doesn't exist

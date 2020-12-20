@@ -48,8 +48,10 @@ RHEL6|RHEL7)
     ;;
 
 *)
-    printf "Unsupported OS: $os_release\n"
+    printf "$0: Not supported on $os_release.\n"
     exit 1
+    ;;
+
 esac
 
 datadir=$prefix/share/spcm/WWW
@@ -283,6 +285,11 @@ FreeBSD-*)
 
 RHEL7)
     systemctl restart apache.service
+    ;;
+
+*)
+    printf "$0: Not supported on $os_release.\n"
+    exit 1
     ;;
 
 esac

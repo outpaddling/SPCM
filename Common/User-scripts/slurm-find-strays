@@ -73,7 +73,7 @@ set +e
 for node in `cluster-compute-nodes`; do
     printf "$node\r"
 
-    case `uname` in
+    case `auto-ostype` in
     FreeBSD)
 	# -Y silences xauth warnings and should not pose a security risk here
 	processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
@@ -82,16 +82,18 @@ for node in `cluster-compute-nodes`; do
 		sort | uniq`
 	;;
 
-    Linux)
+    RHEL)
 	processes=`ssh -o ConnectTimeout=30 $node ps -U $user_name | \
 	    awk '$1 != "PID" && $4 != "ps" && $4 != "awk" && \
 		$4 != "sshd" && $4 != "bash" && $4 != "tcsh" { print $4 }' | \
 		sort | uniq`
 	;;
-    
+
     *)
-	printf "$0: `uname` is not yet supported.\n"
+	printf "$0: Not supported on $(auto-ostype).\n"
 	exit 1
+	;;
+    
     esac
     if [ -n "$processes" ]; then
 	
@@ -108,7 +110,7 @@ for node in `cluster-compute-nodes`; do
 	    printf "\nUser $user_name has jobs running on $node.  Check for strays manually.\n"
 	else
 	    printf "\nStray processes found on $node:\n$processes\n"
-	    case `uname` in
+	    case `auto-ostype` in
 	    FreeBSD)
 		# -Y silences xauth warnings and should not pose a security risk here
 		ssh -o ConnectTimeout=30 $node ps -u -U $user_name | \
@@ -116,7 +118,7 @@ for node in `cluster-compute-nodes`; do
 			$5 != "sshd:" && $5 != "bash" && $5 != "tcsh" { print $0 }'
 		;;
 	    
-	    Linux)
+	    RHEL)
 		ssh -o ConnectTimeout=30 $node ps -u -U $user_name | \
 		    awk '$1 != "USER" && $11 != "ps" && $4 != "awk" && \
 			$11 != "sshd" && $11 != "bash" && $11 != "tcsh" { print $0 }'

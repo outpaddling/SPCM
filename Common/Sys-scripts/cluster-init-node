@@ -203,8 +203,10 @@ FreeBSD)
     ;;
 
 *)
-    printf "Not yet implemented for `auto-ostype`.\n" >> /dev/stderr
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
     ;;
+
 esac
 
 ssh $node "mkdir -p $conf_dir && chmod 755 $conf_dir && touch $conf_dir/init-done"

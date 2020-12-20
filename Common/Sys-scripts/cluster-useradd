@@ -70,13 +70,16 @@ else
     FreeBSD)
 	pw groupadd $group_name -g $user_id
 	;;
+    
     RHEL)
 	groupadd -g $user_id $group_name
 	;;
+    
     *)
-	printf "Unsupported OS: $os_type\n"
+	printf "$0: Not supported on $os_type.\n"
 	exit 1
 	;;
+
     esac
 fi
 

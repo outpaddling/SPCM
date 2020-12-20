@@ -48,13 +48,16 @@ case `auto-ostype` in
 FreeBSD)
     power_off=-p
     ;;
+
 RHEL)
     power_off=-h
     ;;
+
 *)
-    printf "Unsupported OS: `auto-ostype`\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
+
 esac
 
 for node in $nodes; do

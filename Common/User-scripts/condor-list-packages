@@ -50,7 +50,7 @@ cat << EOM > list-packages.sh
 #!/bin/sh -e
 
 hostname
-case $(uname) in
+case $(auto-ostype) in
 FreeBSD)
     /usr/sbin/pkg info
     ;;

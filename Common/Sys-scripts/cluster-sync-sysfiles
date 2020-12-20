@@ -98,9 +98,10 @@ FreeBSD)
     ;;
 
 *)
-    printf "Not yet implemented for $os_type.\n"
+    printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
     ;;
+
 esac
 
 cd $CONF_DIR
