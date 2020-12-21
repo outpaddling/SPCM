@@ -41,7 +41,7 @@ FreeBSD-*)
     ;;
 
 RHEL6|RHEL7)
-    pkgin install -y apache ganglia-webfrontend
+    pkgin -y install apache ganglia-webfrontend
     prefix=$(auto-pkgsrc-prefix)
     web_root=$prefix/share/httpd/htdocs
     ifconfig='ip addr'

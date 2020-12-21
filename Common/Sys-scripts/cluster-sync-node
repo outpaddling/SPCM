@@ -103,7 +103,7 @@ RHEL)
     # FIXME: Prevent node from being enabled in the scheduler
     # until setup is complete
 
-    ssh $node pkgin install -y rsync
+    ssh $node pkgin -y install rsync
     ssh $node yum remove -y rsync
 
     # Install basic tools and updates

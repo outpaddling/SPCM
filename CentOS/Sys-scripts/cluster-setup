@@ -616,8 +616,8 @@ slurm_install()
 {
     case $NODE_TYPE in
     'head'|'compute')
-	pkgin install -y hdf5   # Work around dep issue with slurm-wlm
-	pkgin install -y slurm-wlm
+	pkgin -y install hdf5   # Work around dep issue with slurm-wlm
+	pkgin -y install slurm-wlm
 	# Allow finishing setup on nodes before they're in slurm.conf
 	cluster-munge-enable $NODE_TYPE || true
 	cluster-slurm-enable $NODE_TYPE || true
@@ -651,8 +651,8 @@ ganglia_install()
     if ! pkg_info ganglia-monitor-core > /dev/null; then
 	# FIXME: Work around llvm* dep issue in pkgsrc-current
 	# Remove this when fixed upstream
-	pkgin install -y llvm libXrandr
-	pkgin install -y ganglia-monitor-core
+	pkgin -y install llvm libXrandr
+	pkgin -y install ganglia-monitor-core
     fi
 
     case $OS_RELEASE in
@@ -810,10 +810,10 @@ pkgsrc_setup
 auto-ipmi-install
 
 # Workaround: git install looks for missing older version
-pkgin install -y tcl
+pkgin -y install tcl
 # Workaround lvm* dep issue
-pkgin install -y llvm
-pkgin install -y cvs subversion git rsync iftop nano emacs
+pkgin -y install llvm
+pkgin -y install cvs subversion git rsync iftop nano emacs
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 

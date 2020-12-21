@@ -47,7 +47,7 @@ RHEL)
     
     for node in $@; do
 	ssh $node yum install -y "$yum_packages"
-	ssh $node pkgin install -y "$pkgsrc_packages" || true
+	ssh $node pkgin -y install "$pkgsrc_packages" || true
     done
     
     # FIXME: Prune packages not present on master node
