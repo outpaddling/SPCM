@@ -905,10 +905,6 @@ if [ $NODE_TYPE = head ]; then
     cluster-highest-uid
 fi
 
-# Required by cluster-ssh-keygen, called from cluster-adduser
-# FIXME: Remove need for sudo.  Maybe use su -m?
-install_packages security/sudo
-
 line
 image=$(auto-install-media-distname disc1)
 pxedir=/pxeserver/imags/${image%.iso}
