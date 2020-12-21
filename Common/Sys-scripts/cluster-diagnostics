@@ -95,6 +95,7 @@ EOM
     1)
 	cluster-node-status
 	;;
+    
     2)
 	printf "Host name? "
 	read node
@@ -111,7 +112,10 @@ EOM
 	    printf "$0: Not supported on $(auto-ostype).\n"
 	    exit 1
 	    ;;
-
+	
+	esac
+	;;
+    
     3)
 	printf "Hostname? "
 	read node
@@ -135,6 +139,7 @@ EOM
 
 	esac
 	;;
+    
     4)
 	printf "Host name? "
 	read node
@@ -147,23 +152,29 @@ EOM
 	    node-iftop $node -i $iface
 	fi
 	;;
+    
     5)
 	slurm-user-cores
 	;;
+    
     6)
 	slurm-cluster-load
 	;;
+    
     7)
 	printf "Username of user with suspected strays? "
 	read username
 	slurm-find-strays $username
 	;;
+    
     Q|q)
 	exit 0
 	;;
+    
     *)
 	printf "Invalid selection: '$selection'\n"
 	;;
+    
     esac
     pause
 done
