@@ -1,5 +1,16 @@
 #!/bin/sh -e
 
+##########################################################################
+#   Script description:
+#       Display ASCII art banner
+#       https://www.ascii-art-generator.org/
+#       Font type: Slant
+#
+#   History:
+#   Date        Name        Modification
+#   2020-04?    Jason Bacon Begin
+##########################################################################
+
 cat << EOM
 	  _____ ____  ________  ___   __________________________________
 	 / ___// __ \/ ____/  |/  /
