@@ -119,15 +119,21 @@ If all of your nodes run the same OS, you can use rsync to distribute
 should be maintained separatedly.
 
 EOM
-    scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
-	/usr/pkg/sbin/auto-os-release ${node}:
-    ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
-    ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
+    # FIXME: Add support for different operating systems on head and other
+    # nodes.  Only RHEL7 uses pkgsrc at the time of this writing, so rsync
+    # will suffice for now.
+    node-sync-pkgsrc $node
+    
+    # Old local pacakges
+    #scp /usr/pkg/sbin/auto-binary-pkgsrc-setup \
+    #    /usr/pkg/sbin/auto-os-release ${node}:
+    #ssh $node 'env PATH=${PATH}:. auto-binary-pkgsrc-setup /usr/pkg auto'
+    #ssh $node 'ln -sf /usr/pkg/etc/pkgsrc-non-exclusive.* /etc/profile.d'
     # Work around git dep for missing older tcl
-    ssh $node 'pkgin -y install tcl'
-    ssh $node 'pkgin -y install nbpatch python27 git cvs mozilla-rootcerts'
-    ssh -t $node 'cd /usr/pkgsrc && git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip'
-    ssh $node 'cd /usr/pkgsrc/wip/spcm && bmake install'
+    #ssh $node 'pkgin -y install tcl'
+    #ssh $node 'pkgin -y install nbpatch python27 git cvs mozilla-rootcerts'
+    #ssh -t $node 'cd /usr/pkgsrc && git clone git://wip.pkgsrc.org/pkgsrc-wip.git wip'
+    #ssh $node 'cd /usr/pkgsrc/wip/spcm && bmake install'
     
     # ssh $node hostname $node
     # ssh $node \

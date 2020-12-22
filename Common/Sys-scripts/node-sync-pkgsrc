@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Sync local pkgsrc installation from head node to another node
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-22  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hostname\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+RHEL)
+    rsync -a --delete /usr/pkg* ${node}:/usr
+    rsync -a --delete /var/db/pkgin ${node}:/var/db
+    rsync -a --delete /etc/profile.d/pkgsrc* ${node}:/etc/profile.d
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
