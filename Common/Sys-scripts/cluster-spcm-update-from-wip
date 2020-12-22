@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
 cluster-wip-update
-cluster-run spcm-updae-from-wip all
+cluster-run spcm-update-from-wip all
