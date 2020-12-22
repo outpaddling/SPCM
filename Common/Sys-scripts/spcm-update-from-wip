@@ -1,14 +1,14 @@
 #!/bin/sh -e
 
-case 0$(which cluster-setup) in
-0/usr/local/sbin/cluster-setup)
+case $(auto-ostype) in
+FreeBSD)
     # FreeBSD ports
     wip-update
     pkg remove -y auto-admin
     wip-reinstall-port -nu -r spcm
     ;;
 
-0/usr/pkg/sbin/cluster-setup)
+Darwin|NetBSD|RHEL)
     # pkgsrc
     pkgsrc=$(auto-pkgsrc-dir)
     cd $pkgsrc/wip
@@ -17,17 +17,14 @@ case 0$(which cluster-setup) in
     # Allow auto-admin deinstall
     pkgin remove -y auto-admin spcm || true
     
-    cd $pkgsrc/uwm-pkgsrc-wip/auto-admin
-    bmake distclean && bmake deinstall && bmake install
+    cd $pkgsrc/wip/auto-admin
+    bmake clean reinstall
     
-    cd $pkgsrc/uwm-pkgsrc-wip/spcm
-    bmake distclean && bmake deinstall && bmake install
-    
-    cd ..
-    yes | ./clean-all
+    cd $pkgsrc/wip/spcm
+    bmake clean reinstall
     ;;
 
 *)
-    printf "No spcm installation found.\n"
+    printf "$0: Not supported on $(auto-ostype)\n"
     exit 1
 esac

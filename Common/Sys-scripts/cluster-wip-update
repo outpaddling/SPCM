@@ -11,6 +11,17 @@ FreeBSD)
     done
     ;;
 
+Darwin|NetBSD|RHEL)
+    pkgsrc=$(auto-pkgsrc-dir)
+    cd $pkgsrc/wip
+    git pull
+    cd ..
+    for node in $(cluster-all-nodes); do
+	printf "$node...\n"
+	rsync -a --delete wip ${node}:$pkgsrc
+    done
+    ;;
+
 *)
     printf "$0: Not supported on $(auto-ostype).\n"
     exit 1
