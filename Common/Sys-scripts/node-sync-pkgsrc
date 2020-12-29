@@ -23,6 +23,7 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
+node=$1
 
 case $(auto-ostype) in
 RHEL)

@@ -813,7 +813,7 @@ auto-ipmi-install
 pkgin -y install tcl
 # Workaround lvm* dep issue
 pkgin -y install llvm
-pkgin -y install cvs subversion git rsync iftop nano emacs
+pkgin -y install cvs subversion git rsync iftop nano
 yum remove -y cvs subversion git rsync
 yum autoremove -y
 

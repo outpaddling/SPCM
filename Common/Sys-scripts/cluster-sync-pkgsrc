@@ -29,6 +29,7 @@ RHEL)
     read -p "Are you sure? yes/[no] " sure
     if [ 0$sure = 0yes ]; then
 	for node in $(cluster-all-nodes); do
+            printf "$node...\n"
 	    node-sync-pkgsrc $node
 	done
     fi
