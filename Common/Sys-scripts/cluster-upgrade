@@ -1,0 +1,52 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Upgrade cluster nodes one at a time.  To speed things up, you
+#       may prefer to run node-upgrade manually on several nodes at once.
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-30  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 version\n"
+    printf "Example: $0 12.2-RELEASE\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+version=$1
+
+for node in $(cluster-all-nodes); do
+    ssh $node 'uname -nr'
+    read -p "Upgrade $node? y/[n] " upgrade
+    if [ 0$upgrade = 0y ]; then
+	node-upgrade $node $version
+    fi
+done
+
+cat << EOM
+
+Please run the upgrade process manually on the head node.
+
+EOM
+case $(auto-ostype) in
+FreeBSD)
+    cat << EOM
+1. Update the head node via cluster-admin and reboot if necessary
+2. Run freebsd-update upgrade -r $version
+3. Follow the instructions on the screen
+
+EOM
+    ;;
+esac
