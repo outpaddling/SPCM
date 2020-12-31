@@ -100,8 +100,9 @@ FreeBSD)
     
     cat << EOM
     
-    First install phase complete.  Rebooting $node.
-    Press return when ready.
+First install phase complete.
+
+Press return when ready to reboot $node.
     
 EOM
     read junk

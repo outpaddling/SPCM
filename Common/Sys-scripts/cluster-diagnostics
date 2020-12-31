@@ -2,19 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Various Unix tools for monitoring nodes
 #       
 #   History:
 #   Date        Name        Modification
-#   2014-01-08  root        Begin
+#   2014-01-08  J Bacon     Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 \n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -97,47 +94,15 @@ EOM
 	;;
     
     2)
-	printf "Host name? "
+	printf "Host name or compute-node number? "
 	read node
-	case $(auto-ostype) in
-	FreeBSD)
-	    ssh -t $node netstat 1
-	    ;;
-	
-	RHEL)
-	    ssh -t $node netstat -c 1
-	    ;;
-    
-	*)
-	    printf "$0: Not supported on $(auto-ostype).\n"
-	    exit 1
-	    ;;
-	
-	esac
+	node-netstat $node
 	;;
     
     3)
-	printf "Hostname? "
+	printf "Hostname or compute-node number? "
 	read node
-	case $(auto-ostype) in
-	FreeBSD)
-	    if [ "$(ssh $node zpool status)" = "no pools available" ]; then
-		ssh -t $node iostat -w 1
-	    else
-		ssh -t $node zpool iostat 1
-	    fi
-	    ;;
-	
-	RHEL)
-	    ssh -t $node iostat -p ALL -m 1
-	    ;;
-
-	*)
-	    printf "$0: Not supported on $os_name.\n"
-	    exit 1
-	    ;;
-
-	esac
+	node-iostat $node
 	;;
     
     4)
