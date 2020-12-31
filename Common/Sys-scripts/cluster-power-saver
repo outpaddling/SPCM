@@ -57,9 +57,10 @@ if [ "0$(squeue -h)" = 0 ]; then
     printf "No jobs running.  Shutting down file servers.\n"
     for node in $file_servers; do
 	# FIXME: Do this only for compute nodes
-	# if cluster-node-type $node = 
-	printf "Draining $node...\n"
-	scontrol update nodename=$node state=drain reason=power-save || true
+	if [ $(node-type $node) = compute ]; then
+	    printf "Draining $node...\n"
+	    scontrol update nodename=$node state=drain reason=power-save || true
+	fi
     done
     sleep 5
     for node in $file_servers; do

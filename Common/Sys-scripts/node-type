@@ -2,16 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       Verify that we're running on the head node
+#       Report the node type based on hostname
 #       
 #   History:
 #   Date        Name        Modification
-#   2019-07-16  Jason Bacon Begin
+#   2020-12-31  Charlie &   Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 calling-script-name\n"
+    printf "Usage: $0 [hostname]\n"
     exit 1
 }
 
@@ -20,11 +20,21 @@ usage()
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
-    usage
-fi
+: ${LOCALBASE:=/usr/local}
 
-if [ $(node-type) != head ]; then
-    printf "$0 can only be run on the head node.\n"
-    exit 1
-fi
+case $# in
+0)
+    cat $LOCALBASE/etc/spcm/my-node-type
+    ;;
+
+1)
+    short_host=$(echo $1 | cut -d . -f 1)
+    awk -v hostname=$short_host '$1 == hostname { print $2 }' \
+	$LOCALBASE/etc/spcm/node-types
+    ;;
+
+*)
+    usage
+    ;;
+
+esac

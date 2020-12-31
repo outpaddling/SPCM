@@ -74,8 +74,8 @@ version=$2
 
 case $(auto-ostype) in
 FreeBSD)
-    ssh $node cluster-node-type
-    if [ $(ssh $node cluster-node-type) = compute ]; then
+    ssh $node node-type
+    if [ $(node-type $node) = compute ]; then
 	scontrol update nodename=$node state=drain reason="OS upgrade"
 	sinfo --list-reasons
 	state=`sinfo -n $node -o %T -h`
@@ -112,7 +112,7 @@ EOM
     printf "Running freebsd-update install on $node after reboot.\n"
     ssh -t $node freebsd-update install
     
-    if [ $(ssh $node cluster-node-type) = compute ]; then
+    if [ $(node-type $node) = compute ]; then
 	resume=''
 	while [ 0$resume != 0y ] && [ 0$resume != 0n ]; do
 	    read -p "Resume $node? y/n " resume

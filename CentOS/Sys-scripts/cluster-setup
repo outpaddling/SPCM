@@ -755,11 +755,42 @@ NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
 CONF_DIR=$prefix/etc/spcm
 
+# Source for default files
+DATADIR=$prefix/share/spcm
+
+# FIXME: Install bsdstats?
+
+if [ 0$(node-type) != 0 ] && [ $NODE_TYPE != $(node-type) ]; then
+    cat << EOM
+
+$0:
+
+Node-type "$NODE_TYPE" contradicts previous node type set for $(hostname -s).
+If you really want to change the node type, edit
+
+$prefix/etc/node-types
+
+on the head node and
+
+$prefix/etc/my-node-type
+
+on $(hostname) and run $0 again.
+
+EOM
+    exit 1
+fi
+
 case $NODE_TYPE in
 'head')
     read -p "Hostname for this head node? [$(hostname)] " host_name
     if [ 0$host_name != 0 ]; then
 	hostnamectl set-hostname $host_name
+    fi
+
+    # cluster-init-node does this for all but head node
+    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-node-type
+    if [ 0$(node-type) = 0 ]; then
+	printf "$(hostname -s)\t$NODE_TYPE\n" >> $CLUSTER_DATA/node-types
     fi
 
     printf "Install/edit /etc/hosts.\n"

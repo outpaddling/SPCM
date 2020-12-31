@@ -814,18 +814,44 @@ line
 # Source for default files
 DATADIR=$LOCALBASE/share/spcm
 
+# FIXME: Install bsdstats?
+
+if [ 0$(node-type) != 0 ] && [ $NODE_TYPE != $(node-type) ]; then
+    cat << EOM
+
+$0:
+
+Node-type "$NODE_TYPE" contradicts previous node type set for $(hostname -s).
+If you really want to change the node type, edit
+
+$LOCALBASE/etc/node-types
+
+on the head node and
+
+$LOCALBASE/etc/my-node-type
+
+on $(hostname) and run $0 again.
+
+EOM
+    exit 1
+fi
+
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
 
 auto-ipmi-install || true
-
-# FIXME: Install bsdstats?
 
 # Config files used by spcm
 if [ $NODE_TYPE = head ]; then
     CLUSTER_DATA="$LOCALBASE/etc/spcm"
     mkdir -p $CLUSTER_DATA
 
+    # cluster-init-node does this for all but head node
+    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-node-type
+    if [ 0$(node-type) = 0 ]; then
+	printf "$(hostname -s)\t$NODE_TYPE\n" >> $CLUSTER_DATA/node-types
+    fi
+    
     if [ -z $EDITOR ]; then
 	EDITOR=vi
 	export EDITOR
