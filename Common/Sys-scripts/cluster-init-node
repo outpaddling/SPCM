@@ -78,10 +78,10 @@ EOM
 fi
 
 # cluster-setup does this for the head node
-ssh $node "mkdir -p $CLUSTER_DATA && printf \"$node_type\n\" > $CLUSTER_DATA/my-node-type"
 if [ 0$(node-type $node) = 0 ]; then
     printf "$short_name\t$node_type\n" >> $CLUSTER_DATA/node-types
 fi
+ssh $node "mkdir -p $CLUSTER_DATA && printf \"$node_type\n\" > $CLUSTER_DATA/my-node-type"
 
 conf_dir=$prefix/etc/spcm
 if ssh $node ls $conf_dir/init-done; then

@@ -847,10 +847,11 @@ if [ $NODE_TYPE = head ]; then
     mkdir -p $CLUSTER_DATA
 
     # cluster-init-node does this for all but head node
-    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-node-type
     if [ 0$(node-type) = 0 ]; then
 	printf "$(hostname -s)\t$NODE_TYPE\n" >> $CLUSTER_DATA/node-types
     fi
+    # Create this after node-types or node-types won't be created
+    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-node-type
     
     if [ -z $EDITOR ]; then
 	EDITOR=vi
