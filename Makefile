@@ -5,6 +5,7 @@ RM      ?= rm
 BIN     = cluster-passwd
 SED     ?= sed
 PREFIX  ?= /usr/local
+DESTDIR ?= .
 
 all: ${BIN}
 
