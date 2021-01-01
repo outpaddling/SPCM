@@ -75,12 +75,13 @@ while true; do
     cat << EOM
     
 1.. Check for down nodes
-2.. Monitor load with netstat
-3.. Monitor load with iostat
-4.. Monitor load with iftop
-5.. Show cores per user
-6.. Show cluster load
-7.. Scan for stray processes
+2.. Monitor load with top
+3.. Monitor load with netstat
+4.. Monitor load with iostat
+5.. Monitor load with iftop
+6.. Show cores per user
+7.. Show cluster load
+8.. Scan for stray processes
 Q.. Quit / Return to main menu
 
 EOM
@@ -96,16 +97,22 @@ EOM
     2)
 	printf "Host name or compute-node number? "
 	read node
-	node-netstat $node
+	node-top $node
 	;;
     
     3)
+	printf "Host name or compute-node number? "
+	read node
+	node-netstat $node
+	;;
+    
+    4)
 	printf "Hostname or compute-node number? "
 	read node
 	node-iostat $node
 	;;
     
-    4)
+    5)
 	printf "Host name? "
 	read node
 	list_interfaces $node
@@ -118,15 +125,15 @@ EOM
 	fi
 	;;
     
-    5)
+    6)
 	slurm-user-cores
 	;;
     
-    6)
+    7)
 	slurm-cluster-load
 	;;
     
-    7)
+    8)
 	printf "Username of user with suspected strays? "
 	read username
 	slurm-find-strays $username
