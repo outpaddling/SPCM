@@ -263,7 +263,8 @@ EOM
 	# FIXME: Make sure NFS server is enabled in rc.conf first
 	# Does not work for multi-homed host
 	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
-	subnet=`auto-ask subnet "\nSubnet for NFS?" 192.168.0.0`
+	default_subnet=$(auto-get-network octet)
+	subnet=`auto-ask subnet "\nSubnet for NFS?" $default_subnet`
 
 	# FIXME: Use auto-nfs-client/server-setup and sysrc when nfsuserd
 	# option exists.  Must use nfsuserd for hybrid clusters.
@@ -555,8 +556,8 @@ nodes.
 
 EOM
     # Be generous, but prevent fork bombs
-    default_maxproc=$(( `sysctl -n kern.smp.cpus` * 4 ))
-    # default_maxproc=32
+    # default_maxproc=$(( `sysctl -n kern.smp.cpus` * 4 ))
+    default_maxproc=128
     maxproc=`auto-ask max-proc "Max processes for the $NODE_TYPE node?" $default_maxproc`
     
     default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
@@ -583,7 +584,7 @@ EOM
 #   2013-02-15  Charlie &   Begin
 ##########################################################################
 
-update_system()
+update_clock()
 {
     line
     printf "Updating system clock...\n"
@@ -612,7 +613,7 @@ install_common_tools()
     line
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion \
-	shells/bash shells/dash
+	shells/bash shells/dash sysutils/bsdstats
 }
 
 
@@ -663,14 +664,14 @@ startup_scripts()
     # Install extra login logic
     line
     printf "Installing startup scripts...\n"
-    if [ ! -e $LOCALBASE/etc/spcm/profile ]; then
-	cp $DATADIR/profile $LOCALBASE/etc/spcm
+    if [ ! -e $CONF_DIR/profile ]; then
+	cp $DATADIR/profile $CONF_DIR
     fi
-    if [ ! -e $LOCALBASE/etc/spcm/csh.login ]; then
-	cp $DATADIR/csh.login $LOCALBASE/etc/spcm
+    if [ ! -e $CONF_DIR/csh.login ]; then
+	cp $DATADIR/csh.login $CONF_DIR
     fi
-    auto-append-line cluster/profile ". $LOCALBASE/etc/spcm/profile" /etc/profile cluster-setup
-    auto-append-line cluster/csh.login "source $LOCALBASE/etc/spcm/csh.login" /etc/csh.login cluster-setup
+    auto-append-line cluster/profile ". $CONF_DIR/profile" /etc/profile cluster-setup
+    auto-append-line cluster/csh.login "source $CONF_DIR/csh.login" /etc/csh.login cluster-setup
 }
 
 
@@ -735,15 +736,12 @@ get_head_host()
     compute|io|vis)
 	# If cluster-setup was previously completed on this node,
 	# get head node from configuration, otherwise ask.
-	head_host=''
-	while [ 0$head_host = 0 ]; do
-	    head_host=`auto-ask head-hostname "\nShort hostname of head node?" login`
-	done
+	head_host=$(cat $CONF_DIR/head-node)
 	;;
     
     head)
 	head_host=`hostname -s`
-	hostname -s > $LOCALBASE/etc/spcm/head_node
+	hostname -s > $CONF_DIR/head-node
 	;;
     
     esac
@@ -761,7 +759,7 @@ fi
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+prefix=/usr/local
 
 NODE_TYPE=$1
 case $NODE_TYPE in
@@ -772,38 +770,20 @@ head|compute|io|vis)
     ;;
 esac
 
-if [ `whoami` != root ]; then
-    printf "$0 must be run as root.\n"
-    exit 1
-fi
-
-if ! fgrep -q $(hostname) /etc/hosts; then
-    printf "Error: /etc/hosts must contain an entry for this node.\n"
-    exit 1
-fi
-
-for file in /root/ssh /etc/fstab; do
-    if [ -e $file ] && [ ! -e $file.backup ]; then
-	printf "Backing up $file...\n"
-	cp -R $file $file.backup
-    fi
-done
+auto-root-check $0
 
 ##########################################################################
 #   Set common variables
 ##########################################################################
 
-# Recommended layout for dedicated hardware:
-# Use netmask of 255.255.128.0.
-MAX_NODES=60000
-
-# Misc
-LOCALBASE=/usr/local
+: ${LOCALBASE:=/usr/local}
+CONF_DIR=$LOCALBASE/etc/spcm
+# Source for default files
+DATADIR=$LOCALBASE/share/spcm
 RC_CONF=/etc/rc.conf
 HOSTS=/etc/hosts
 HOSTS_ALLOW=/etc/hosts.allow
 START_DIR=`pwd`
-APACHE_PKG=apache24
 
 # Used by child scripts, so export it
 LOG_DIR=$START_DIR/cluster-setup-log
@@ -811,66 +791,41 @@ line
 printf "Command output will be stored in $LOG_DIR.\n"
 line
 
-# Source for default files
-DATADIR=$LOCALBASE/share/spcm
-
-# FIXME: Install bsdstats?
-
-if [ 0$(node-type) != 0 ] && [ $NODE_TYPE != $(node-type) ]; then
-    cat << EOM
-
-$0:
-
-Node-type "$NODE_TYPE" contradicts previous node type set for $(hostname -s).
-If you really want to change the node type, edit
-
-$LOCALBASE/etc/node-types
-
-on the head node and
-
-$LOCALBASE/etc/my-node-type
-
-on $(hostname) and run $0 again.
-
-EOM
+if ! fgrep -q $(hostname) /etc/hosts; then
+    printf "Error: /etc/hosts must contain an entry for $(hostname).\n"
     exit 1
 fi
+
+for file in /root/.ssh /etc/fstab; do
+    if [ -e $file ] && [ ! -e $file.backup ]; then
+	printf "Backing up $file...\n"
+	cp -R $file $file.backup
+    fi
+done
 
 # Needed by openjdk, bash, etc.
 auto-add-fdesc-mount
 
 auto-ipmi-install || true
 
-# Config files used by spcm
+# Configure files used by spcm
 if [ $NODE_TYPE = head ]; then
-    CLUSTER_DATA="$LOCALBASE/etc/spcm"
-    mkdir -p $CLUSTER_DATA
-
-    # cluster-init-node does this for all but head node
-    if [ 0$(node-type) = 0 ]; then
-	printf "$(hostname -s)\t$NODE_TYPE\n" >> $CLUSTER_DATA/node-types
-    fi
-    # Create this after node-types or node-types won't be created
-    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-node-type
+    # cluster-init-node will do this for other node types
+    node-set-type $(hostname -s) $NODE_TYPE
     
     if [ -z $EDITOR ]; then
-	EDITOR=vi
-	export EDITOR
+	export EDITOR=vi
     fi
-    
-    printf "\nIf you have an old $HOSTS_ALLOW to restore, do it now.\n\n"
-    pause
-    $EDITOR $HOSTS_ALLOW
 
-    latest=`auto-ask latest-packages 'Use latest packages instead of quarterly?' y`
-    if [ $latest != n ]; then
-	auto-pkg-latest --no-reboot
+    firewall=`auto-ask firewall 'Configure firewall?' y`
+    if [ $firewall = y ]; then
+	auto-firewall-setup
     fi
-    
+
     cat << EOM
 
 It's a good idea to start with a fully updated system, to ensure ports and
-package compatibility and maximize security.
+package compatibility and to maximize security.
 
 EOM
     update=`auto-ask update-system 'Update system before continuing?' y`
@@ -879,21 +834,19 @@ EOM
     fi
 fi
 
-NETMASK=`auto-ask netmask 'Netmask for local network?' 255.255.128.0`
+default_netmask=$(auto-get-netmask octet)
+NETMASK=`auto-ask netmask 'Netmask for local network?' $default_netmask`
 export NETMASK  # Pass to other scripts like ganglia-web-setup
 
 ##########################################################################
 #   Begin setup
 ##########################################################################
 
-# Done by cluster-bootstrap
-# auto-pkg-latest
-
 # The following configuration must be done on all nodes, although
 # different node types may be configured differently.
-update_system               # Start with and NTP update
+update_clock                # NTP update
 enable_procfs               # Needed for?
-get_port_install_method     # Build ports from source?
+# get_port_install_method     # Build ports from source?
 install_common_tools        # gmake, etc.
 get_head_host
 if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
@@ -948,8 +901,6 @@ if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
 	auto-pxe-installer-setup $image
 	cd $save_cwd
     fi
-else
-    printf "$pxedir already exists.\n"
 fi
 
 # Run local site hooks

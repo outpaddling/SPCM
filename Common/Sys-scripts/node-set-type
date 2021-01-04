@@ -1,0 +1,66 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Store node-type in etc/spcm
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-03  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 short-hostname node-type\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+node_name=$1
+node_type=$2
+
+: ${LOCALBASE:=/usr/local}
+
+if [ 0"$(node-type $node_name)" != 0 ] && [ $node_type != $(node-type $node_name) ]; then
+    cat << EOM
+
+$0:
+
+Node-type "$node_type" contradicts previous node type "$(node-type $node_name)" set for
+$node_name. If you really want to change the node type, edit
+
+$LOCALBASE/etc/node-types
+
+on the head node and
+
+$LOCALBASE/etc/my-node-type
+
+on $node_name and run $0 again.
+
+EOM
+    exit 1
+fi
+
+conf_dir=$LOCALBASE/etc/spcm
+mkdir -p $conf_dir
+
+# Set $conf_dir/my-node-type on all nodes
+# This is used by the node-type command with no args below, so do it first
+if [ $node_type = head ]; then
+    printf "$node_type\n" > $conf_dir/my-node-type
+else
+    ssh $node_name "mkdir -p $conf_dir && printf \"$node_type\n\" > $conf_dir/my-node-type"
+fi
+
+# Add to $conf_dir/node-types only if running on the head node
+# and not already there
+if [ $(node-type) = head ] && [ 0$(node-type $node_name) = 0 ]; then
+    printf "$node_name\t$node_type\n" >> $conf_dir/node-types
+fi

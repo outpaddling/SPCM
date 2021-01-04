@@ -41,7 +41,7 @@ node_type=$2
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+prefix=/usr/local
 CLUSTER_DATA=$prefix/etc/spcm
 
 short_name=${node%%.*}
@@ -57,31 +57,7 @@ if ! awk '{ print $2 }' /etc/hosts | fgrep -q $node; then
     exit 1
 fi
 
-if [ 0$(node-type $short_name) != 0 ] && [ $node_type != $(node-type $short_name) ]; then
-    cat << EOM
-
-$0:
-
-Node-type "$node_type" contradicts previous node type set for $(hostname -s).
-If you really want to change the node type, edit
-
-$prefix/etc/node-types
-
-on the head node and
-
-$prefix/etc/my-node-type
-
-on $(hostname) and run $0 again.
-
-EOM
-    exit 1
-fi
-
-# cluster-setup does this for the head node
-if [ 0$(node-type $node) = 0 ]; then
-    printf "$short_name\t$node_type\n" >> $CLUSTER_DATA/node-types
-fi
-ssh $node "mkdir -p $CLUSTER_DATA && printf \"$node_type\n\" > $CLUSTER_DATA/my-node-type"
+node-set-type $short_name $node_type
 
 conf_dir=$prefix/etc/spcm
 if ssh $node ls $conf_dir/init-done; then

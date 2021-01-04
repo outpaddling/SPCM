@@ -87,12 +87,12 @@ FreeBSD)
 	printf "ssh_config "
 	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
 	
-	printf "system-auth"
+	printf "system-auth "
 	rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d
 	
-	printf "fstab fragments "
+	printf "etc/spcm "
 	ssh $node mkdir -p $CONF_DIR
-	rsync -av $CONF_DIR/fstab* ${node}:$CONF_DIR
+	rsync -av $CONF_DIR/fstab* $CONF_DIR/head-node ${node}:$CONF_DIR
 	printf '\n'
     done
     ;;

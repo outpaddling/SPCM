@@ -75,11 +75,9 @@ fi
 
 gmond_conf=$prefix/etc/gmond.conf
 if [ -e $gmond_conf ]; then
-    read -p "Overwrite gmond.conf? y/[n] " overwrite
-    if [ 0$overwrite = 0y ]; then
-	if [ ! -e $gmond_conf.orig ]; then
-	    cp $gmond_conf $gmond_conf.orig
-	fi
+    read -p "Overwrite gmond.conf? [y]/n " overwrite
+    if [ 0$overwrite != 0n ]; then
+	auto-backup-file $gmond_conf
 	rm -f $gmond_conf
     fi
 fi
@@ -98,7 +96,7 @@ EOM
     #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
     cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $(hostname)`
     cluster_owner=`auto-ask cluster-owner "Owner of the cluster as it should appear in Ganglia? " $(whoami)`
-    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " 192.168.0.2`
+    gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " $(auto-get-ip octet)`
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
 	-e "s|%%CLUSTER_OWNER%%|$cluster_owner|g" \
@@ -107,14 +105,14 @@ EOM
 fi
 
 chmod 644 $gmond_conf
-vi $gmond_conf
+# vi $gmond_conf
 
 gmetad_conf=$prefix/etc/gmetad.conf
 if [ -e $gmetad_conf ]; then
-    read -p "Overwrite gmetad.conf? y/[n] " overwrite
-    if [ 0$overwrite = 0y ]; then
+    read -p "Overwrite gmetad.conf? [y]/n " overwrite
+    if [ 0$overwrite != 0n ]; then
 	auto-backup-file $gmetad_conf
-	rm $gmetad_conf
+	rm -f $gmetad_conf
     fi
 fi
 
@@ -149,7 +147,7 @@ EOM
 fi
 
 chmod 644 $gmetad_conf
-vi $gmetad_conf
+# vi $gmetad_conf
 
 case $os_release in
 FreeBSD-*)
@@ -269,7 +267,7 @@ EOM
     ;;
 
 esac
-vi $httpd_conf
+# vi $httpd_conf
 
 # Make sure everything is readable by apache_user
 chown -Rh ${apache_user}:${apache_user} $prefix/share/ganglia/
