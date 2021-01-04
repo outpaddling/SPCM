@@ -1,7 +1,10 @@
 #!/bin/sh -e
 
+: ${PREFIX:=/usr/local}
+CONF_DIR=$PREFIX/etc/spcm
+
 # ${PREFIX} is prepended by install script
-if ! fgrep -q highest-uid spcm.conf; then
+if ! fgrep -q highest-uid $CONF_DIR/spcm.conf 2> /dev/null; then
     cat << EOM >> /dev/stderr
 
 You must indicate the highest UID for a regular cluster user on this
@@ -20,8 +23,8 @@ EOM
     if [ 0$highest_uid = 0 ]; then
 	highest_uid=20000
     fi
-    printf "highest-uid $highest_uid\n" >> spcm.conf
+    printf "highest-uid $highest_uid\n" >> $CONF_DIR/spcm.conf
 fi
 
-awk '$1 == "highest-uid" { print $2 }' spcm.conf
+awk '$1 == "highest-uid" { print $2 }' $CONF_DIR/spcm.conf
 

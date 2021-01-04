@@ -1,7 +1,10 @@
 #!/bin/sh -e
 
+: ${PREFIX:=/usr/local}
+CONF_DIR=$PREFIX/etc/spcm
+
 # ${PREFIX} is prepended by install script
-if ! fgrep -q lowest-uid spcm.conf 2> /dev/null; then
+if ! fgrep -q lowest-uid $CONF_DIR/spcm.conf 2> /dev/null; then
     cat << EOM >> /dev/stderr
 
 You must indicate the lowest UID for a regular cluster user on this
@@ -20,8 +23,8 @@ EOM
     if [ 0$lowest_uid = 0 ]; then
 	lowest_uid=2000
     fi
-    printf "lowest-uid $lowest_uid\n" >> spcm.conf
+    printf "lowest-uid $lowest_uid\n" >> $CONF_DIR/spcm.conf
 fi
 
-awk '$1 == "lowest-uid" { print $2 }' spcm.conf
+awk '$1 == "lowest-uid" { print $2 }' $CONF_DIR/spcm.conf
 

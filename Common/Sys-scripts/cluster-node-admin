@@ -287,17 +287,17 @@ EOM
 		if [ 0$domain = 0 ]; then
 		    domain=$default_domain
 		fi
-		if get_host_info 3; then
-		    default_responses_info
-		    read -p "Default responses to all prompts? y/[n] " use_defaults
-		    if [ 0$use_defaults = 0y ]; then
-			read -p "Reference node for binary packages? " ref_node
-			sync_opts="--use-defaults $ref_node"
-			read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
-			if [ 0$infiniband = 0y ]; then
-			    sync_opts="$sync_opts --infiniband"
-			fi
+		default_responses_info
+		read -p "Default responses to all prompts? y/[n] " use_defaults
+		if [ 0$use_defaults = 0y ]; then
+		    read -p "Reference node for binary packages? " ref_node
+		    sync_opts="--use-defaults $ref_node"
+		    read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
+		    if [ 0$infiniband = 0y ]; then
+			sync_opts="$sync_opts --infiniband"
 		    fi
+		fi
+		if get_host_info 3; then
 		    num=$first_num
 		    while [ $num -le $last_num ]; do
 			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
