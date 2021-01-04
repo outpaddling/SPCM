@@ -1,0 +1,33 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Set default NFS fstab fragments in etc/spcm/fstab.node-type
+#       to NFS mounts on node.
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-04  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 hostname node-type\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+node=$1
+node_type=$2
+
+: ${PREFIX:=/usr/local}
+CONF_DIR=$PREFIX/etc/spcm
+
+ssh $node "awk '\$3 == \"nfs\" { print \$0 }' /etc/fstab" > $CONF_DIR/fstab.$node_type

@@ -59,7 +59,7 @@ fi
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+prefix=/usr/local
 
 LOCALBASE=/usr/local
 
@@ -86,8 +86,8 @@ if [ -z EDITOR ]; then
     EDITOR="vi"
 fi
 
-conf_dir=$prefix/etc/spcm
-if ! ssh $node stat $conf_dir/init-done; then
+CONF_DIR=$prefix/etc/spcm
+if ! ssh $node stat $CONF_DIR/init-done; then
     printf "You must run 'cluster-init-node $long_node_name $node_type' first.\n"
     exit 1
 fi
@@ -245,6 +245,13 @@ FreeBSD)
     ;;
 
 esac
+
+if [ 0$use_defaults != 0yes ]; then
+    read -p "Set $node NFS mounts to defaults for other $node_type nodes? [y]/n " set_nfs_defaults
+    if [ 0$set_nfs_defaults != 0n ]; then
+	cluster-set-default-nfs-mounts $node $node_type
+    fi
+fi
 
 if [ 0$use_defaults = 0yes ]; then
     reboot=y

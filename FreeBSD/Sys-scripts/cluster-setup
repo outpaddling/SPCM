@@ -190,11 +190,11 @@ EOM
 	fi
 	$EDITOR $slurm_conf
 	stop_service slurmctld
-	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1
+	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1 || true
 	service slurmctld restart || true
     else
 	stop_service slurmd
-	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1
+	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1 || true
 	service slurmd restart || true
     fi
 }
@@ -243,7 +243,7 @@ Some other directories you may want to share include:
 EOM
 
     line
-    nfs_config=`auto-ask nfs-config 'Configure NFS?' y`
+    nfs_config=`auto-ask cluster-nfs-config 'Configure NFS?' y`
     if [ $nfs_config != 'y' ]; then
 	return
     fi
@@ -264,7 +264,7 @@ EOM
 	# Does not work for multi-homed host
 	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
 	default_subnet=$(auto-get-network octet)
-	subnet=`auto-ask subnet "\nSubnet for NFS?" $default_subnet`
+	subnet=`auto-ask cluster-subnet "\nSubnet for NFS?" $default_subnet`
 
 	# FIXME: Use auto-nfs-client/server-setup and sysrc when nfsuserd
 	# option exists.  Must use nfsuserd for hybrid clusters.
@@ -289,6 +289,14 @@ EOM
 	    df
 	    printf "\nCurrent mounts:\n\n"
 	    showmount -e || true
+	    cat << EOM
+
+Note: There should be only one export within each filesystem/partition.
+
+If you want multiple mount points within the same partition, specify the
+highest level directory and use the -alldirs flag.
+
+EOM
 	    printf "\nDirectory to export? [Press enter to quit] "
 	    read share
 	    
@@ -558,12 +566,12 @@ EOM
     # Be generous, but prevent fork bombs
     # default_maxproc=$(( `sysctl -n kern.smp.cpus` * 4 ))
     default_maxproc=128
-    maxproc=`auto-ask max-proc "Max processes for the $NODE_TYPE node?" $default_maxproc`
+    maxproc=`auto-ask cluster-max-proc "Max processes for each user on $NODE_TYPE node?" $default_maxproc`
     
     default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
-    vmem=`auto-ask vmem "Max memory use for the $NODE_TYPE node? (use 'm' or 'g' suffix)" $default_vmem`
+    vmem=`auto-ask cluster-vmem "Max memory use for processes on $NODE_TYPE node? (use 'm' or 'g' suffix)" $default_vmem`
     
-    umask=`auto-ask umask "umask for the $NODE_TYPE node?" 027`
+    umask=`auto-ask cluster-umask "umask for the $NODE_TYPE node?" 027`
     sed -i '' -e "s/maxproc=unlimited/maxproc=$maxproc/g" \
 	     -e "s/vmemoryuse=unlimited/vmemoryuse=$vmem/g" \
 	     /etc/login.conf
@@ -632,7 +640,7 @@ install_common_tools()
 get_port_install_method()
 {
     line
-    #resp=`auto-ask use-source "Build ports from source?" n`
+    #resp=`auto-ask cluster-use-source "Build ports from source?" n`
     resp=n
     if [ 0$resp = 0'y' ]; then
 	export AUTO_BUILD_FROM_SOURCE='yes'
@@ -817,7 +825,17 @@ if [ $NODE_TYPE = head ]; then
 	export EDITOR=vi
     fi
 
-    firewall=`auto-ask firewall 'Configure firewall?' y`
+    cat << EOM
+
+You should configure a firewall ASAP to protect your head node.  FreeBSD
+has three firewalls built-in, namely IPFW, PF, and IPFILTER.
+
+We can quickly configure an IPFW firewall here for basic protection.  You
+will need to edit /etc/firewall.conf to allow connections from outside the
+cluster LAN.
+
+EOM
+    firewall=`auto-ask cluster-firewall 'Configure IPFW firewall?' n`
     if [ $firewall = y ]; then
 	auto-firewall-setup
     fi
@@ -828,14 +846,14 @@ It's a good idea to start with a fully updated system, to ensure ports and
 package compatibility and to maximize security.
 
 EOM
-    update=`auto-ask update-system 'Update system before continuing?' y`
+    update=`auto-ask cluster-update-system 'Update system before continuing?' y`
     if [ $update != n ]; then
 	auto-update-system  # Run interactively
     fi
 fi
 
 default_netmask=$(auto-get-netmask octet)
-NETMASK=`auto-ask netmask 'Netmask for local network?' $default_netmask`
+NETMASK=`auto-ask cluster-netmask 'Netmask for cluster LAN?' $default_netmask`
 export NETMASK  # Pass to other scripts like ganglia-web-setup
 
 ##########################################################################

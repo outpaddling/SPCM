@@ -159,8 +159,8 @@ default_responses_info()
 {
     cat << EOM
 
-At least one node must be configured before using default responses to
-all prompts.
+At least one node must be configured manually before using default responses
+to all prompts.
 
 $prefix/etc/spcm should also contain fstab fragments for all NFS mounts.
 
@@ -176,18 +176,16 @@ if [ $# != 0 ]; then
     usage
 fi
 
+cluster-head-check $0
+
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+prefix=/usr/local
 
 sinfo_format='%T %u %E %N'
 updates_dir="/home/slurm/Compute-node-updates"
-for prefix in /usr/local /usr/pkg; do
-    if [ -e $prefix/etc/slurm.conf ]; then
-	default_domain=$(hostname | cut -d . -f 2-)
-    fi
-done
+default_domain=$(hostname | cut -d . -f 2-)
 
 while true; do
 
@@ -225,9 +223,9 @@ EOM
 	if [ 0$host_digits = 0 ]; then
 	    host_digits=3
 	fi
-	read -p "Domain? [$default_name] " domain
+	read -p "Domain? [$default_domain] " domain
 	if [ 0$domain = 0 ]; then
-	    domain='$default_name'
+	    domain=$default_domain
 	fi
 	auto-pxe-node-discover $host_prefix $host_digits $domain
 	;;
@@ -243,8 +241,8 @@ EOM
 		domain=$default_domain
 	    fi
 	    if get_host_info $default_digits; then
-		read -p "Unattended init? y/[n] " unattended
-		if [ 0$unattended = 0y ]; then
+		read -p "Unattended init? [y]/n " unattended
+		if [ 0$unattended != 0n ]; then
 		    flags=--unattended
 		fi
 		num=$first_num
@@ -279,6 +277,7 @@ EOM
     
 	    compute)
 		# Sync compute nodes
+		printf "Running sinfo..."
 		sinfo
 		read -p "Host name prefix? [compute-] " host_prefix
 		if [ 0$host_prefix = 0 ]; then
