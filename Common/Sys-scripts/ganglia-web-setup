@@ -60,11 +60,11 @@ cp $datadir/global_styles.css $web_root
 cp $datadir/*.gif $web_root || true
 chmod a+rX $web_root/*
 
-if [ ! -e $web_root/index.php ]; then
+while [ 0$name = 0 ]; do
     printf "Cluster name as it should appear on the main web page? "
     read name
-    sed -e "s|%%HOSTNAME%%|$name|g" $datadir/index.php > $web_root/index.php
-fi
+done
+sed -e "s|%%HOSTNAME%%|$name|g" $datadir/index.php > $web_root/index.php
 
 ##########################################################################
 #   Generate basic Ganglia config
@@ -75,6 +75,7 @@ fi
 
 gmond_conf=$prefix/etc/gmond.conf
 if [ -e $gmond_conf ]; then
+    printf "If you have a working, customized gmond.conf, answer 'n' here.\n"
     read -p "Overwrite gmond.conf? [y]/n " overwrite
     if [ 0$overwrite != 0n ]; then
 	auto-backup-file $gmond_conf
@@ -94,8 +95,10 @@ EOM
     pause
 
     #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
-    cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $(hostname)`
-    cluster_owner=`auto-ask cluster-owner "Owner of the cluster as it should appear in Ganglia? " $(whoami)`
+    cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $name`
+    while [ 0$cluster_owner = 0 ]; do
+	read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
+    done
     gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " $(auto-get-ip octet)`
     sed \
 	-e "s|%%CLUSTER_NAME%%|$cluster_name|g" \
@@ -109,6 +112,7 @@ chmod 644 $gmond_conf
 
 gmetad_conf=$prefix/etc/gmetad.conf
 if [ -e $gmetad_conf ]; then
+    printf "If you have a working, customized gmetad.conf, answer 'n' here.\n"
     read -p "Overwrite gmetad.conf? [y]/n " overwrite
     if [ 0$overwrite != 0n ]; then
 	auto-backup-file $gmetad_conf
@@ -129,15 +133,6 @@ Otherwise, one will be generated for you.
 EOM
     pause
 
-    #cp $prefix/share/examples/ganglia/gmond.conf $prefix/etc
-    # Use values from gmond.conf if available
-    if [ -z "$cluster_name" ]; then
-	read -p "Name of the cluster as it should appear in Ganglia? " cluster_name
-	read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
-	# ip addr
-	read -p "IP address on head node to receive Ganglia data? " head_node_ip
-    fi
-    
     # FIXME: Don't rely on template from spcm as format may
     # change with new ganglia versions
     sed \

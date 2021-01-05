@@ -294,10 +294,10 @@ EOM
 Note: There should be only one export within each filesystem/partition.
 
 If you want multiple mount points within the same partition, specify the
-highest level directory and use the -alldirs flag.
+highest level directory and use the -alldirs flag in the exports file.
 
 EOM
-	    printf "\nDirectory to export? [Press enter to quit] "
+	    printf "Directory to export? [Press enter to quit] "
 	    read share
 	    
 	    if [ 0$share != 0 ]; then
@@ -799,9 +799,22 @@ line
 printf "Command output will be stored in $LOG_DIR.\n"
 line
 
-if ! fgrep -q $(hostname) /etc/hosts; then
-    printf "Error: /etc/hosts must contain an entry for $(hostname).\n"
-    exit 1
+if ! fgrep -q $(hostname) $HOSTS; then
+    cat << EOM
+
+Error: $HOSTS must contain an entry for $(hostname) with the IP of the
+cluster LAN.  My best guess for the proper entry is:
+
+$(auto-get-ip octet)  $(hostname)  $(hostname -s)
+
+EOM
+    read -p "Add this to $HOSTS? [y]/n " add_host
+    if [ 0$add_host != 0n ]; then
+	auto-add-hosts-entry
+    else
+	printf "\nOK, edit $HOSTS and run $0 again.\n\n"
+	exit
+    fi
 fi
 
 for file in /root/.ssh /etc/fstab; do
@@ -831,8 +844,9 @@ You should configure a firewall ASAP to protect your head node.  FreeBSD
 has three firewalls built-in, namely IPFW, PF, and IPFILTER.
 
 We can quickly configure an IPFW firewall here for basic protection.  You
-will need to edit /etc/firewall.conf to allow connections from outside the
-cluster LAN.
+will need to edit /etc/ipfw.rules to allow connections from outside the
+cluster LAN before enabling the firewall, or risk losing access to this
+host.
 
 EOM
     firewall=`auto-ask cluster-firewall 'Configure IPFW firewall?' n`
