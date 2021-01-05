@@ -261,16 +261,18 @@ case $gecos_source in
     ;;
 
 3)
-    default_gecos="no default"
+    default_gecos=""
     ;;
 
 esac
 
-printf "Full name? [$default_gecos] "
-read gecos
-if [ 0"$gecos" = 0 ]; then
-    gecos="$default_gecos"
-fi
+while [ 0$gecos = 0 ]; do
+    printf "Full name? [$default_gecos] "
+    read gecos
+    if [ 0"$gecos" = 0 ]; then
+	gecos="$default_gecos"
+    fi
+done
 
 # Convention
 home_dir=/home/$user_name

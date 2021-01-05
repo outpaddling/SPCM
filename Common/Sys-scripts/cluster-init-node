@@ -41,7 +41,7 @@ node_type=$2
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/local
+prefix=%%PREFIX%%
 CLUSTER_DATA=$prefix/etc/spcm
 
 short_name=${node%%.*}

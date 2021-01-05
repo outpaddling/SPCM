@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-: ${PREFIX:=/usr/local}
+: ${PREFIX:=%%PREFIX%%}
 CONF_DIR=$PREFIX/etc/spcm
 
 # ${PREFIX} is prepended by install script

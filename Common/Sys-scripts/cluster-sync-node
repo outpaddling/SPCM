@@ -59,9 +59,9 @@ fi
 # Caution: 
 # The line below is modified by install. Be careful not to replace
 # %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/local
+prefix=%%PREFIX%%
 
-LOCALBASE=/usr/local
+LOCALBASE=%%PREFIX%%
 
 long_node_name=$1
 if ! echo $long_node_name | fgrep -q '.'; then
@@ -210,7 +210,7 @@ FreeBSD)
     rsync -av /etc/hosts.allow ${node}:/etc
     
     # Ganglia
-    rsync -av /usr/local/etc/gmond.conf ${node}:/usr/local/etc
+    rsync -av $prefix/etc/gmond.conf ${node}:$prefix/etc
     
     case $node_type in
     head|compute)
