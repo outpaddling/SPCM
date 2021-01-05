@@ -1,9 +1,8 @@
 #!/bin/sh -e
 
-: ${PREFIX:=%%PREFIX%%}
-CONF_DIR=$PREFIX/etc/spcm
+LOCALBASE=$(cluster-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
 
-# ${PREFIX} is prepended by install script
 if ! fgrep -q highest-uid $CONF_DIR/spcm.conf 2> /dev/null; then
     cat << EOM >> /dev/stderr
 

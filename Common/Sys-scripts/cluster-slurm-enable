@@ -47,23 +47,23 @@ if [ -z "$EDITOR" ]; then
     export EDITOR
 fi
 
+LOCALBASE=$(cluster-localbase)
+
 case $(auto-ostype) in
 RHEL)
-    prefix=`auto-pkgsrc-prefix`
-    
     dirs="/var/log/slurm /home/slurm /var/spool/slurm /var/spool/slurm/ctld /var/spool/slurm/d"
     mkdir -p $dirs
     chown slurm:slurm $dirs
     
-    if [ ! -e $prefix/etc/slurm.conf ]; then
-	cp $prefix/share/examples/slurm/slurm.conf.example $prefix/etc/slurm.conf
+    if [ ! -e $LOCALBASE/etc/slurm.conf ]; then
+	cp $LOCALBASE/share/examples/slurm/slurm.conf.example $LOCALBASE/etc/slurm.conf
     fi
-    chmod 644 $prefix/etc/slurm.conf
+    chmod 644 $LOCALBASE/etc/slurm.conf
     
     case `auto-os-release` in
     RHEL6)
 	rm -f /etc/init.d/slurm
-	ln -s $prefix/share/examples/slurm/init.d.slurm /etc/init.d/slurm
+	ln -s $LOCALBASE/share/examples/slurm/init.d.slurm /etc/init.d/slurm
 	chmod 755 /etc/init.d/slurm
     
 	chkconfig slurm on
@@ -73,11 +73,11 @@ RHEL)
     RHEL7)
 	case $NODE_TYPE in
 	head)
-	    printf "Install/edit $prefix/etc/slurm.conf.\n"
-	    printf "(and $prefix/etc/cgroup.conf if needed)\n"
+	    printf "Install/edit $LOCALBASE/etc/slurm.conf.\n"
+	    printf "(and $LOCALBASE/etc/cgroup.conf if needed)\n"
 	    pause
-	    $EDITOR $prefix/etc/slurm.conf
-	    init_script=$prefix/share/examples/slurm/slurmctld.service
+	    $EDITOR $LOCALBASE/etc/slurm.conf
+	    init_script=$LOCALBASE/share/examples/slurm/slurmctld.service
 	    # FIXME: Why?
 	    sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
 	    systemctl disable slurmctld.service || true
@@ -87,7 +87,7 @@ RHEL)
 	    ;;
 	
 	compute)
-	    init_script=$prefix/share/examples/slurm/slurmd.service
+	    init_script=$LOCALBASE/share/examples/slurm/slurmd.service
 	    # FIXME: Why?
 	    sed -i'' -e 's|sysconfig/slurmctld|sysconfig/slurm|g' $init_script
 	    systemctl disable slurmd.service || true

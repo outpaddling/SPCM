@@ -72,20 +72,3 @@ sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-highest-uid \
     > ${DESTDIR}${PREFIX}/sbin/cluster-highest-uid
-
-src_prefix=$(dirname $(dirname $(dirname $(dirname $(pwd)))))
-printf "src_prefix = $src_prefix\n"
-for script in `fgrep -l '%%PREFIX%%' \
-	$os/Sys-scripts/* \
-	Common/Sys-scripts/*`; do
-    sed -e "s|%%PREFIX%%|${PREFIX}|g" \
-	-e "s|%%SRC_PREFIX%%|$src_prefix|g" $script \
-    > ${DESTDIR}${PREFIX}/sbin/`basename $script`
-done
-for script in `fgrep -l '%%PREFIX%%' \
-	$os/User-scripts/* \
-	Common/User-scripts/*`; do
-    sed -e "s|%%PREFIX%%|${PREFIX}|g" \
-	-e "s|%%SRC_PREFIX%%|$src_prefix|g" $script \
-    > ${DESTDIR}${PREFIX}/bin/`basename $script`
-done

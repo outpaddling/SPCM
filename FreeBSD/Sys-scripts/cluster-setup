@@ -346,7 +346,7 @@ EOM
     # FIXME: Automatically eliminate local mounts that conflict
     case $NODE_TYPE in
     compute|io|vis)
-	fstab=$prefix/etc/spcm/fstab.$NODE_TYPE
+	fstab=$LOCALBASE/etc/spcm/fstab.$NODE_TYPE
 	if [ -e $fstab ]; then
 	    printf "Automatically adding shares from $fstab...\n"
 	    auto-amend-fstab $fstab
@@ -770,10 +770,7 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=/usr/local
+LOCALBASE=$(cluster-localbase)
 
 NODE_TYPE=$1
 case $NODE_TYPE in
@@ -790,7 +787,7 @@ auto-root-check $0
 #   Set common variables
 ##########################################################################
 
-: ${LOCALBASE:=/usr/local}
+LOCALBASE=$(cluster-localbase)
 CONF_DIR=$LOCALBASE/etc/spcm
 # Source for default files
 DATADIR=$LOCALBASE/share/spcm

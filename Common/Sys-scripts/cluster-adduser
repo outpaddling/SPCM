@@ -98,22 +98,18 @@ if ! cluster-check-cron-updates; then
     exit 0
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
-
 if ps axw | fgrep cluster-adduser | fgrep -v grep | fgrep -v $$; then
     printf "Another instance of cluster-adduser is running.  Please try again later.\n"
     exit 1
 fi
 
-CONF_DIR=$prefix/etc/spcm
+LOCALBASE=$(cluster-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
 
 os_type=`auto-ostype`
 case $os_type in
 FreeBSD)
-    ldap_conf=/usr/local/etc/ldap.conf
+    ldap_conf=$LOCALBASE/etc/ldap.conf
     ldap_flags=''
     default_shell="/bin/tcsh"
     ;;

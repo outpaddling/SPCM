@@ -62,13 +62,10 @@ export R_LIBS="\$(pwd)/R/lib/\$os"
 echo \$R_LIBS
 mkdir -p \$R_LIBS
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 # Help script find Rscript
-export PATH=\${PATH}:/usr/local/bin:$prefix/bin
+export PATH=\${PATH}:/usr/local/bin:$LOCALBASE/bin
 
 # HTCondor process IDs begin at 0. 
 Rscript R-packages.r

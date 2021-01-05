@@ -5,10 +5,7 @@
 #   a modified copy) from /etc/profile or /etc/bashrc and similar scripts.
 ##########################################################################
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 # Set prompt to show more than just "login" for a host like
 # login.avi.hpc.uwm.edu
@@ -22,6 +19,6 @@ alias f=finger
 alias dir='ls -als'
 
 if shopt -q login_shell && [ `hostname -s` = login ] && \
-    [ -e $prefix/etc/spcm/check-local-password-age ]; then
+    [ -e $LOCALBASE/etc/spcm/check-local-password-age ]; then
     cluster-pw-check
 fi

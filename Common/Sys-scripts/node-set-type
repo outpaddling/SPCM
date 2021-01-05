@@ -26,7 +26,7 @@ fi
 node_name=$1
 node_type=$2
 
-: ${LOCALBASE:=%%PREFIX%%}
+LOCALBASE=$(cluster-localbase)
 
 if [ 0"$(node-type $node_name)" != 0 ] && [ $node_type != $(node-type $node_name) ]; then
     cat << EOM
@@ -48,19 +48,19 @@ EOM
     exit 1
 fi
 
-conf_dir=$LOCALBASE/etc/spcm
-mkdir -p $conf_dir
+CONF_DIR=$LOCALBASE/etc/spcm
+mkdir -p $CONF_DIR
 
-# Set $conf_dir/my-node-type on all nodes
+# Set $CONF_DIR/my-node-type on all nodes
 # This is used by the node-type command with no args below, so do it first
 if [ $node_type = head ]; then
-    printf "$node_type\n" > $conf_dir/my-node-type
+    printf "$node_type\n" > $CONF_DIR/my-node-type
 else
-    ssh $node_name "mkdir -p $conf_dir && printf \"$node_type\n\" > $conf_dir/my-node-type"
+    ssh $node_name "mkdir -p $CONF_DIR && printf \"$node_type\n\" > $CONF_DIR/my-node-type"
 fi
 
-# Add to $conf_dir/node-types only if running on the head node
+# Add to $CONF_DIR/node-types only if running on the head node
 # and not already there
 if [ $(node-type) = head ] && [ 0$(node-type $node_name) = 0 ]; then
-    printf "$node_name\t$node_type\n" >> $conf_dir/node-types
+    printf "$node_name\t$node_type\n" >> $CONF_DIR/node-types
 fi

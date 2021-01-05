@@ -1,13 +1,10 @@
 #!/bin/sh -e
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
-age_dir=$prefix/etc/spcm/pw-age
+age_dir=$LOCALBASE/etc/spcm/pw-age
 mkdir -p $age_dir
-chmod 755 $age_dir $prefix/etc/spcm
+chmod 755 $age_dir $LOCALBASE/etc/spcm
 for user in `cluster-users`; do
     echo $user
     now=$(date +%s)

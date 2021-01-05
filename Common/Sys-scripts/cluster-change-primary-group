@@ -2,10 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Change primary group for a user
 #       
 #   History:
 #   Date        Name        Modification
@@ -33,10 +30,7 @@ if ! cluster-check-cron-updates; then
     exit 0
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 user_name=$1
 new_group=$2
@@ -54,5 +48,4 @@ done
 
 auto-change-primary-group $user_name $new_group $dirs
 cluster-run "auto-change-primary-group $user_name $new_group" backup io vis compute
-# FIXME: Should $prefix/etc/spcm be hard-coded?
-chgrp $new_group $prefix/etc/spcm/pw-age/$user_name
+chgrp $new_group $LOCALBASE/etc/spcm/pw-age/$user_name

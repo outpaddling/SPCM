@@ -49,8 +49,8 @@ RHEL)
 	RHEL_VERSION=7
     fi
     
-    prefix=$(auto-pkgsrc-prefix)
-    munge_etc="$prefix/etc/munge"
+    LOCALBASE=$(cluster-localbase)
+    munge_etc="$LOCALBASE/etc/munge"
     mkdir -p -m 0700 $munge_etc
     
     case $NODE_TYPE in
@@ -77,23 +77,23 @@ RHEL)
     
     # https://github.com/dun/munge/wiki/Installation-Guide
     # FIXME: Move this to munge pkg?
-    mkdir -p -m 711 $prefix/var/lib/munge
-    mkdir -p -m 700 $prefix/var/log/munge
-    mkdir -p -m 755 $prefix/var/run/munge
+    mkdir -p -m 711 $LOCALBASE/var/lib/munge
+    mkdir -p -m 700 $LOCALBASE/var/log/munge
+    mkdir -p -m 755 $LOCALBASE/var/run/munge
     mkdir -p -m 400 $munge_etc
     
-    chmod 755 $prefix/var/lib $prefix/var/log $prefix/var/run
+    chmod 755 $LOCALBASE/var/lib $LOCALBASE/var/log $LOCALBASE/var/run
     chown -Rh daemon:daemon \
-	$prefix/var/log/munge \
-	$prefix/var/run/munge \
-	$prefix/var/lib/munge \
+	$LOCALBASE/var/log/munge \
+	$LOCALBASE/var/run/munge \
+	$LOCALBASE/var/lib/munge \
 	$munge_etc
     
     # RHEL init script
     case $RHEL_VERSION in
     6)
 	rm -f /etc/init.d/munge
-	init_script=$prefix/share/examples/rc.d/init.d/munge
+	init_script=$LOCALBASE/share/examples/rc.d/init.d/munge
 	if [ -e $init_script ]; then
 	    ln -s $init_script /etc/init.d/munge
 	fi
@@ -102,7 +102,7 @@ RHEL)
 	;;
     
     7)
-	init_script=$prefix/lib/systemd/system/munge.service
+	init_script=$LOCALBASE/lib/systemd/system/munge.service
 	# FIXME: Move this to munge pkg?
 	sed -i'' 's|=munge|=daemon|g' $init_script
 	systemctl disable munge.service || true

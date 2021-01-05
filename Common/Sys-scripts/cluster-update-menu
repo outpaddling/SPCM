@@ -162,7 +162,7 @@ default_responses_info()
 At least one node must be configured before using default responses to
 all prompts.
 
-$prefix/etc/spcm should also contain fstab fragments for all NFS mounts.
+$LOCALBASE/etc/spcm should also contain fstab fragments for all NFS mounts.
 
 EOM
 }
@@ -176,18 +176,15 @@ if [ $# != 0 ]; then
     usage
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 sinfo_format='%T %u %E %N'
 updates_dir="/home/slurm/Compute-node-updates"
-for prefix in /usr/local /usr/pkg; do
-    if [ -e $prefix/etc/slurm.conf ]; then
-	default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $prefix/etc/slurm.conf`
-    fi
-done
+
+# FIXME: Is default_domain used by another script called from here?
+if [ -e $LOCALBASE/etc/slurm.conf ]; then
+    default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $LOCALBASE/etc/slurm.conf`
+fi
 
 while true; do
 

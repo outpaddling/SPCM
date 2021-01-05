@@ -2,16 +2,16 @@
 
 ##########################################################################
 #   Script description:
-#       Report the node type based on hostname
+#       Echo LOCALBASE for the current OS
 #       
 #   History:
 #   Date        Name        Modification
-#   2020-12-31  Charlie &   Begin
+#   2021-01-05  Jason Bacon Begin
 ##########################################################################
 
 usage()
 {
-    printf "Usage: $0 [hostname]\n"
+    printf "Usage: $0\n"
     exit 1
 }
 
@@ -20,21 +20,26 @@ usage()
 #   Main
 ##########################################################################
 
-LOCALBASE=$(cluster-localbase)
+if [ $# != 0 ]; then
+    usage
+fi
 
-case $# in
-0)
-    cat $LOCALBASE/etc/spcm/my-node-type
+case $(auto-ostype) in
+Darwin)
+    echo /opt/pkg
     ;;
 
-1)
-    short_host=$(echo $1 | cut -d . -f 1)
-    awk -v hostname=$short_host '$1 == hostname { print $2 }' \
-	$LOCALBASE/etc/spcm/node-types
+FreeBSD)
+    echo /usr/local
+    ;;
+
+NetBSD|RHEL)
+    echo /usr/pkg
     ;;
 
 *)
-    usage
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
     ;;
 
 esac

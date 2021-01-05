@@ -2,14 +2,11 @@
 
 ##########################################################################
 #   Script description:
-#       
-#   Arguments:
-#       
-#   Returns:
+#       Sync previously selected files to all nodes
 #       
 #   History:
 #   Date        Name        Modification
-#   2016-08-15  root        Begin
+#   2016-08-15  J Bacon     Begin
 ##########################################################################
 
 usage()
@@ -35,12 +32,9 @@ if ! cluster-check-cron-updates; then
     exit 0
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
-repo=$prefix/etc/spcm/sync-files
+repo=$LOCALBASE/etc/spcm/sync-files
 if [ ! -d $repo ]; then
     printf "$0: No files to sync.\n"
     exit 0

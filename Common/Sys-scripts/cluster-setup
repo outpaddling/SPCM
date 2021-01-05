@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+LOCALBASE=$(cluster-localbase)
+
 cat << EOM
 
 SPCM has not yet been ported to $(auto-ostype).
@@ -9,7 +11,7 @@ in SPCM and in auto-admin and writing a new cluster-setup script specific
 to $(auto-ostype).  Model cluster-setup scripts are available in the
 source distribution under FreeBSD/Sys-scripts and CentOS/Sys-scripts.
 
-Please edit scripts in-place in \$PREFIX/bin and \$PREFIX/sbin and fully
+Please edit scripts in-place in \$LOCALBASE/bin and \$LOCALBASE/sbin and fully
 test before sending patches.
 
 EOM

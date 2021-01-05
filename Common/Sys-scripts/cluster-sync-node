@@ -56,12 +56,7 @@ if [ $# != 2 ]; then
     usage
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
-
-LOCALBASE=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 long_node_name=$1
 if ! echo $long_node_name | fgrep -q '.'; then
@@ -86,7 +81,7 @@ if [ -z EDITOR ]; then
     EDITOR="vi"
 fi
 
-CONF_DIR=$prefix/etc/spcm
+CONF_DIR=$LOCALBASE/etc/spcm
 if ! ssh $node stat $CONF_DIR/init-done; then
     printf "You must run 'cluster-init-node $long_node_name $node_type' first.\n"
     exit 1
@@ -148,7 +143,7 @@ EOM
     done
     
     # Install standard software packages
-    yum_list=$prefix/etc/spcm/$node_type-node-yum-packages
+    yum_list=$LOCALBASE/etc/spcm/$node_type-node-yum-packages
     if [ -e $yum_list ]; then
 	printf "Installing local packages from $yum_list...\n"
 	ssh $node yum install -y `cat $yum_list`
@@ -210,7 +205,7 @@ FreeBSD)
     rsync -av /etc/hosts.allow ${node}:/etc
     
     # Ganglia
-    rsync -av $prefix/etc/gmond.conf ${node}:$prefix/etc
+    rsync -av $LOCALBASE/etc/gmond.conf ${node}:$LOCALBASE/etc
     
     case $node_type in
     head|compute)

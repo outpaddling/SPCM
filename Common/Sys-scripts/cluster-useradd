@@ -27,12 +27,8 @@ if [ $# -lt 6 ]; then
     usage
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
-
-CONF_DIR=$prefix/etc/spcm
+LOCALBASE=$(cluster-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
 
 os_type=`auto-ostype`
 

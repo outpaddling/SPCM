@@ -27,7 +27,7 @@ fi
 node=$1
 node_type=$2
 
-: ${PREFIX:=%%PREFIX%%}
-CONF_DIR=$PREFIX/etc/spcm
+LOCALBASE=$(cluster-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
 
 ssh $node "awk '\$3 == \"nfs\" { print \$0 }' /etc/fstab" > $CONF_DIR/fstab.$node_type

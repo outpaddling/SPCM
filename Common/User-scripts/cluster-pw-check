@@ -37,12 +37,9 @@ case $# in
 
 esac
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
-pw_age_dir=$prefix/etc/spcm/pw-age
+pw_age_dir=$LOCALBASE/etc/spcm/pw-age
 pw_age_file=$pw_age_dir/$user_name
 max_pw_age=`awk '{ print $1 }' $pw_age_file`
 last_pw_change=`awk '{ print $2 }' $pw_age_file`

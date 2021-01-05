@@ -1,20 +1,16 @@
 #!/bin/sh -e
 
-for prefix in /usr/pkg /usr/local; do
-    if [ -e $prefix/etc/slurm.conf ]; then
-	break;
-    fi
-done
+LOCALBASE=$(cluster-localbase)
 
 # Backup controller needs to save state info to the same location as
 # primary controller
 sed -e 's|StateSaveLocation=/home/slurm/slurmctld|StateSaveLocation=/head_home/slurm/slurmctld|' \
-    $prefix/etc/slurm.conf > $prefix/etc/slurm.conf.backup-node
+    $LOCALBASE/etc/slurm.conf > $LOCALBASE/etc/slurm.conf.backup-node
 for node in `cluster-backup-nodes`; do
     printf "Syncing slurm.conf to $node...\n"
-    rsync -pog $prefix/etc/slurm.conf.backup-node ${node}:$prefix/etc/slurm.conf
-    if [ -e $prefix/etc/cgroup.conf ]; then
-	rsync -pog $prefix/etc/cgroup.conf ${node}:$prefix/etc
+    rsync -pog $LOCALBASE/etc/slurm.conf.backup-node ${node}:$LOCALBASE/etc/slurm.conf
+    if [ -e $LOCALBASE/etc/cgroup.conf ]; then
+	rsync -pog $LOCALBASE/etc/cgroup.conf ${node}:$LOCALBASE/etc
     fi
 done
-rm -f $prefix/etc/slurm.conf.backup-node
+rm -f $LOCALBASE/etc/slurm.conf.backup-node

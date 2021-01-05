@@ -67,8 +67,8 @@ RHEL)
     ;;
 
 FreeBSD)
-    # FIXME: Don't hard code /usr/local
-    CONF_DIR=/usr/local/etc/spcm
+    LOCALBASE=$(cluster-localbase)
+    CONF_DIR=$LOCALBASE/etc/spcm
     printf "root home...\n"
     for node in $all_nodes; do
 	rsync /root/.bash_profile ${node}:/root

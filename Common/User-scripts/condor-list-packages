@@ -41,10 +41,7 @@ arch=$2
 #   Generate HTCondor executable file
 ##########################################################################
 
-# Caution: 
-# The line below is modified by install.sh. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 cat << EOM > list-packages.sh
 #!/bin/sh -e
@@ -55,8 +52,8 @@ FreeBSD)
     /usr/sbin/pkg info
     ;;
 *)
-    if [ -e $prefix/sbin/pkg_info ]; then
-	$prefix/sbin/pkg_info
+    if [ -e $LOCALBASE/sbin/pkg_info ]; then
+	$LOCALBASE/sbin/pkg_info
     else
 	printf "No package manager found\n"
 	exit 1

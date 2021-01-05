@@ -29,6 +29,8 @@ fi
 node=$1
 shift
 
+LOCALBASE=$(cluster-localbase)
+
 for user_name in $@; do
     # Get user info from /etc/passwd
     # uid, gid, comment, home, shell
@@ -89,7 +91,7 @@ for user_name in $@; do
 	    ;;
 	*)
 	    if echo $shell | grep '^/bin/'; then
-		remote_shell=/usr/local$shell
+		remote_shell=${LOCALBASE}$shell
 	    fi
 	    ;;
 	esac

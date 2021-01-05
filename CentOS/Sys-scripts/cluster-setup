@@ -746,17 +746,13 @@ if [ $# != 1 ]; then
     usage $0
 fi
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
-
+LOCALBASE=$(cluster-localbase)
 NODE_TYPE=$1
 OS_RELEASE=`auto-os-release`
-CONF_DIR=$prefix/etc/spcm
+CONF_DIR=$LOCALBASE/etc/spcm
 
 # Source for default files
-DATADIR=$prefix/share/spcm
+DATADIR=$LOCALBASE/share/spcm
 
 # FIXME: Install bsdstats?
 
@@ -768,11 +764,11 @@ $0:
 Node-type "$NODE_TYPE" contradicts previous node type set for $(hostname -s).
 If you really want to change the node type, edit
 
-$prefix/etc/node-types
+$LOCALBASE/etc/node-types
 
 on the head node and
 
-$prefix/etc/my-node-type
+$LOCALBASE/etc/my-node-type
 
 on $(hostname) and run $0 again.
 

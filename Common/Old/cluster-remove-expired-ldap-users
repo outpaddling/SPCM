@@ -14,10 +14,7 @@ pause()
     read junk
 }
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 for user in `cluster-users`; do
     comment=`ldapsearch -x uid=$user | awk '$1 == "cn:" { for (c=2; c<NF; ++c) printf("%s ", $c); printf("%s", $NF); }'`
@@ -33,7 +30,7 @@ for user in `cluster-users`; do
 	if [ 0$remove = 0yes ]; then
 	    cluster-rmuser $user
 	    rm -rf /share1/*/$user
-	    auto-append-line $user $prefix/etc/spcm/removed-users nocomment
+	    auto-append-line $user $LOCALBASE/etc/spcm/removed-users nocomment
 	    pause
 	fi
     else

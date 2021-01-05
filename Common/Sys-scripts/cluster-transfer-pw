@@ -27,10 +27,7 @@ fi
 
 cluster-head-check $0
 
-# Caution: 
-# The line below is modified by install. Be careful not to replace
-# %%PREFIX%% with a hard-coded prefix from an installed script.
-prefix=%%PREFIX%%
+LOCALBASE=$(cluster-localbase)
 
 # This script is called from cluster-passwd, which runs suid root.
 # Prevent malicious users from running imposter programs.
@@ -41,12 +38,7 @@ old_shadow_pw="$2"
 old_pw_age_file="$3/$user_name"
 
 case $(auto-ostype) in
-FreeBSD)
-    prefix=/usr/local
-    ;;
-
-RHEL)
-    prefix=/usr/pkg
+FreeBSD|RHEL)
     ;;
 
 *)
@@ -63,7 +55,7 @@ if [ "0$pw" = 0 ]; then
 fi
 
 # Store cluster pw aging info
-pw_age_file=$prefix/etc/spcm/pw-age/$user_name
+pw_age_file=$LOCALBASE/etc/spcm/pw-age/$user_name
 if [ -e $old_pw_age_file ]; then
     if [ $old_pw_age_file != $pw_age_file ]; then
 	cp $old_pw_age_file $pw_age_file
@@ -75,6 +67,6 @@ else
     printf "180 $now\n" > $pw_age_file
 fi
 
-$prefix/sbin/auto-transfer-pw $user_name "$pw"
-$prefix/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" all
+$LOCALBASE/sbin/auto-transfer-pw $user_name "$pw"
+$LOCALBASE/sbin/cluster-run "auto-transfer-pw $user_name '$pw'" all
 
