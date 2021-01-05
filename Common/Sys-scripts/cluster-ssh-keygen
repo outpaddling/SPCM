@@ -26,7 +26,7 @@ FreeBSD)
     fi
     ;;
 
-case    RHEL)
+RHEL)
 
     if [ ! -e /home/$user_name/.ssh ]; then
 	mkdir -m 0700 /home/$user_name/.ssh

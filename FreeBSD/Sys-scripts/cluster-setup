@@ -253,6 +253,8 @@ EOM
     touch /etc/exports
     auto-append-line 'V4: /' /etc/exports $0
     
+    auto-enable-service -s nfsclient nfs_client $0
+    auto-enable-service nfsuserd $0
     auto-enable-service -s statd rpc_statd $0
     auto-enable-service -s lockd rpc_lockd $0
     
@@ -272,11 +274,10 @@ EOM
 	
 	# Need UDP for some PXE ROMs
 	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
-	
+
 	# For NFSv4.  Some configs don't need nfsuser.
 	# man nfsv4 for details
 	auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
-	auto-append-line 'nfsuserd_enable="YES"' $RC_CONF $0
 
 	touch /etc/exports  # Must be present for NFS to start
 	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
@@ -310,7 +311,7 @@ EOM
 Disabling the ZIL (ZFS Intent Log) will vastly improve NFS write performance
 in exchange for increased data loss in the event of power outages and other
 sudden failures.  Such loss is generally of no concern in HPC, where the
-jos will simply be rerun anyway.
+jobs will simply be rerun anyway.
 
 EOM
 		    read -p "Disable ZIL? [y]/n " no_zil
