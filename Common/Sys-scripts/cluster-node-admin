@@ -277,8 +277,7 @@ EOM
     
 	    compute)
 		# Sync compute nodes
-		printf "Running sinfo..."
-		sinfo
+		sinfo || true
 		read -p "Host name prefix? [compute-] " host_prefix
 		if [ 0$host_prefix = 0 ]; then
 		    host_prefix='compute-'

@@ -302,10 +302,15 @@ EOM
 	    read share
 	    
 	    if [ 0$share != 0 ]; then
+		mount_flags="-maproot=root -network $subnet -mask $NETMASK"
+		read -p "Allow mounting any subdirectory of $share? [y]/n " alldirs
+		if [ 0$alldirs != 0n ]; then
+		    mount_flags="-alldirs $mount_flags"
+		fi
 		fs_type=`mount | awk -v share=$share '$3 == share { print $4 }'`
 		if [ 0$fs_type = 0'(zfs,' ]; then
 		    zfs_share=`mount | awk -v share=$share '$3 == share { print $1 }'`
-		    zfs set sharenfs="-maproot=root -network $subnet -mask $NETMASK" $zfs_share
+		    zfs set sharenfs="$mount_flags" $zfs_share
 		    cat << EOM
 
 Disabling the ZIL (ZFS Intent Log) will vastly improve NFS write performance
@@ -318,16 +323,16 @@ EOM
 		    if [ 0$no_zil != 0y ]; then
 			zfs set sync=disabled $zfs_share
 		    fi
+		    auto-nfs-restart
+		    zfs get sharenfs
 		else
 		    printf "Updating /etc/exports...\n"
-		    auto-append-line "$share\t-maproot=0\t-network $subnet -mask $NETMASK\n" /etc/exports $0
+		    auto-append-line "$share\t$mount_flags" /etc/exports $0
+		    auto-nfs-restart
 		fi
-		auto-nfs-restart
 	    fi
 	done
-	zfs get sharenfs
 	
-	auto-nfs-restart
 	printf "\nYou may need to reboot before NFS clients can mount the new shared folder.\n\n"
 	pause
 	;;
