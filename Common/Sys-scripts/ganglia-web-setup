@@ -31,6 +31,8 @@ os_release=$(auto-os-release)
 
 LOCALBASE=$(cluster-localbase)
 
+export AUTO_ASK_TAG_PREFIX=ganglia-web-setup
+
 case $os_release in
 FreeBSD-*)
     apache=apache24

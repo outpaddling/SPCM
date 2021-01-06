@@ -40,7 +40,7 @@ fi
 
 node=$1
 shift
-if ! echo $node | egrep -q '^compute-|^raid-|^zfs-|^vis-|^login-'; then
+if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
     node=compute-$node
 fi
 ssh -t $node top $*
