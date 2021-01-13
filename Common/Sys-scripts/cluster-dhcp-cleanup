@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Guide user through cleaning up DHCP leases
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-05  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+: ${EDITOR:=vi}
+
+case $(auto-ostype) in
+FreeBSD)
+    service isc-dhcpd stop
+    for file in /var/db/dhcpd/dhcpd.leases /usr/local/etc/dhcpd.conf /etc/hosts; do
+	$EDITOR $file
+    done
+    service isc-dhcpd start
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

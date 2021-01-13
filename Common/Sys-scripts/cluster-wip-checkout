@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check out wip on all nodes
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    auto-freebsd-wip-checkout git
+    cluster-run "touch /etc/make.conf && auto-set-conf-var USE_LOCAL_MK yes /etc/make.conf $0" all
+    cluster-run "auto-set-conf-var VALID_CATEGORIES+ wip /usr/ports/Mk/bsd.local.mk $0" all
+    cluster-wip-update
+    ;;
+    
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+esac
