@@ -168,7 +168,7 @@ FreeBSD)
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
 	pkg upgrade -y
     ssh -t $node env ASSUME_ALWAYS_YES=yes \
-	pkg install -y subversion rsync ca_root_nss iftop bash
+	pkg install -y spcm subversion rsync ca_root_nss iftop bash
     
     printf "Syncing ports "
     if [ -e /usr/ports ]; then
@@ -182,7 +182,6 @@ FreeBSD)
 	ssh -t $node portsnap fetch extract
     fi
     
-    ssh $node pkg install -y spcm
     ssh $node auto-append-line powerd 'powerd_enable="YES"' /etc/rc.conf $0
     
     # Pull ssh keys from node

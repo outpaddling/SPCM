@@ -302,6 +302,18 @@ EOM
 	    read share
 	    
 	    if [ 0$share != 0 ]; then
+                if [ ! -e $share ]; then
+                    printf "$share does not exist.  Create directory? y/[n] "
+                    read create
+                    if [ 0$create = 0y ]; then
+                        mkdir -p $share
+                    else
+                        continue
+                    fi
+                elif [ ! -d $share ]; then
+                    printf "$share exists but is not a directory.\n"
+                    continue
+                fi
 		mount_flags="-maproot=root -network $subnet -mask $NETMASK"
 		read -p "Allow mounting any subdirectory of $share? [y]/n " alldirs
 		if [ 0$alldirs != 0n ]; then
@@ -327,7 +339,7 @@ EOM
 		    zfs get sharenfs
 		else
 		    printf "Updating /etc/exports...\n"
-		    auto-append-line "$share\t$mount_flags" /etc/exports $0
+		    auto-append-line "$share $mount_flags" /etc/exports $0
 		    auto-nfs-restart
 		fi
 	    fi
