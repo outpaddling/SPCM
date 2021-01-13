@@ -244,7 +244,6 @@ EOM
 	    if [ `auto-ostype` = FreeBSD ]; then
 		read -p "Update and sync ports tree to all nodes? [y]/n " ports_update
 		if [ 0$ports_update != 0n ]; then
-		    # This will sync everything including wip
 		    cluster-ports-update
 		fi
 	    fi

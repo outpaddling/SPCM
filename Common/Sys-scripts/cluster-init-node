@@ -182,21 +182,7 @@ FreeBSD)
 	ssh -t $node portsnap fetch extract
     fi
     
-    if ! ssh $node 'fgrep -q "USE_LOCAL_MK=yes" /etc/make.conf'; then
-	ssh $node 'printf "USE_LOCAL_MK=yes\n" >> /etc/make.conf'
-    fi
-
-    if ssh $node stat /usr/ports/wip; then
-	ssh $node 'cd /usr/ports/wip && svn up'
-	ssh $node 'cd /usr/ports/wip/wip-tools && make deinstall distclean reinstall'
-	ssh $node wip-reinstall-port -nu -r auto-admin
-	ssh $node wip-reinstall-port -nu -r spcm
-    else
-	ssh $node 'fetch https://github.com//outpaddling/freebsd-ports-wip/raw/master/freebsd-wip-checkout'
-	ssh $node sh ./freebsd-wip-checkout svn
-	ssh $node 'cd /usr/ports/wip/spcm && make deinstall distclean reinstall clean'
-    fi
-    
+    ssh $node pkg install -y spcm
     ssh $node auto-append-line powerd 'powerd_enable="YES"' /etc/rc.conf $0
     
     # Pull ssh keys from node

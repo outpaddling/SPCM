@@ -1,9 +1,6 @@
 /***************************************************************************
  *  Description:
- *  
- *  Arguments:
- *
- *  Returns:
+ *      Change a user's local password on all nodes
  *
  *  History: 
  *  Date        Name        Modification
@@ -21,11 +18,7 @@
 
 #define CMD_LEN     128
 
-/*
- *  Use absolute pathnames to prevent malicious users from running their
- *  own programs as root.
- */
-
+/* Use absolute pathname to prevent arbitrary code execution as root */
 #define SYNC_CMD    "%%PREFIX%%/sbin/cluster-sync-pw %s"
 
 int     main(int argc,char *argv[])
@@ -64,10 +57,11 @@ int     main(int argc,char *argv[])
 	user_name = pw_ent->pw_name;
     }
 
+    /* Use absolute pathname to prevent arbitrary code execution */
     if ( uid == 0 )
-	snprintf(cmd, CMD_LEN, "passwd %s", user_name);
+	snprintf(cmd, CMD_LEN, "/usr/bin/passwd %s", user_name);
     else
-	snprintf(cmd, CMD_LEN, "passwd");
+	snprintf(cmd, CMD_LEN, "/usr/bin/passwd");
     
     /* Keep trying until user gets it right */
     while ( system(cmd) != 0 )

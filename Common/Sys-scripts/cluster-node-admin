@@ -129,7 +129,7 @@ EOM
 	1)
 	    node_type=head
 	    default_digits=1
-	    default_prefix=login-
+	    default_prefix=head-
 	    ;;
 	2)
 	    node_type=io
@@ -212,19 +212,21 @@ EOM
 	;;
     
     2)  # PXE
-	read -p "Host name prefix? [compute-] " host_prefix
-	if [ 0$host_prefix = 0 ]; then
-	    host_prefix='compute-'
+	if get_node_type; then
+	    read -p "Host name prefix? [$default_prefix] " host_prefix
+	    if [ 0$host_prefix = 0 ]; then
+		host_prefix=$default_prefix
+	    fi
+	    read -p "Digits in hostname #? [$default_digits] " host_digits
+	    if [ 0$host_digits = 0 ]; then
+		host_digits=$default_digits
+	    fi
+	    read -p "Domain? [$default_domain] " domain
+	    if [ 0$domain = 0 ]; then
+		domain=$default_domain
+	    fi
+	    auto-pxe-node-discover $host_prefix $host_digits $domain
 	fi
-	read -p "Digits in hostname #? [3] " host_digits
-	if [ 0$host_digits = 0 ]; then
-	    host_digits=3
-	fi
-	read -p "Domain? [$default_domain] " domain
-	if [ 0$domain = 0 ]; then
-	    domain=$default_domain
-	fi
-	auto-pxe-node-discover $host_prefix $host_digits $domain
 	;;
     
     3)  # Initialize nodes

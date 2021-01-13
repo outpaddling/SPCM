@@ -180,9 +180,6 @@ EOM
 FreeBSD)
     # Install basic tools and updates
 
-    # Should be preinstalled by cluster-init-node
-    ssh -t $node wip-update
-    
     # Sync sys files
     cluster-sync-sysfiles $node
     
