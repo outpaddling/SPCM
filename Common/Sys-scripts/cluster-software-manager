@@ -1,0 +1,182 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Manage software packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-27  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-17  Charlie &   Begin
+##########################################################################
+
+select_node_type()
+{
+    while true; do
+	n=1
+	NODE_TYPE=''
+	available_node_types='head'
+	printf "\n1.. head"
+	for node_type in backup raid vis compute; do
+	    if [ "0$(cluster-$node_type-nodes)" != 0 ]; then
+		n=$((n + 1))
+		printf "\n$n.. $node_type"
+		available_node_types="$available_node_types $node_type"
+	    fi
+	done
+	printf "\nQ.. Quit\n\nSelection? "
+	read selection
+	if [ 0$selection = 0q ]; then
+	    return
+	elif [ 0$selection -ge 1 ] && [ 0$selection -le $n ]; then
+	    NODE_TYPE=`echo $available_node_types | awk -v n=$selection '{ print $n }'`
+	    if [ $NODE_TYPE = head ]; then
+		SSH_NODE=''
+	    else
+		node=$(cluster-$NODE_TYPE-nodes | head -n 1)
+		SSH_NODE="ssh $node "
+	    fi
+	    return
+	fi
+    done
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    while true
+    do
+	clear
+	spcm-banner
+	cat << EOM
+
+To see ports by category, run "ls /usr/ports" and e.g. "ls /usr/ports/audio"
+or browse the collection at https://www.freebsd.org/ports/index.html.
+
+NOTE: It's best to install new packages when your current packages are
+up-to-date.  Developers do their best to specify proper dependency versions
+but there could be issues installing new packages alongside much older ones.
+
+1.. List installed packages
+2.. List available packages
+3.. Search available packages
+4.. Install packages
+5.. Remove packages
+Q.. Quit
+
+EOM
+    
+	read -p 'Selection? ' resp
+	case 0$resp in
+	01)
+	    select_node_type
+	    if [ 0$NODE_TYPE != 0 ]; then
+		$SSH_NODE pkg info | more
+		printf "$($SSH_NODE pkg info | wc -l) packages installed.\n"
+		pause
+	    fi
+	    ;;
+    
+	02)
+	    tmpfile=.auto-software-manager-packages.txt
+	    pkg search '.*' > $tmpfile
+	    more $tmpfile
+	    printf "$(cat $tmpfile | wc -l) packages available.\n"
+	    rm -f $tmpfile
+	    pause
+	    ;;
+    
+	03)
+	    read -p 'Enter any part of the package name: ' pattern
+	    pkg search "$pattern" | more
+	    pause
+	    ;;
+	
+	04)
+	    select_node_type
+	    if [ 0$NODE_TYPE != 0 ]; then
+		read -p 'Enter the package name(s): ' names
+		if [ 0"$names" != 0 ]; then
+		    if [ $NODE_TYPE = head ]; then
+			pkg install -y $names
+		    else
+			cluster-run "pkg install -y $names" $NODE_TYPE
+		    fi
+		    pause
+		fi
+	    fi
+	    ;;
+	
+	05)
+	    select_node_type
+	    if [ 0$NODE_TYPE != 0 ]; then
+		read -p 'Enter the package name(s): ' names
+		if [ 0"$names" != 0 ]; then
+		    if [ $NODE_TYPE = head ]; then
+			(pkg remove $names; pkg autoremove -y) || true
+		    else
+			cluster-run \
+			    "(pkg remove -y $names; pkg autoremove -y) || true" \
+			    $NODE_TYPE
+		    fi
+		    pause
+		fi
+	    fi
+	    ;;
+	
+	0Q|0q)
+	    exit 0
+	    ;;
+    
+	*)
+	    printf "Invalid option: $resp\n"
+	esac
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    pause
+    ;;
+
+esac

@@ -49,7 +49,8 @@ while true; do
 3.. Diagnostics and Monitoring
 4.. Services
 5.. Node management
-6.. Shut down cluster
+6.. Software management
+7.. Shut down cluster
 Q.. Quit
 
 EOM
@@ -74,6 +75,9 @@ EOM
 	cluster-node-admin
 	;;
     6)
+	cluster-software-manager
+	;;
+    7)
 	cluster-shutdown
 	pause
 	;;
