@@ -212,6 +212,7 @@ EOM
 	;;
     
     2)  # PXE
+	spcm-banner
 	if get_node_type; then
 	    read -p "Host name prefix? [$default_prefix] " host_prefix
 	    if [ 0$host_prefix = 0 ]; then
@@ -230,6 +231,7 @@ EOM
 	;;
     
     3)  # Initialize nodes
+	spcm-banner
 	if get_node_type; then
 	    read -p "Host name prefix? [$default_prefix] " host_prefix
 	    if [ 0$host_prefix = 0 ]; then
@@ -256,6 +258,7 @@ EOM
 	;;
     
     4)  # Sync nodes
+	spcm-banner
 	if get_node_type; then
 	    case $node_type in
 	    io|vis|head)
@@ -311,8 +314,8 @@ EOM
 	;;
     
     5) # Drain node
-	clear
-	printf "Current node status:\n\n"
+	spcm-banner
+	printf "\nCurrent node status:\n\n"
 	sinfo -o "$sinfo_format"
 	printf "\nNode number? (e.g. 001) "
 	read node
@@ -328,8 +331,8 @@ EOM
 	;;
 
     6)  # Resume node
-	clear
-	printf "Nodes currently down:\n\n"
+	spcm-banner
+	printf "\nNodes currently down:\n\n"
 	sinfo --list-reasons
 	printf "\nNode number? (e.g. 001) "
 	read node
@@ -340,7 +343,8 @@ EOM
 	;;
     
     7)  # Drain all nodes
-	printf "This will prevent any new jobs from running.\n"
+	spcm-banner
+	printf "\nThis will prevent any new jobs from running.\n"
 	printf "Are you sure you want to proceed? yes/[no] "
 	read proceed
 	if [ 0$proceed = 0yes ]; then
@@ -354,6 +358,8 @@ EOM
 	;;
 
     8)
+	spcm-banner
+	printf "\n"
 	slurm-shutdown-idle-nodes
 	;;
 

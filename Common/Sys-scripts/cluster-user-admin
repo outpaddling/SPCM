@@ -80,29 +80,34 @@ EOM
     clear
     case $selection in
     1)
+	spcm-banner
 	cluster-adduser
 	;;
     2)
-	printf "Username? "
+	spcm-banner
+	printf "\nUsername? "
 	read user_name
 	if [ 0$user_name != 0 ] && id $user_name > /dev/null; then
 	    cluster-passwd $user_name
 	fi
 	;;
     3)
-	printf "Username? "
+	spcm-banner
+	printf "\nUsername? "
 	read user_name
 	cluster-sync-pw $user_name
 	;;
     4)
-	printf "Username? "
+	spcm-banner
+	printf "\nUsername? "
 	read user_name
 	printf "Expire passwords in how many days? "
 	read days
 	cluster-passwd-user-expiration $user_name $days
 	;;
     5)
-	printf "This will reset password expiration date for ALL users.\n"
+	spcm-banner
+	printf "\nThis will reset password expiration date for ALL users.\n"
 	printf "Some users may have special expiration periods, which will be overwritten.\n"
 	printf "\nAre you sure you want to proceed? y/[n] "
 	read proceed
@@ -114,7 +119,8 @@ EOM
 	;;
     
     6)
-	printf "Username? "
+	spcm-banner
+	printf "\nUsername? "
 	read user_name
 	if [ 0$user_name != 0 ] && id $user_name; then
 	    printf "Add to which group? "
@@ -126,7 +132,8 @@ EOM
 	;;
     
     7)
-	printf "Username? "
+	spcm-banner
+	printf "\nUsername? "
 	read user_name
 	if [ 0$user_name != 0 ] && id $user_name; then
 	    printf "Remove from which group? "
@@ -138,6 +145,8 @@ EOM
 	;;
     
     8)
+	spcm-banner
+	printf "\n"
 	read -p "Username? " user_name
 	read -p "Directory with passwd, $pw_file, group, and pw-age? [$LOCALBASE/etc/spcm/Old] " \
 	    source_dir
@@ -147,6 +156,8 @@ EOM
 	;;
     
     9)
+	spcm-banner
+	printf "\n"
 	read -p "Username? " user_name
 	read -p "Directory with passwd, $pw_file, group, and pw-age? [$LOCALBASE/etc/spcm/Old] " \
 	    source_dir

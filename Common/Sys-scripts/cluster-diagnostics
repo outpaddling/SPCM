@@ -96,25 +96,29 @@ EOM
 	;;
     
     2)
-	printf "Host name or compute-node number? "
+	spcm-banner
+	printf "\nHost name or compute-node number? "
 	read node
 	node-top $node
 	;;
     
     3)
-	printf "Host name or compute-node number? "
+	spcm-banner
+	printf "\nHost name or compute-node number? "
 	read node
 	node-netstat $node
 	;;
     
     4)
-	printf "Hostname or compute-node number? "
+	spcm-banner
+	printf "\nHostname or compute-node number? "
 	read node
 	node-iostat $node
 	;;
     
     5)
-	printf "Hostname or compute-node number? "
+	spcm-banner
+	printf "\nHostname or compute-node number? "
 	read node
 	if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
 	    node=compute-$node
@@ -142,7 +146,8 @@ EOM
 	;;
     
     9)
-	printf "Username of user with suspected strays? "
+	spcm-banner
+	printf "\nUsername of user with suspected strays? "
 	read username
 	slurm-find-strays $username
 	;;
