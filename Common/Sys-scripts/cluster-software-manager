@@ -85,6 +85,7 @@ FreeBSD)
     available_cmd='pkg search ".*"'
     search_cmd='pkg search'
     install_cmd='pkg install -y'
+    install_from_source_cmd='auto-install-packages -n -s'
     remove_cmd='pkg remove -y'
     autoremove_cmd='pkg autoremove -y'
     ;;
@@ -132,6 +133,7 @@ but there could be issues installing new packages alongside much older ones.
 3.. Search available packages
 4.. Install packages
 5.. Remove packages
+6.. Install port/package from source
 Q.. Quit
 
 EOM
@@ -194,6 +196,21 @@ EOM
 	fi
 	;;
     
+    06)
+	select_node_type
+	if [ 0$NODE_TYPE != 0 ]; then
+	    read -p 'Enter category/name: ' names
+	    if [ 0"$names" != 0 ]; then
+		if [ $NODE_TYPE = head ]; then
+		    $install_from_source_cmd $names
+		else
+		    cluster-run "$install_from_source_cmd $names" $NODE_TYPE
+		fi
+		pause
+	    fi
+	fi
+	;;
+
     0Q|0q)
 	exit 0
 	;;
