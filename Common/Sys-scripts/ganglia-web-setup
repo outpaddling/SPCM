@@ -98,7 +98,7 @@ EOM
 
     #cp $LOCALBASE/share/examples/ganglia/gmond.conf $LOCALBASE/etc
     cluster_name=`auto-ask cluster-name "Name of the cluster as it should appear in Ganglia? " $name`
-    while [ 0$cluster_owner = 0 ]; do
+    while [ 0"$cluster_owner" = 0 ]; do
 	read -p "Owner of the cluster as it should appear in Ganglia? " cluster_owner
     done
     gmetad_ip=`auto-ask head-ip "IP address of node to receive Ganglia data? " $(auto-get-ip octet)`

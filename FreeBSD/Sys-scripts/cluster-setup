@@ -909,6 +909,9 @@ fi
 resource_limits             # Configure login.conf.  After nfs_config.
 ganglia_config              # Cluster monitoring.
 
+# Many users may want to try Linux binaries of apps not yet in the ports tree
+auto-install-linux_base
+
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in
 head)
