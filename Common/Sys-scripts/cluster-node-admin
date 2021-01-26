@@ -46,6 +46,12 @@ get_host_info()
 	host_digits=$default_digits
     fi
     
+    if [ $host_digits = 0 ]; then
+	first_num=''
+	last_num=''
+	return 0
+    fi
+
     # Remove leading zeros so printf doesn't interpret it as octal
     read -p "First host number? " first_num
     if [ 0$first_num = 0 ]; then
@@ -246,13 +252,21 @@ EOM
 		if [ 0$unattended != 0n ]; then
 		    flags=--unattended
 		fi
-		num=$first_num
-		while [ $num -le $last_num ]; do
-		    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+		if [ -z $first_num ]; then
+		    node=`printf '%s.%s' $host_prefix $domain`
+		    printf "Initializing $node...\n"
 		    cluster-init-node $flags $node $node_type || true
 		    printf "Done with $node...\n"
-		    num=$((num + 1))
-		done
+		else
+		    num=$first_num
+		    while [ $num -le $last_num ]; do
+			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			printf "Initializing $node...\n"
+			cluster-init-node $flags $node $node_type || true
+			printf "Done with $node...\n"
+			num=$((num + 1))
+		    done
+		fi
 	    fi
 	fi
 	;;
@@ -299,14 +313,21 @@ EOM
 		    fi
 		fi
 		if get_host_info 3; then
-		    num=$first_num
-		    while [ $num -le $last_num ]; do
-			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+		    if [ -z $first_num ]; then
+			node=`printf '%s.%s' $host_prefix $domain`
 			printf "Synchronizing $node...\n"
 			cluster-sync-node $sync_opts $node $node_type || true
 			printf "Done with $node...\n"
-			num=$((num + 1))
-		    done
+		    else
+			num=$first_num
+			while [ $num -le $last_num ]; do
+			    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			    printf "Synchronizing $node...\n"
+			    cluster-sync-node $sync_opts $node $node_type || true
+			    printf "Done with $node...\n"
+			    num=$((num + 1))
+			done
+		    fi
 		fi
 		;;
 	    esac
