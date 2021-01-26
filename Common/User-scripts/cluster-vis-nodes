@@ -1,5 +1,3 @@
 #!/bin/sh
 
-awk '$2 ~ "vis.*-[0-9]+" { print $3 }' /etc/hosts \
-    | egrep -ve '-ib0|-mgmt|-hpc|-aux' || true
-
+awk '$2 == "vis" { print $1 }' $(cluster-localbase)/etc/spcm/node-types

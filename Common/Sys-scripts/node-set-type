@@ -27,6 +27,7 @@ node_name=$1
 node_type=$2
 
 LOCALBASE=$(cluster-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
 
 if [ 0"$(node-type $node_name)" != 0 ] && [ $node_type != $(node-type $node_name) ]; then
     cat << EOM
@@ -36,11 +37,11 @@ $0:
 Node-type "$node_type" contradicts previous node type "$(node-type $node_name)" set for
 $node_name. If you really want to change the node type, edit
 
-$LOCALBASE/etc/node-types
+$CONF_DIR/node-types
 
 on the head node and
 
-$LOCALBASE/etc/my-node-type
+$CONF_DIR/my-node-type
 
 on $node_name and run $0 again.
 
@@ -48,7 +49,6 @@ EOM
     exit 1
 fi
 
-CONF_DIR=$LOCALBASE/etc/spcm
 mkdir -p $CONF_DIR
 
 # Set $CONF_DIR/my-node-type on all nodes

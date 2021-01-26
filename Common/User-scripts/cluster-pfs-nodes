@@ -1,5 +1,3 @@
 #!/bin/sh -e
 
-# Return 0 status regardless
-
-# Empty for now, populate when parallel file system is available
+awk '$2 == "pfs" { print $1 }' $(cluster-localbase)/etc/spcm/node-types

@@ -3,3 +3,4 @@
 # Return 0 status regardless
 cluster-raid-nodes
 cluster-pfs-nodes
+cluster-io-nodes

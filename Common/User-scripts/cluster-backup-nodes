@@ -1,5 +1,3 @@
 #!/bin/sh
 
-awk '$2 ~ "login.*-[0-9]+" { print $3 }' /etc/hosts \
-    | egrep -ve '-ib0|-mgmt|-hpc|-aux' || true
-
+awk '$2 == "backup" { print $1 }' $(cluster-localbase)/etc/spcm/node-types
