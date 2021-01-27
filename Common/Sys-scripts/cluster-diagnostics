@@ -120,7 +120,7 @@ EOM
 	spcm-banner
 	printf "\nHostname or compute-node number? "
 	read node
-	if ! echo $node | egrep -q '^compute-|^raid-|^vis-|^login-'; then
+	if [ 0$(node-type compute-$node) = 0compute ]; then
 	    node=compute-$node
 	fi
 	list_interfaces $node
