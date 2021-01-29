@@ -204,7 +204,7 @@ EOM
 		if [ $NODE_TYPE = head ]; then
 		    $install_from_source_cmd $names
 		else
-		    cluster-run "$install_from_source_cmd $names" $NODE_TYPE
+		    cluster-run "$install_from_source_cmd $names" $NODE_TYPE || true
 		fi
 		pause
 	    fi
