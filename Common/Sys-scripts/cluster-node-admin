@@ -338,13 +338,16 @@ EOM
 	spcm-banner
 	printf "\nCurrent node status:\n\n"
 	sinfo -o "$sinfo_format"
-	printf "\nNode number? (e.g. 001) "
+	printf "\nCompute node name or number? "
 	read node
 	if [ 0$node != 0 ]; then
 	    printf "Reason? "
 	    read reason
 	    if [ 0"$reason" != 0 ]; then
-		scontrol update State=drain NodeName=compute-$node reason="$reason"
+		if [ 0$(node-type compute-$node) = 0compute ]; then
+		    node=compute-$node
+		fi
+		scontrol update State=drain NodeName=$node reason="$reason"
 		sinfo --list-reasons
 		printf "Update slurm.conf if this is a long-term outage.\n"
 	    fi
@@ -355,10 +358,13 @@ EOM
 	spcm-banner
 	printf "\nNodes currently down:\n\n"
 	sinfo --list-reasons
-	printf "\nNode number? (e.g. 001) "
+	printf "\nCompute node name or number? "
 	read node
 	if [ 0$node != 0 ]; then
-	    full_name=`awk '$3 == "compute-'$node'" { print $2 }' /etc/hosts`
+	    if [ 0$(node-type compute-$node) = 0compute ]; then
+		node=compute-$node
+	    fi
+	    full_name=`awk '$3 == "'$node'" { print $2 }' /etc/hosts`
 	    slurm-resume-nodes $full_name
 	fi
 	;;
