@@ -248,8 +248,9 @@ EOM
 	return
     fi
 
-    # FIXME: Submit PR
-    # NFS may fail to start without this, even if using ZFS
+    # FIXME: Use auto-admin
+    # auto-nfs-client-setup daemon $domain
+    
     touch /etc/exports
     auto-append-line 'V4: /' /etc/exports $0
     
@@ -271,6 +272,10 @@ EOM
 	# FIXME: Use auto-nfs-client/server-setup and sysrc when nfsuserd
 	# option exists.  Must use nfsuserd for hybrid clusters.
 	printf "Updating $RC_CONF...\n"
+    
+	# FIXME: Use auto-admin
+	# auto-nfs-server-setup -network='-network $subnet -mask $NETMASK' \
+	#   -maproot=root daemon $domain
 	
 	# Need UDP for some PXE ROMs
 	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
