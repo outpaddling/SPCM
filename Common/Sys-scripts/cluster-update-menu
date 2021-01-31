@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -215,14 +215,14 @@ EOM
     case $selection in
     
     1)  # Update backup head node
-	cluster-update-backup-nodes || true
+	cluster-update-backup-nodes
 	;;
     
     2)  # Verify scheduler running on backup head node
 	if [ -z $(cluster-backup-nodes) ]; then
 	    printf "No backup nodes found.\n"
 	else
-	    ssh login-2 tail /var/log/slurm/slurmctld.log || true
+	    ssh login-2 tail /var/log/slurm/slurmctld.log
 	fi
 	;;
     
@@ -265,15 +265,15 @@ EOM
 	;;
     
     4)
-	cluster-update-vis-nodes || true
+	cluster-update-vis-nodes
 	;;
     
     5)
-	cluster-update-file-servers || true
+	cluster-update-file-servers
 	;;
     
     6)
-	cluster-node-status || true
+	cluster-node-status
 	;;
     
     7)  # Update all compute nodes

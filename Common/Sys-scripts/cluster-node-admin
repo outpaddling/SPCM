@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -255,14 +255,14 @@ EOM
 		if [ -z $first_num ]; then
 		    node=`printf '%s.%s' $host_prefix $domain`
 		    printf "Initializing $node...\n"
-		    cluster-init-node $flags $node $node_type || true
+		    cluster-init-node $flags $node $node_type
 		    printf "Done with $node...\n"
 		else
 		    num=$first_num
 		    while [ $num -le $last_num ]; do
 			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
 			printf "Initializing $node...\n"
-			cluster-init-node $flags $node $node_type || true
+			cluster-init-node $flags $node $node_type
 			printf "Done with $node...\n"
 			num=$((num + 1))
 		    done
@@ -286,14 +286,14 @@ EOM
 			sync_opts="--use-defaults $ref_node"
 		    fi
 		    printf "Synchronizing $node...\n"
-		    cluster-sync-node $sync_opts $node $node_type || true
+		    cluster-sync-node $sync_opts $node $node_type
 		    printf "Done with $node...\n"
 		fi
 		;;
     
 	    compute)
 		# Sync compute nodes
-		sinfo || true
+		sinfo
 		read -p "Host name prefix? [compute-] " host_prefix
 		if [ 0$host_prefix = 0 ]; then
 		    host_prefix='compute-'
@@ -316,14 +316,14 @@ EOM
 		    if [ -z $first_num ]; then
 			node=`printf '%s.%s' $host_prefix $domain`
 			printf "Synchronizing $node...\n"
-			cluster-sync-node $sync_opts $node $node_type || true
+			cluster-sync-node $sync_opts $node $node_type
 			printf "Done with $node...\n"
 		    else
 			num=$first_num
 			while [ $num -le $last_num ]; do
 			    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
 			    printf "Synchronizing $node...\n"
-			    cluster-sync-node $sync_opts $node $node_type || true
+			    cluster-sync-node $sync_opts $node $node_type
 			    printf "Done with $node...\n"
 			    num=$((num + 1))
 			done

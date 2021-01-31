@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -185,7 +185,8 @@ EOM
 	    read -p 'Enter the package name(s): ' names
 	    if [ 0"$names" != 0 ]; then
 		if [ $NODE_TYPE = head ]; then
-		    ($remove_cmd $names; $autoremove_cmd) || true
+		    $remove_cmd $names
+		    $autoremove_cmd
 		else
 		    cluster-run \
 			"($remove_cmd $names; $autoremove_cmd) || true" \
