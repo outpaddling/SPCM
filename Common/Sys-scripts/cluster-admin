@@ -44,10 +44,10 @@ while true; do
     spcm-banner
     cat << EOM
 
-1.. Update system
-2.. User management
-3.. Node management
-4.. Software management
+1.. Update manager
+2.. User manager
+3.. Node manager
+4.. Software manager
 5.. Diagnostics and Monitoring
 6.. Restart services
 7.. Shut down cluster
