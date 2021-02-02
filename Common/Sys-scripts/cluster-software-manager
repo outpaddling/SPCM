@@ -42,10 +42,10 @@ pause()
 select_node_type()
 {
     while true; do
-	n=1
+	n=2
 	NODE_TYPE=''
-	available_node_types='head'
-	printf "\n1.. head"
+	available_node_types='all head'
+	printf "\n1.. All\n2.. head"
 	for node_type in backup raid vis compute; do
 	    if [ "0$(cluster-$node_type-nodes)" != 0 ]; then
 		n=$((n + 1))
