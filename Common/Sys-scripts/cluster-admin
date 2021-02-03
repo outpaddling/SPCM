@@ -60,15 +60,15 @@ EOM
     clear
     case $selection in
     1)
-	cluster-update-menu
+	cluster-update-manager
 	;;
     
     2)
-	cluster-user-admin
+	cluster-user-manager
 	;;
     
     3)
-	cluster-node-admin
+	cluster-node-manager
 	;;
     
     4)
@@ -80,7 +80,7 @@ EOM
 	;;
     
     6)
-	cluster-services-menu
+	cluster-services-manager
 	;;
     
     7)

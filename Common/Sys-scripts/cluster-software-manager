@@ -134,6 +134,7 @@ but there could be issues installing new packages alongside much older ones.
 4.. Install packages
 5.. Remove packages
 6.. Install port/package from source
+7.. Update WIP repo on all nodes
 Q.. Quit
 
 EOM
@@ -210,6 +211,20 @@ EOM
 		pause
 	    fi
 	fi
+	;;
+    
+    07)
+	cat << EOM
+
+This will update the work-in-progress frameworks on all nodes.  To upgrade
+an installed WIP package, first remove it and then install from source.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    cluster-wip-update
+	fi
+	pause
 	;;
 
     0Q|0q)
