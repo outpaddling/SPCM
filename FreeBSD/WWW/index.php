@@ -22,18 +22,19 @@
 <h2>FreeBSD Ports Collection</h2>
 
 <p>
-Users can request that additional software be installed on %%HOSTNAME%%'s
-head node or compute nodes.  %%HOSTNAME%% runs a Unix variant called FreeBSD,
-which has one of the most extensive pre-packaged software collections of
-any operating system, known as the "FreeBSD ports" collection.  Users can
-browse the ports collection by category to see what's available:
+%%HOSTNAME%% runs a Unix variant called FreeBSD, which has one of the most
+extensive pre-packaged software collections of any operating system, known
+as the "FreeBSD ports" collection.  Most mainstream open source software
+can be installed in seconds using FreeBSD ports.  For more information,
+please visit the ports web page:
 
 <p>
-<a href="http://www.freebsd.org/ports/categories-grouped.html">http://www.freebsd.org/ports/categories-grouped.html</a>
+<a href="http://www.freebsd.org/ports/">https://www.freebsd.org/ports/</a>
 
 <p>
 Software not currently included in the FreeBSD ports collection can also
-be requested, but may take longer to install.
+be installed manually or using other tools such as pip or pkg.install under
+R.
 
 <p>
 <img style="float:right" src="powerlogo.gif" alt="[Powered by FreeBSD]">
