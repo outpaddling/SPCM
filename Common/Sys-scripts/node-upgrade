@@ -85,9 +85,11 @@ FreeBSD)
 	fi
     fi
     
-    ssh -t $node freebsd-update fetch install
+    printf "Updating current release before upgrade...\n"
+    ssh -t $node freebsd-update fetch install || true
     reboot_node $node
     
+    printf "Upgrading to $version...\n"
     ssh -t $node freebsd-update upgrade -r $version
     install=''
     while [ 0$install != 0y ] && [ 0$install != 0n ]; do

@@ -184,13 +184,26 @@ EOM
 	select_node_type
 	if [ 0$NODE_TYPE != 0 ]; then
 	    read -p 'Enter the package name(s): ' names
+	    cat << EOM
+
+Dependencies that are no longer needed can be automatically removed.  This is
+a good idea if you do not plan to reinstall the software, but will waste time
+if you are going to reinstall or install a newer WIP version.
+
+EOM
+	    read -p 'Autoremove dependencies? y/[n] ' autoremove
 	    if [ 0"$names" != 0 ]; then
+		if [ 0$autoremove = 0y ]; then
+		    ar="$autoremove_cmd"
+		else
+		    ar=''
+		fi
 		if [ $NODE_TYPE = head ]; then
 		    $remove_cmd $names
-		    $autoremove_cmd
+		    $ar
 		else
 		    cluster-run \
-			"($remove_cmd $names; $autoremove_cmd) || true" \
+			"($remove_cmd $names; $ar) || true" \
 			$NODE_TYPE
 		fi
 		pause

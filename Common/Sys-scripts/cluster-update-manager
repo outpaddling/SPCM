@@ -202,7 +202,7 @@ reboot, so you should be physically nearby in case of issues.
 2.. Verify scheduler restart on backup head node
 3.. Install updates on head node
 4.. Install updates on visualization nodes
-5.. Install updates on File servers
+5.. Install updates on file servers
 6.. Check for down nodes
 7.. Install updates on idle compute nodes
 8.. Restart cron updates on idle compute nodes
