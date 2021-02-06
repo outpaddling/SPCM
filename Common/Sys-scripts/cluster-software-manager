@@ -134,8 +134,9 @@ but there could be issues installing new packages alongside much older ones.
 4.. Install packages
 5.. Remove packages
 6.. Install port/package from source
-7.. Update WIP repo on all nodes
-8.. Enable Linux compatibility
+7.. Install WIP repo on all nodes
+8.. Update WIP repo on all nodes
+9.. Enable Linux compatibility (non-Linux clusters, of course)
 Q.. Quit
 
 EOM
@@ -230,8 +231,7 @@ EOM
     07)
 	cat << EOM
 
-This will update the work-in-progress frameworks on all nodes.  To upgrade
-an installed WIP package, first remove it and then install from source.
+This will install the work-in-progress frameworks on all nodes.
 
 EOM
 	read -p "Proceed? [y]/n " proceed
@@ -242,6 +242,21 @@ EOM
 	;;
 
     08)
+	cat << EOM
+
+This will update the work-in-progress frameworks on all nodes, but will not
+upgrade installed ports/packages.  To upgrade an installed WIP package, first
+remove it and then install it again from source.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    cluster-wip-update
+	fi
+	pause
+	;;
+
+    09)
 	cat << EOM
 
 This will enable the FreeBSD Linux compatibility module on all nodes except
