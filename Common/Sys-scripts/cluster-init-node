@@ -200,7 +200,10 @@ FreeBSD)
 
 esac
 
-ssh $node "mkdir -p $CONF_DIR && chmod 755 $CONF_DIR && touch $CONF_DIR/init-done"
+ssh $node "mkdir -p $CONF_DIR && chmod 755 $CONF_DIR"
+# Uniform domain for NFSv4 ID mapping
+scp $CONF_DIR/nfs4_domain ${node}:$CONF_DIR
+ssh $node "touch $CONF_DIR/init-done"
 
 if [ $unattended = y ]; then
     reboot=y

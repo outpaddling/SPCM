@@ -135,6 +135,7 @@ but there could be issues installing new packages alongside much older ones.
 5.. Remove packages
 6.. Install port/package from source
 7.. Update WIP repo on all nodes
+8.. Enable Linux compatibility
 Q.. Quit
 
 EOM
@@ -236,6 +237,30 @@ EOM
 	read -p "Proceed? [y]/n " proceed
 	if [ 0$proceed != 0n ]; then
 	    cluster-wip-update
+	fi
+	pause
+	;;
+
+    08)
+	cat << EOM
+
+This will enable the FreeBSD Linux compatibility module on all nodes except
+file servers.  This will allow users to run closed-source Linux binaries.
+
+This is NOT an emulation layer.  It simply adds Linux system calls to the
+FreeBSD kernel so that Linux binaries can be run directly.  In fact, some
+Linux binaries will run faster on FreeBSD than they do on Linux.
+
+Most binaries built for RHEL/CentOS will run on FreeBSD.  However, you may
+need to install the necessary shared libraries or other dependencies, just
+as you would on Linux.
+
+This will also mount Linux procfs, sysfs, and tmpfs.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    cluster-run auto-install-linux_base head compute vis
 	fi
 	pause
 	;;

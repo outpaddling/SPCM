@@ -247,17 +247,27 @@ EOM
     if [ $nfs_config != 'y' ]; then
 	return
     fi
+    
+    default_nfs4_domain=$(hostname | cut -d . -f 2-)
+    if [ $NODE_TYPE = head ]; then
+	read -p "Domain name for NFSv4? [$default_nfs4_domain] " nfs4_domain
+	if [ -z $nfs4_domain ]; then
+	    nfs4_domain=$default_nfs4_domain
+	    printf "$nfs4_domain\n" > $CONF_DIR/nfs4_domain
+	fi
+    else
+	nfs4_domain=$(cat $CONF_DIR/nfs4_domain)
+    fi
 
+    auto-nfs-client-setup daemon $nfs4_domain
+    
     # FIXME: Use auto-admin
-    # auto-nfs-client-setup daemon $domain
-    
-    touch /etc/exports
-    auto-append-line 'V4: /' /etc/exports $0
-    
-    auto-enable-service -s nfsclient nfs_client $0
-    auto-enable-service nfsuserd $0
-    auto-enable-service -s statd rpc_statd $0
-    auto-enable-service -s lockd rpc_lockd $0
+    #touch /etc/exports
+    #auto-append-line 'V4: /' /etc/exports $0
+    #auto-enable-service -s nfsclient nfs_client $0
+    #auto-enable-service nfsuserd $0
+    #auto-enable-service -s statd rpc_statd $0
+    #auto-enable-service -s lockd rpc_lockd $0
     
     case $NODE_TYPE in
     head|io)
@@ -274,19 +284,19 @@ EOM
 	printf "Updating $RC_CONF...\n"
     
 	# FIXME: Use auto-admin
-	# auto-nfs-server-setup -network='-network $subnet -mask $NETMASK' \
-	#   -maproot=root daemon $domain
+	auto-nfs-server-setup "-network $subnet -mask $NETMASK" \
+	    daemon $nfs4_domain
 	
 	# Need UDP for some PXE ROMs
-	auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
+	#auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
 
 	# For NFSv4.  Some configs don't need nfsuser.
 	# man nfsv4 for details
-	auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
+	#auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
 
-	touch /etc/exports  # Must be present for NFS to start
-	auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
-	auto-nfs-restart
+	#touch /etc/exports  # Must be present for NFS to start
+	#auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
+	#auto-nfs-restart
 	
 	share='x'
 	while [ 0$share != 0 ]; do
@@ -913,9 +923,6 @@ if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
 fi
 resource_limits             # Configure login.conf.  After nfs_config.
 ganglia_config              # Cluster monitoring.
-
-# Many users may want to try Linux binaries of apps not yet in the ports tree
-auto-install-linux_base
 
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in
