@@ -894,7 +894,11 @@ package compatibility and to maximize security.
 EOM
     update=`auto-ask update-system 'Update system before continuing?' y`
     if [ $update != n ]; then
-	auto-update-system  # Run interactively
+	auto-update-system --defaults
+	read -p "Reboot? [y]/n " reboot
+	if [ 0"$reboot" != 0n ]; then
+	    shutdown -r now
+	fi
     fi
 fi
 
