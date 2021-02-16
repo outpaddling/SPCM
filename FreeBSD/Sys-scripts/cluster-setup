@@ -863,6 +863,18 @@ auto-ipmi-install || true
 
 # Configure files used by spcm
 if [ $NODE_TYPE = head ]; then
+    # May or may not have been done by spcm-bootstrap
+    if [ $(auto-pkg-branch) = latest ]; then
+	printf "Already using latest packages.\n"
+    else
+	read -p 'Use latest packages instead of quarterly? [y]/n ' latest
+	if [ 0$latest != 0n ]; then
+	    auto-pkg-latest --no-reboot
+	else
+	    auto-update-system --defaults
+	fi
+    fi
+    
     # cluster-init-node will do this for other node types
     node-set-type $(hostname -s) $NODE_TYPE
     
