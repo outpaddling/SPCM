@@ -192,18 +192,13 @@ while true; do
     spcm-banner
     cat << EOM
     
-******************************************************************************
-				*** WARNING ***
-
 Installing updates remotely is not recommended.  Servers occasionally fail to
 reboot, so you should be physically nearby in case of issues.
 
 Updates are best performed in the order presented below.  Most importantly,
-complete head node updates before beginning compute node updates.  The head
-node should never be rebooted while compute node updates are in progress.
-Doing so may leave a compute node in a partially updated state.
-
-******************************************************************************
+complete head node updates before beginning compute node updates.  Rebooting
+the head node while compute node updates are in progress may leave a compute
+node in a partially updated state.
 
 1.. Install updates on backup head node
 2.. Verify scheduler restart on backup head node
