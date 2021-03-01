@@ -203,7 +203,6 @@ while true; do
 5.. Drain a node
 6.. Resume a node
 7.. Drain all nodes
-8.. Shut down idle nodes
 Q.. Quit / Return to main menu
 
 EOM
@@ -382,12 +381,6 @@ EOM
 	else
 	    printf "Operation canceled.\n"
 	fi
-	;;
-
-    8)
-	spcm-banner
-	printf "\n"
-	slurm-shutdown-idle-nodes
 	;;
 
     Q|q)
