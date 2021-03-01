@@ -231,37 +231,39 @@ EOM
     3)  # Update head node
 	# FIXME: Warn if cron updates are running
 	update_warning
-	w
-	read -p 'Continue? y/[n] ' continue
-	if [ 0$continue = 0y ]; then
-		cat << EOM | wall
+	if cluster-check-cron-updates; then
+	    w
+	    read -p 'Continue? y/[n] ' continue
+	    if [ 0$continue = 0y ]; then
+		    cat << EOM | wall
 
 The head node may need to be rebooted shortly to complete the installation of
 important security updates.  An additional notice will follow if a reboot
 is necessary.
 
 EOM
-	    auto-update-system --binary
-	    read -p "Reboot? [y]/n " reboot
-	    if [ `auto-ostype` = FreeBSD ]; then
-		read -p "Update and sync ports tree to all nodes? [y]/n " ports_update
-		if [ 0$ports_update != 0n ]; then
-		    cluster-ports-update
+		auto-update-system --binary
+		read -p "Reboot? [y]/n " reboot
+		if [ `auto-ostype` = FreeBSD ]; then
+		    read -p "Update and sync ports tree to all nodes? [y]/n " ports_update
+		    if [ 0$ports_update != 0n ]; then
+			cluster-ports-update
+		    fi
 		fi
-	    fi
-	    w
-	    if [ 0$reboot != 0n ]; then
-		read -p "Minutes before reboot? [2] " minutes
-		if [ 0$minutes = 0 ]; then
-		    minutes=2
-		fi
-		cat << EOM | wall
+		w
+		if [ 0$reboot != 0n ]; then
+		    read -p "Minutes before reboot? [2] " minutes
+		    if [ 0$minutes = 0 ]; then
+			minutes=2
+		    fi
+		    cat << EOM | wall
 
 The head node will be rebooted shortly to complete the installation of
 important security updates.  It should be available again in a few minutes.
 
 EOM
-		shutdown -r +$minutes
+		    shutdown -r +$minutes
+		fi
 	    fi
 	fi
 	;;

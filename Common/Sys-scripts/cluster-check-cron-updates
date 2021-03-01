@@ -3,10 +3,13 @@
 if sinfo --list-reasons | fgrep slurm-update-idle; then
     cat << EOM
 
-The nodes listed above are awaiting cron updates and may reboot at any time.
+The nodes listed above are either awaiting cron updates or in the process of
+updating, and may reboot at any time.
 
 This may cause failures for any sysadmin tasks that require access to all
 compute nodes.
+
+If the head node is rebooted, updates may be left partially completed.
 
 EOM
     printf "Are you sure you want to proceed? yes/[no] "
