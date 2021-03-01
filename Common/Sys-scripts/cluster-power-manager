@@ -44,6 +44,10 @@ while true; do
     spcm-banner
     cat << EOM
 
+Nodes must be configured for remote IPMI power-on to utilize the power on
+features here.  This may require some BIOS setup.  Use auto-ipmi-install and
+auto-ipmi-remote-access for the rest.
+
 1.. Power on backup head node
 2.. Power on file servers
 3.. Power on compute nodes
