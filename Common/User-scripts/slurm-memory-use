@@ -1,8 +1,9 @@
 #!/bin/sh -e
 
-squeue -o '%7i %8u %2t %3C %3D %6m %8j %11M %5P %N'
+cat << EOM
 
-printf '\n'
+"slurm-memory-use" has been merged info "slurm-cluster-load".
 
-slurm-load-summary
+This reminder will be removed after March 2022.
 
+EOM

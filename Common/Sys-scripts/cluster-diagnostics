@@ -74,15 +74,14 @@ while true; do
     spcm-banner
     cat << EOM
     
-1.. Check for down nodes
-2.. Monitor load with top
-3.. Monitor load with netstat
-4.. Monitor load with iostat
-5.. Monitor load with iftop
+1.. Check node status
+2.. Monitor node with top
+3.. Monitor node with netstat
+4.. Monitor node with iostat
+5.. Monitor node with iftop
 6.. Show cores per user
-7.. Show cluster load
-8.. Show cluster load with memory use
-9.. Scan for stray processes
+7.. Show jobs and cluster load
+8.. Scan for stray processes
 Q.. Quit / Return to main menu
 
 EOM
@@ -142,10 +141,6 @@ EOM
 	;;
     
     8)
-	slurm-memory-use  
-	;;
-    
-    9)
 	spcm-banner
 	printf "\nUsername of user with suspected strays? "
 	read username
