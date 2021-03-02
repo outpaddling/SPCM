@@ -69,7 +69,7 @@ if [ ! -z $temp ]; then
 fi
 
 for node in $compute_only_nodes; do
-    state=$(sinfo -h -n compute-001 -o '%T')
+    state=$(sinfo -h -n $node -o '%T')
     reason=$(sinfo -h -n $node -o '%E')
     case $state in
     "drained"|"drained*")
@@ -100,7 +100,7 @@ if [ ! -z $temp ]; then
 	sleep 5
 	
 	for node in $file_servers; do
-	    state=$(sinfo -h -n compute-001 -o '%T')
+	    state=$(sinfo -h -n $node -o '%T')
 	    reason=$(sinfo -h -n $node -o '%E')
 	    case $state in
 	    "drained"|"drained*")
