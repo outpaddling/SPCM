@@ -54,6 +54,19 @@ if ! awk '{ print $2 }' /etc/hosts | fgrep -q $node; then
     exit 1
 fi
 
+# Do this before the first ssh command
+if [ $unattended = y ]; then
+    remove=y
+else
+    printf "Remove $node from all known_hosts files? [y]/n "
+    read remove
+fi
+if [ 0$remove != 0n ]; then
+    cluster-remove-from-known-hosts $node
+    # Re-add to known_hosts
+    ssh -o "StrictHostKeyChecking no" $node ls > /dev/null
+fi
+
 node-set-type $short_name $node_type
 
 if ssh $node ls $CONF_DIR/init-done; then
@@ -80,17 +93,6 @@ LOCALBASE=$(cluster-localbase)
 # Should be fixed now: Was apparently a dhcp.conf configuration problem on
 # login.mortimer
 # gateway=$2
-
-if [ $unattended = y ]; then
-    remove=y
-else
-    printf "Remove $node from all known_hosts files? [y]/n "
-    read remove
-fi
-
-if [ 0$remove != 0n ]; then
-    cluster-remove-from-known-hosts $node
-fi
 
 # Disable prompt for first ssh
 auto-disable-host-key-prompt $short_name $node $ip
