@@ -4,12 +4,9 @@ case $(auto-ostype) in
 FreeBSD)
     : ${PORTSDIR:=/usr/ports}
     LOCALBASE=$(cluster-localbase)
-    
-    if [ -e $PORTSDIR/.svn ]; then
-	svn update $PORTSDIR
-    else
-	portsnap fetch && portsnap update
-    fi
+
+    auto-check-ports-branch
+    (cd $PORTSDIR && git pull)
     
     if [ -e $LOCALBASE/sbin/wip-update ]; then
 	wip-update
