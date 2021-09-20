@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Wait until all updated nodes are resumed.
+#
+#   History:
+#   Date        Name        Modification
+#   2021-09-20  Charlie &   Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 log-directory\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+log_dir="$1"
+while ! slurm-resume-updated-nodes "$log_dir"; do
+    printf "Some nodes still down.  Retrying in 10 seconds...\n"
+    sleep 10
+done

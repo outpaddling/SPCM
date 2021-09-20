@@ -601,6 +601,7 @@ EOM
     default_maxproc=128
     maxproc=`auto-ask max-proc "Max processes for each user on $NODE_TYPE node?" $default_maxproc`
     
+    # FIXME: Use auto-set-memory-limits
     default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
     vmem=`auto-ask vmem "Max memory use for processes on $NODE_TYPE node? (use 'm' or 'g' suffix)" $default_vmem`
     

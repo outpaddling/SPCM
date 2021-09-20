@@ -15,7 +15,7 @@
 
 usage()
 {
-    printf "Usage: $0 output-directory\n"
+    printf "Usage: $0 log-directory\n"
     exit 1
 }
 
@@ -188,5 +188,6 @@ for node in $nodes; do
     # or drained, but respond to ssh.
     slurm-resume-updated-nodes "$log_dir" || true
 done
+slurm-resume-all-updated-nodes "$log_dir"
 wc -l $updated_nodes_file
 rm -f "$lock_file"

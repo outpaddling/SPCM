@@ -36,6 +36,7 @@ dir="$1"
 down_nodes=`sinfo -h -o '%n %T' | awk '$2 ~ "down" { print $1 }' | sort | uniq`
 drained_nodes=`sinfo -h -o '%n %T' | awk '$2 ~ "drained" { print $1 }' | sort | uniq`
 
+status=0
 for node in $down_nodes $drained_nodes; do
     if fgrep -q $node "$dir/updated-nodes"; then
 	reason="`sinfo -h -n $node -o '%E'`"
@@ -48,10 +49,11 @@ for node in $down_nodes $drained_nodes; do
 		scontrol update state=resume nodename=$node
 	    else
 		printf "$node is not responding.  May still be rebooting...\n"
+		status=1
 	    fi
 	else
 	    printf "Skipping $node, down for $reason\n"
 	fi
     fi
 done
-
+exit $status
