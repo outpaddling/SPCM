@@ -236,6 +236,7 @@ EOM
 	;;
     
     3)  # Initialize nodes
+	set -e  # Stop if init fails
 	spcm-banner
 	if get_node_type; then
 	    read -p "Host name prefix? [$default_prefix] " host_prefix
@@ -268,9 +269,11 @@ EOM
 		fi
 	    fi
 	fi
+	set +e
 	;;
     
     4)  # Sync nodes
+	set -e  # Stop if init fails
 	spcm-banner
 	if get_node_type; then
 	    case $node_type in
@@ -331,6 +334,7 @@ EOM
 		;;
 	    esac
 	fi
+	set +e
 	;;
     
     5) # Drain node
