@@ -42,7 +42,7 @@ LOCALBASE=$(cluster-localbase)
 CONF_DIR=$LOCALBASE/etc/spcm
 
 short_name=${node%%.*}
-ip=`awk -v hn=$node '$2 == hn || $3 == hn { print $1 }' /etc/hosts` 
+ip=`awk -v hn=$node '$1 !~ "^#" && $2 == hn || $3 == hn { print $1 }' /etc/hosts` 
 
 if ! echo $node | fgrep -q '.'; then
     printf "No domain name in $node.\n"

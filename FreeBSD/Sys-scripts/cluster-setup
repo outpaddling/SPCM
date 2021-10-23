@@ -207,23 +207,6 @@ scheduler_config()
 	slurm_config
     fi
     printf "Done with slurm_config.\n"
-    
-    if auto-package-installed sysutils/condor; then
-	if [ ! -e $LOCALBASE/etc/condor_config ]; then
-	    cp $LOCALBASE/etc/condor/condor_config $LOCALBASE/etc
-	fi
-	if [ ! -e $LOCALBASE/etc/condor_config.local ]; then
-	    cp $LOCALBASE/etc/condor/condor_config.local $LOCALBASE/etc
-	fi
-	cat << EOM
-
-If you have condor_config and condor_config.local files prepared, restore
-them to $LOCALBASE/etc now.
-
-EOM
-	pause
-	$EDITOR $LOCALBASE/etc/condor_config*
-    fi
 }
 
 

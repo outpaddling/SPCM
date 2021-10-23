@@ -37,7 +37,7 @@ if ! echo $host | fgrep -q '.'; then
 fi
 
 short_host=${host%%.*}
-ip=$(awk -v host=$host '$2 == host || $3 == host { print $1 }' /etc/hosts)
+ip=$(awk -v host=$host '$1 !~ "^#" && $2 == host || $3 == host { print $1 }' /etc/hosts)
 
 set +e
 
@@ -45,6 +45,7 @@ set +e
 ssh-keygen -R $host
 ssh-keygen -R $short_host
 ssh-keygen -R $ip
+exit
 for user in $(cluster-users); do
     file=/home/$user/.ssh/known_hosts
     if [ -e $file ]; then
