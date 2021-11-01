@@ -29,10 +29,6 @@ fi
 
 auto-root-check $0 "Needs to resume compute nodes."
 
-if ! cluster-check-cron-updates; then
-    exit 0
-fi
-
 while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
     if [ $1 = '-f' ]; then
 	shift
