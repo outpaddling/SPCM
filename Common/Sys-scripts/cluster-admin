@@ -84,7 +84,9 @@ EOM
 	;;
     
     3)
+	set -e
 	cluster-node-manager
+	set +e
 	;;
     
     4)
