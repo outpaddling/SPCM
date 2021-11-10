@@ -65,7 +65,7 @@ while true; do
 3.. Node manager
 4.. Software manager
 5.. Diagnostics and Monitoring
-6.. Restart services
+6.. Services manager
 7.. Power manager
 Q.. Quit
 
