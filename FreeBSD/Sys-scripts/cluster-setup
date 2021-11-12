@@ -233,11 +233,11 @@ EOM
     
     default_nfs4_domain=$(hostname | cut -d . -f 2-)
     if [ $NODE_TYPE = head ]; then
-	read -p "Domain name for NFSv4? [$default_nfs4_domain] " nfs4_domain
+	nfs4_domain=`auto-ask nfs4-domain "Domain name for NFSv4?" $default_nfs4_domain`
 	if [ -z $nfs4_domain ]; then
 	    nfs4_domain=$default_nfs4_domain
-	    printf "$nfs4_domain\n" > $CONF_DIR/nfs4_domain
 	fi
+	printf "$nfs4_domain\n" > $CONF_DIR/nfs4_domain
     else
 	nfs4_domain=$(cat $CONF_DIR/nfs4_domain)
     fi
