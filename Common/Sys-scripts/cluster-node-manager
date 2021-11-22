@@ -203,6 +203,7 @@ while true; do
 5.. Drain a node
 6.. Resume a node
 7.. Drain all nodes
+8.. Enable IPMI remote access on nodes
 Q.. Quit / Return to main menu
 
 EOM
@@ -387,6 +388,12 @@ EOM
 	fi
 	;;
 
+    8)
+	if get_node_type; then
+	    cluster-ipmi-remote-access $node_type
+	fi
+	;;
+	
     Q|q)
 	exit 0
 	;;

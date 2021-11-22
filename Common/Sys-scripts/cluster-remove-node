@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+: ${EDITOR:=vi}
+: ${LOCALBASE:=/usr/local}
+conf_dir=$LOCALBASE/etc/spcm
+
+$EDITOR $conf_dir/node-types $LOCALBASE/etc/slurm.conf
+cluster-dhcp-cleanup
+slurm-restart
