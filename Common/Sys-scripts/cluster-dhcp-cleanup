@@ -29,7 +29,7 @@ fi
 case $(auto-ostype) in
 FreeBSD)
     service isc-dhcpd stop
-    for file in /var/db/dhcpd/dhcpd.leases /usr/local/etc/dhcpd.conf /etc/hosts; do
+    for file in /usr/local/etc/dhcpd.conf /var/db/dhcpd/dhcpd.leases /etc/hosts; do
 	$EDITOR $file
     done
     service isc-dhcpd start

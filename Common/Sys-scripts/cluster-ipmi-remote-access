@@ -156,6 +156,12 @@ else
     printf "Using existing $pw_file...\n"
 fi
 
+printf "IPMI user ID? [2] "
+read userid
+if [ 0$userid = 0 ]; then
+    userid=2
+fi
+
 for node in $selected_nodes; do
     printf "\n============================================================\n"
     printf "Configuring $node...\n"
@@ -163,5 +169,5 @@ for node in $selected_nodes; do
     
     ssh $node auto-ipmi-remote-access on
     pw=$(cat $pw_file)
-    ssh -t $node auto-ipmi-passwd --passwd $pw
+    ssh -t $node auto-ipmi-passwd --user $userid --passwd $pw
 done
