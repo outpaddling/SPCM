@@ -1,12 +1,12 @@
-#!/bin/sh -e
+#!/bin/sh
+
+# No -e since some rsync commands are expected to fail
 
 # DO NOT sync /etc/passwd, /etc/ssh*, or any other file that may contain
 # different information on different node types!
 
 auto-root-check $0
 cluster-head-check $0
-
-set +e
 
 if ! cluster-check-cron-updates; then
     exit 0
@@ -24,77 +24,29 @@ if [ $# -gt 0 ]; then
     all_nodes=$(printf "%s\n" $all_nodes $nodes | sort | uniq -d)
 fi
 
-echo $login_nodes
-echo $root_nodes
-echo $all_nodes
+echo $login_nodes $root_nodes $all_nodes
 
 printf "limits.d...\n"
 for node in $login_nodes; do
     rsync -av /etc/security/limits.d/* ${node}:/etc/security/limits.d
 done
 
+printf "root home...\n"
+for node in $all_nodes; do
+    rsync /root/.bash_profile /root/.bashrc /root/.login /root/.cshrc \
+	${node}:/root 2> /dev/null
+done
+    
 # FIXME: Are these ready to merge?
 os_type=`auto-ostype`
 case $os_type in
 RHEL)
     CONF_DIR=$(auto-pkgsrc-prefix)/etc/spcm
-    echo $CONF_DIR
-    for node in $all_nodes; do
-	rsync /root/.bash_profile ${node}:/root
-    done
-    
-    for node in $all_nodes; do
-	# /etc/hosts
-	printf "$node: hosts "
-	rsync -pog /etc/hosts ${node}:/etc
-	
-	printf "hosts.allow "
-	rsync -pog /etc/hosts.allow ${node}:/etc
-	
-	# Do not sync sshd_config.  Public-facing servers are different than
-	# compute nodes.
-	printf "ssh_config "
-	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
-	
-	printf "system-auth "
-	rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d
-
-	printf "fstab-fragments "
-	ssh $node mkdir -p $CONF_DIR
-	rsync -av $CONF_DIR/fstab.* ${node}:$CONF_DIR
-	printf '\n'
-    done
     ;;
 
 FreeBSD)
     LOCALBASE=$(cluster-localbase)
     CONF_DIR=$LOCALBASE/etc/spcm
-    printf "root home...\n"
-    for node in $all_nodes; do
-	rsync /root/.bash_profile ${node}:/root
-    done
-    
-    for node in $all_nodes; do
-	# /etc/hosts
-	printf "$node: hosts "
-	rsync -pog /etc/hosts ${node}:/etc
-
-	printf "$node: hosts.allow "
-	rsync -pog /etc/hosts.allow ${node}:/etc
-	
-	# Do not sync sshd_config.  Public-facing servers are different than
-	# compute nodes.
-	printf "ssh_config "
-	rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
-	
-	printf "system-auth "
-	rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d
-	
-	printf "etc/spcm "
-	ssh $node mkdir -p $CONF_DIR
-	rsync -av $CONF_DIR/fstab* $CONF_DIR/head-node ${node}:$CONF_DIR
-	printf '\n'
-    done
     ;;
 
 *)
@@ -104,6 +56,31 @@ FreeBSD)
 
 esac
 
+for node in $all_nodes; do
+    # /etc/hosts
+    printf "$node: hosts "
+    rsync -pog /etc/hosts ${node}:/etc
+
+    printf "hosts.allow "
+    rsync -pog /etc/hosts.allow ${node}:/etc
+    
+    # Do not sync sshd_config.  Public-facing servers are different than
+    # compute nodes.
+    printf "ssh_config "
+    rsync -pog /etc/ssh/ssh_config ${node}:/etc/ssh
+    
+    printf "system-auth "
+    # RHEL
+    rsync -pog /etc/pam.d/system-auth-ac ${node}:/etc/pam.d 2> /dev/null
+    # FreeBSD
+    rsync -pog /etc/pam.d/passwd ${node}:/etc/pam.d 2> /dev/null
+    
+    printf "etc/spcm "
+    ssh $node mkdir -p $CONF_DIR
+    rsync -rpog $CONF_DIR/fstab* $CONF_DIR/head-node ${node}:$CONF_DIR 2> /dev/null
+    printf '\n'
+done
+
 cd $CONF_DIR
 # Should have been done by cluster-init-node
 # ssh $node mkdir -p $CONF_DIR
@@ -112,4 +89,3 @@ for file in fstab.* site-mods.sh; do
 	scp -p $file ${node}:$CONF_DIR
     fi
 done
-
