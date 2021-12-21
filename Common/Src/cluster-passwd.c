@@ -84,8 +84,13 @@ int     main(int argc,char *argv[])
     fp = fopen(pw_age_file, "r+");
     if ( fp == NULL )
     {
-	fprintf(stderr, "%s: Cannot open %s.\n", argv[0], pw_age_file);
-	return EX_UNAVAILABLE;
+	// If age file doesn't exist, create it
+	fp = fopen(pw_age_file, "w+");
+	if ( fp == NULL )
+	{
+	    fprintf(stderr, "%s: Cannot open %s.\n", argv[0], pw_age_file);
+	    return EX_UNAVAILABLE;
+	}
     }
     if ( fscanf(fp, "%u %u", &max_pw_age, &last_pw_change) != 2 )
     {
