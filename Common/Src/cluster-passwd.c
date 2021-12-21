@@ -26,6 +26,7 @@ int     main(int argc,char *argv[])
 {
     uid_t   uid, euid;
     unsigned int    max_pw_age, last_pw_change;
+    int     items;
     char    *user_name,
 	    cmd[CMD_LEN+1],
 	    pw_age_file[PATH_MAX+1];
@@ -79,7 +80,6 @@ int     main(int argc,char *argv[])
     /*
      *  Record password change time
      */
-    now = time(NULL) / 3600 / 24;
     snprintf(pw_age_file, PATH_MAX, "%%PREFIX%%/etc/spcm/pw-age/%s", user_name);
     fp = fopen(pw_age_file, "r+");
     if ( fp == NULL )
@@ -91,8 +91,13 @@ int     main(int argc,char *argv[])
 	    fprintf(stderr, "%s: Cannot open %s.\n", argv[0], pw_age_file);
 	    return EX_UNAVAILABLE;
 	}
+	do
+	{
+	    printf("Days until password expires? ");
+	    items = scanf("%u", &max_pw_age);
+	}   while ( items != 1 );
     }
-    if ( fscanf(fp, "%u %u", &max_pw_age, &last_pw_change) != 2 )
+    else if ( fscanf(fp, "%u %u", &max_pw_age, &last_pw_change) != 2 )
     {
 	fprintf(stderr, "%s: Error reading %s.\n", argv[0], pw_age_file);
 	fclose(fp);
@@ -100,6 +105,7 @@ int     main(int argc,char *argv[])
     }
     // printf("%u %u %lu\n", max_pw_age, last_pw_change, now);
     rewind(fp);
+    now = time(NULL) / 3600 / 24;
     if ( fprintf(fp, "%u %lu\n", max_pw_age, now) < 0 )
     {
 	fprintf(stderr, "%s: Error writing %s.\n", argv[0], pw_age_file);
