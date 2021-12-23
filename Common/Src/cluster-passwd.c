@@ -8,6 +8,7 @@
  ***************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <sysexits.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -114,6 +115,7 @@ int     main(int argc,char *argv[])
     }
     fclose(fp);
     
-    system("auto-sync-pxe-root-pw");
+    if ( strcmp(user_name, "root") == 0 )
+	system("auto-sync-pxe-root-pw");
     return EX_OK;
 }
