@@ -113,5 +113,7 @@ int     main(int argc,char *argv[])
 	return EX_DATAERR;
     }
     fclose(fp);
+    
+    // FIXME: Update root pw under /pxeserver/images/
     return EX_OK;
 }
