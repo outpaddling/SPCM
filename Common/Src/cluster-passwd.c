@@ -114,6 +114,6 @@ int     main(int argc,char *argv[])
     }
     fclose(fp);
     
-    // FIXME: Update root pw under /pxeserver/images/
+    system("auto-sync-pxe-root-pw");
     return EX_OK;
 }
