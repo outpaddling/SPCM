@@ -82,6 +82,7 @@ while true; do
 6.. Show cores per user
 7.. Show jobs and cluster load
 8.. Scan for stray processes
+9.. Hardware specifications
 Q.. Quit / Return to main menu
 
 EOM
@@ -145,6 +146,10 @@ EOM
 	printf "\nUsername of user with suspected strays? "
 	read username
 	slurm-find-strays $username
+	;;
+
+    9)
+	cluster-hardware-specs 2>&1 | more
 	;;
     
     Q|q)
