@@ -49,6 +49,10 @@ Note:
 For security reasons, you may need to manually enable remote IPMI in the
 BIOS settings in addition to running $(basename $0).
 
+Examples:
+
+Dell PowerEdge: Enter BMC management (Ctrl+e) during boot.
+
 EOM
 pause
 
