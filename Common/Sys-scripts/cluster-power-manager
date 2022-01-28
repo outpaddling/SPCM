@@ -52,9 +52,10 @@ auto-ipmi-remote-access for the rest.
 2.. Power on file servers
 3.. Power on compute nodes
 4.. Power on vis nodes
-5.. Shut down idle compute nodes
-6.. Power on drained compute nodes
-7.. Shut down cluster
+5.. Power on nodes by hostname
+6.. Shut down idle compute nodes
+7.. Power on drained compute nodes
+8.. Shut down cluster
 Q.. Quit
 
 EOM
@@ -80,14 +81,25 @@ EOM
 	;;
     
     5)
-	cluster-power-saver
+	printf "Enter hostnames separated by space\n"
+	read hostnames
+	for host in $hostnames; do
+	    if [ ${host##*-} != mgmt ]; then
+		host=$host-mgmt
+	    fi
+	    auto-ipmi-remote-power $host on
+	done
 	;;
     
     6)
+	cluster-power-saver
+	;;
+    
+    7)
 	cluster-power-waster
 	;;
 
-    7)
+    8)
 	cluster-shutdown
 	;;
 
