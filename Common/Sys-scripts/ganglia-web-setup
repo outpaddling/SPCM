@@ -36,9 +36,9 @@ export AUTO_ASK_TAG_PREFIX=ganglia-web-setup-
 case $os_release in
 FreeBSD-*)
     apache=apache24
-    # FIXME: Find a way to auto-detect the current mainstream version
+    # Ganglia does not support PHP 8.x and development has ceased
     php=php74
-    pkg install -y $apache ganglia-webfrontend $php mod_$php
+    pkg install -y $apache ganglia-webfrontend-$php $php mod_$php
     web_root=$LOCALBASE/www/apache24/data
     ifconfig=ifconfig
     ;;
