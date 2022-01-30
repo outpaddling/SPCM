@@ -122,7 +122,6 @@ EOM
     # Disable threaded MPM, conflicts with non-threaded mod_php
     sed -i'' -e 's|^LoadModule mpm_event_module|#LoadModule mpm_event_module|' $httpd_conf
     sed -i'' -e 's|#LoadModule mpm_prefork_module|LoadModule mpm_prefork_module|' $httpd_conf
-    fi
     ;;
 
 esac
