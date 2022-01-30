@@ -16,8 +16,20 @@
 <h2>Current %%HOSTNAME%% Status</h2>
 
 <p>
-<a href="nagios/">Nagios Resource Monitor</a>
-<br>
+Below are links to optional monitoring suites such as Nagios.
+</p>
+
+<?php if ( is_dir("%%LOCALBASE%%/www/nagios") ): ?>
+    <p><a href="nagios/">Nagios Resource Monitor</a></p>
+<?php endif; ?>
+
+<?php if ( is_dir("%%LOCALBASE%%/www/ganglia") ): ?>
+    <p><a href="ganglia/">Ganglia Resource Monitor</a></p>
+<?php endif; ?>
+
+<?php if ( is_dir("%%LOCALBASE%%/www/munin") ): ?>
+    <p><a href="munin/">Munin Resource Monitor</a></p>
+<?php endif; ?>
 
 <h2>FreeBSD Ports Collection</h2>
 

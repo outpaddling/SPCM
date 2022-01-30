@@ -412,47 +412,6 @@ EOM
 }
 
 
-ganglia_config()
-{
-    ##########################################################################
-    #   Head node: bind in both send and receive?
-    #   Compute nodes: host = head IP
-    ##########################################################################
-    
-    if [ $NODE_TYPE = head ]; then
-	ganglia-web-setup
-    fi
-    
-    line
-    if ! auto-package-installed sysutils/ganglia-monitor-core; then
-	install_packages sysutils/ganglia-monitor-core
-    fi
-    
-    if grep -q 'name = "unspecified"' $LOCALBASE/etc/gmond.conf; then
-	if [ $NODE_TYPE = head ]; then
-	    name=$(hostname -s)
-	else
-	    name=$head_host
-	fi
-	sed -i '.orig' \
-	    -e "s|name = \"unspecified\"|name = \"$name\"|g" \
-	    $LOCALBASE/etc/gmond.conf
-    fi
-    
-    # Failing as of 2019-05-18: stop_service gmond
-    auto-enable-service gmond cluster-setup \
-	> $LOG_DIR/gmond_enable 2>&1
-    service gmond restart
-    
-    if [ $NODE_TYPE = head ]; then
-	stop_service gmetad
-	auto-enable-service gmetad cluster-setup \
-	    > $LOG_DIR/gmetad_enable 2>&1
-	service gmetad restart
-    fi
-}
-
-
 ##########################################################################
 #   Function description:
 #       Add this host to authorized_hosts on remote host
@@ -924,11 +883,10 @@ fi
 resource_limits             # Configure login.conf.  After nfs_config.
 
 # Ganglia is deprecated, has vulnerabilities, and is non-essential.
-# ganglia_config              # Cluster monitoring.
-if [ $NODE_TYPE = head ]; then
-    auto-nagios-web-setup
-fi
-auto-nagios-node-setup
+# Just configure the web server and let the user install their own
+# monitoring tools.
+# ganglia_config
+cluster-web-setup
 
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in

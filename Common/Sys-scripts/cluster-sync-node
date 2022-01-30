@@ -133,7 +133,9 @@ EOM
     rsync -av /usr/pkg/etc/munge ${node}:/usr/pkg/etc
     
     # Ganglia
-    rsync -av /usr/pkg/etc/gmond.conf ${node}:/usr/pkg/etc
+    if [ -e /usr/pkg/etc/gmond.conf ]; then
+	rsync -av /usr/pkg/etc/gmond.conf ${node}:/usr/pkg/etc
+    fi
     
     # SLURM config
     for file in slurm.conf cgroup.conf; do
@@ -202,7 +204,9 @@ FreeBSD)
     rsync -av /etc/hosts.allow ${node}:/etc
     
     # Ganglia
-    rsync -av $LOCALBASE/etc/gmond.conf ${node}:$LOCALBASE/etc
+    if [ -e $LOCALBASE/etc/gmond.conf ]; then
+	rsync -av $LOCALBASE/etc/gmond.conf ${node}:$LOCALBASE/etc
+    fi
     
     case $node_type in
     head|compute)

@@ -1,0 +1,147 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+os_release=$(auto-os-release)
+
+##########################################################################
+#   Generate landing page
+##########################################################################
+
+LOCALBASE=$(cluster-localbase)
+
+export AUTO_ASK_TAG_PREFIX=cluster-web-setup-
+
+case $os_release in
+FreeBSD-*)
+    apache=apache24
+    # FIXME: Auto-detect this
+    php=php80
+    pkg install -y $apache $php mod_$php
+    web_root=$LOCALBASE/www/apache24/data
+    ifconfig=ifconfig
+    ;;
+
+RHEL6|RHEL7)
+    pkgin -y install apache
+    web_root=$LOCALBASE/share/httpd/htdocs
+    ifconfig='ip addr'
+    ;;
+
+*)
+    printf "$0: Not supported on $os_release.\n"
+    exit 1
+    ;;
+
+esac
+
+datadir=$LOCALBASE/share/spcm/WWW
+
+cp $datadir/global_styles.css $web_root
+cp $datadir/*.gif $web_root || true
+chmod a+rX $web_root/*
+
+while [ 0$name = 0 ]; do
+    printf "Cluster name as it should appear on the main web page? "
+    read name
+done
+sed -e "s|%%HOSTNAME%%|$name|g" -e "s|%%LOCALBASE%%|$LOCALBASE|g" \
+    $datadir/index.php > $web_root/index.php
+
+##########################################################################
+#   Configure apache
+##########################################################################
+
+# https://gist.github.com/blacksaildivision/199f9806dc68b2e7cf78713ae4631dfe
+# FIXME: Add this to apache package?
+case $os_release in
+FreeBSD-*)
+    httpd_conf=$LOCALBASE/etc/$apache/httpd.conf
+    if [ ! -e $httpd_conf.orig ]; then
+	printf "Patching httpd.conf...\n"
+	mv $httpd_conf $httpd_conf.orig
+	awk -f $datadir/patch-apache.awk $httpd_conf.orig > $httpd_conf
+    fi
+    
+    # or update date.timezone in $LOCALBASE/etc/php.ini and restart
+    # Apache
+    if [ ! -e $LOCALBASE/etc/php.ini ]; then
+	cp $LOCALBASE/etc/php.ini-production $LOCALBASE/etc/php.ini
+    fi
+    
+    # Set timezone if not already set
+    if ! grep -q '^date.timezone' $LOCALBASE/etc/php.ini; then
+	default_zone=$(auto-print-timezone | head -n 1)
+	# FIXME: Find a way to validate input
+	read -p "Time zone? [$default_zone] " zone
+	: ${zone:=$default_zone}
+	sed -i '.orig' -e "s|;date.timezone =|date.timezone = $zone|g" \
+	    $LOCALBASE/etc/php.ini
+    fi
+    ;;
+
+RHEL7)
+    apache_init_script=$LOCALBASE/etc/apache.service
+    if [ ! -e $apache_init_script ]; then
+	cat << EOM > $apache_init_script
+[Unit]
+Description=The Apache HTTP Server
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=$LOCALBASE/sbin/apachectl -k start
+ExecReload=$LOCALBASE/sbin/apachectl -k graceful
+ExecStop=$LOCALBASE/sbin/apachectl -k graceful-stop
+PIDFile=$LOCALBASE/var/run/httpd.pid
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOM
+    fi
+
+    systemctl disable apache.service || true
+    systemctl enable $apache_init_script || true
+    systemctl daemon-reload
+    
+    httpd_conf=$LOCALBASE/etc/httpd/httpd.conf
+    sed -i'' -e 's|DirectoryIndex index.html|DirectoryIndex index.php|' $httpd_conf
+    
+    # Disable threaded MPM, conflicts with non-threaded mod_php
+    sed -i'' -e 's|^LoadModule mpm_event_module|#LoadModule mpm_event_module|' $httpd_conf
+    sed -i'' -e 's|#LoadModule mpm_prefork_module|LoadModule mpm_prefork_module|' $httpd_conf
+    fi
+    ;;
+
+esac
+
+case $os_release in
+FreeBSD-*)
+    # FIXME: Dying here on first run
+    # Must come after php5 install, since http.conf was patched
+    auto-enable-service $apache $0
+    service $apache restart
+    ;;
+
+RHEL7)
+    systemctl restart apache.service
+    ;;
+
+*)
+    printf "$0: Not supported on $os_release.\n"
+    exit 1
+    ;;
+
+esac

@@ -122,7 +122,6 @@ for node in $selected_nodes; do
     if [ $node = "localhost" ]; then
 	ssh_cmd="sh -c"
     else
-	# -t causes ganglia restart to fail
 	ssh_cmd="ssh $flags $node"
     fi
     
