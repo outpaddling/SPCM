@@ -16,7 +16,7 @@
 <h2>Current %%HOSTNAME%% Status</h2>
 
 <p>
-<a href="ganglia/">Ganglia Resource Monitor</a>
+<a href="nagios/">Nagios Resource Monitor</a>
 <br>
 
 <h2>FreeBSD Ports Collection</h2>

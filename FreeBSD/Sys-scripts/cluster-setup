@@ -924,10 +924,11 @@ fi
 resource_limits             # Configure login.conf.  After nfs_config.
 
 # Ganglia is deprecated, has vulnerabilities, and is non-essential.
-# There are numerous alternatives to choose from and the end-user should
-# make that decision, so we don't plan to replace ganglia here.  We may add
-# scripts to auto-admin to facilitate separate setup of monitoring tools.
-ganglia_config              # Cluster monitoring.
+# ganglia_config              # Cluster monitoring.
+if [ $NODE_TYPE = head ]; then
+    auto-nagios-web-setup
+fi
+auto-nagios-node-setup
 
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in
