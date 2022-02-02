@@ -1,10 +1,42 @@
 #!/bin/sh -e
 
 ##########################################################################
-#   Script description:
-#       Power on groups of nodes using remote IPMI.
-#       Unlike cluster-power-waster, current node state is not considered.
-#       FIXME: May want to add exemptions for some drain reasons.
+#   Synopsis:
+#       cluster-ipmi-power-on \
+#           [-f first-host] [-l last-host] head|backup|io|compute|vis|all
+#
+#   Description:
+#       .B cluster-ipmi-power-on
+#       remotely powers on nodes that have this capability and are
+#       configured for remote IPMI access.
+#
+#       If $LOCALBASE/etc/spcm/ipmi-boot-delay exists, it should contain
+#       a single value, which is the number of seconds to wait between
+#       power-up of nodes.  This is important to prevent a spike in power
+#       draw since servers tend to draw large current during the power up
+#       process, ramping up fans, etc.  The default delay is 5 seconds.
+#
+#       If -f first-host and/or -l last-host are provided, they apply to
+#       the final list after concatenating all host classes, such as io,
+#       compute, and vis.  E.g. if the host list is io-01, compute-001
+#       through compute-050, vis-01, and first-host is compute-010, then
+#       io-01 and compute-001 through compute-009 will not be powered on.
+#
+#   Arguments:
+#       -f first-host   First host in the list to power on
+#       -l last-host    Last host in the list to power on
+#       
+#   Returns:
+#       0 on success, non-zero otherwise
+#
+#   Examples:
+#       cluster-ipmi-power-on io compute
+#
+#   Files:
+#       $LOCALBASE/etc/spcm/ipmi-boot-deley
+#
+#   See also:
+#       auto-ipmi-remote-power(1)
 #       
 #   History:
 #   Date        Name        Modification
@@ -28,6 +60,13 @@ if [ $# -lt 1 ]; then
 fi
 
 auto-root-check $0 "Needs to resume compute nodes."
+
+conf_file=$(cluster-localbase)/etc/spcm/ipmi-boot-delay
+if [ -e $conf_file ]; then
+    delay=$(cat $conf_file)
+else
+    delay=5
+fi
 
 while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
     if [ $1 = '-f' ]; then
@@ -115,5 +154,6 @@ for node in $selected_nodes; do
     fi
     
     # Avoid power surge from powering on too many nodes at once
-    sleep 5
+    printf "Waiting $delay seconds before powering on next node...\n"
+    sleep $delay
 done
