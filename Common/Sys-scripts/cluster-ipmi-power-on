@@ -11,10 +11,16 @@
 #       configured for remote IPMI access.
 #
 #       If $LOCALBASE/etc/spcm/ipmi-boot-delay exists, it should contain
-#       a single value, which is the number of seconds to wait between
-#       power-up of nodes.  This is important to prevent a spike in power
+#       one or more lines with a host name in the first column and an
+#       integer in the second, which is the number of seconds to wait
+#       before power-up.  If the first column is "*", the delay represents
+#       a custom default delay before powering on all nodes that are not
+#       listed by name.  In the absense of either the node name or a "*"
+#       entry, the default delay is 5 seconds.
+#
+#       This is important to prevent a spike in power
 #       draw since servers tend to draw large current during the power up
-#       process, ramping up fans, etc.  The default delay is 5 seconds.
+#       process, ramping up fans, etc.
 #
 #       If -f first-host and/or -l last-host are provided, they apply to
 #       the final list after concatenating all host classes, such as io,
@@ -61,11 +67,12 @@ fi
 
 auto-root-check $0 "Needs to resume compute nodes."
 
-conf_file=$(cluster-localbase)/etc/spcm/ipmi-boot-delay
-if [ -e $conf_file ]; then
-    delay=$(cat $conf_file)
-else
-    delay=5
+delay_file=$(cluster-localbase)/etc/spcm/ipmi-boot-delay
+if [ -e $delay_file ]; then
+    default_delay=$(awk '$1 == "*" { print $2 }' $delay_file)
+fi
+if [ -z "$default_delay" ]; then
+    default_delay=5
 fi
 
 while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
@@ -146,14 +153,20 @@ for node in $selected_nodes; do
     printf "Starting $node...\n"
     printf "============================================================\n\n"
     
+    # Avoid power surge from powering on too many nodes at once
+    if [ -e $delay_file ]; then
+	delay=$(awk -v node=$node '$1 == node { print $2 }' $delay_file)
+    fi
+    if [ -z "$delay" ]; then
+	delay=$default_delay
+    fi
+    printf "Waiting $delay seconds before powering on $node...\n"
+    sleep $delay
+    
     auto-ipmi-remote-power $node-mgmt on
 
     if [ $(node-type $node) = compute ]; then
 	printf "Resuming $node...\n"
 	scontrol update nodename=$node state=resume 2> /dev/null || true
     fi
-    
-    # Avoid power surge from powering on too many nodes at once
-    printf "Waiting $delay seconds before powering on next node...\n"
-    sleep $delay
 done
