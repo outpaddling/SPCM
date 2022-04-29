@@ -148,6 +148,7 @@ for node in $nodes; do
     fi
 done
 
+first=true
 for node in $selected_nodes; do
     printf "\n============================================================\n"
     printf "Starting $node...\n"
@@ -160,8 +161,12 @@ for node in $selected_nodes; do
     if [ -z "$delay" ]; then
 	delay=$default_delay
     fi
-    printf "Waiting $delay seconds before powering on $node...\n"
-    sleep $delay
+    
+    if [ $first != true ]; then
+	printf "Waiting $delay seconds before powering on $node...\n"
+	sleep $delay
+    fi
+    first=false
     
     auto-ipmi-remote-power $node-mgmt on
 
