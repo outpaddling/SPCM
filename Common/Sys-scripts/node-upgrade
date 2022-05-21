@@ -95,7 +95,7 @@ FreeBSD)
     while [ 0$install != 0y ] && [ 0$install != 0n ]; do
 	read -p "Proceed with install on $node? y/n " install
     done
-    if [ 0$install != 0y ]; then
+    if [ $install != y ]; then
 	exit 1
     fi
     ssh -t $node freebsd-update install
@@ -119,7 +119,7 @@ EOM
 	while [ 0$resume != 0y ] && [ 0$resume != 0n ]; do
 	    read -p "Resume $node? y/n " resume
 	done
-	if [ 0$resume = 0y ]; then
+	if [ $resume = yes ]; then
 	    scontrol update nodename=$node state=resume
 	fi
     fi

@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 ##########################################################################
 #   Script description:
@@ -12,7 +12,7 @@
 
 usage()
 {
-    printf "Usage: $0 version\n"
+    printf "Usage: $0 release\n"
     printf "Example: $0 12.2-RELEASE\n"
     exit 1
 }
@@ -25,13 +25,14 @@ usage()
 if [ $# != 1 ]; then
     usage
 fi
-version=$1
+release=$1
 
 for node in $(cluster-all-nodes); do
-    ssh $node 'uname -nr'
+    printf "\n"
+    ssh -o ConnectTimeout=5 $node 'uname -nr'
     read -p "Upgrade $node? y/[n] " upgrade
     if [ 0$upgrade = 0y ]; then
-	node-upgrade $node $version
+	node-upgrade $node $release
     fi
 done
 
@@ -42,11 +43,11 @@ Please run the upgrade process manually on the head node.
 EOM
 case $(auto-ostype) in
 FreeBSD)
-    cat << EOM
-1. Update the head node via cluster-admin and reboot if necessary
-2. Run freebsd-update upgrade -r $version
-3. Follow the instructions on the screen
-
-EOM
+    printf "\n"
+    uname -nr
+    read -p "Upgrade head node? y/[n] " upgrade
+    if [ 0"$upgrade" = 0y ]; then
+	auto-upgrade-base $release
+    fi
     ;;
 esac

@@ -208,6 +208,7 @@ node in a partially updated state.
 6.. Check for down nodes
 7.. Install updates on idle compute nodes
 8.. Restart cron updates on idle compute nodes
+9.. Upgrade nodes to a new OS release
 Q.. Quit / Return to main menu
 
 EOM
@@ -325,6 +326,12 @@ EOM
 	fi
 	;;
 
+    9)
+	printf "Release? (e.g. 13.1-RELEASE) "
+	read release
+	cluster-upgrade $release
+	;;
+    
     Q|q)
 	exit 0
 	;;
