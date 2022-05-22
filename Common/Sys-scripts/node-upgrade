@@ -112,17 +112,21 @@ EOM
     wait_for_reboot $node
     
     printf "Running freebsd-update install on $node after reboot.\n"
-    ssh -t $node freebsd-update install
+    # Restart sshd in case API changes broke running daemon
+    ssh -t $node "freebsd-update install && service sshd restart"
     
     if [ $(node-type $node) = compute ]; then
 	resume=''
 	while [ 0$resume != 0y ] && [ 0$resume != 0n ]; do
 	    read -p "Resume $node? y/n " resume
 	done
-	if [ $resume = yes ]; then
+	if [ $resume = y ]; then
 	    scontrol update nodename=$node state=resume
 	fi
     fi
+    
+    printf "Rebooting again to reload kernel modules and restart services...\n"
+    ssh $node shutdown -r now
     ;;
 
 RHEL)
