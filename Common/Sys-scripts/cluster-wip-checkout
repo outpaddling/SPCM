@@ -26,11 +26,15 @@ fi
 
 case $(auto-ostype) in
 FreeBSD)
-    auto-freebsd-wip-checkout git
+    if ! which wip-update; then
+	auto-freebsd-wip-checkout
+    fi
     cluster-run "touch /etc/make.conf && auto-set-conf-var USE_LOCAL_MK yes /etc/make.conf $0" all
     cluster-run "auto-set-conf-var VALID_CATEGORIES+ wip /usr/ports/Mk/bsd.local.mk $0" all
     cluster-run "pkg install -y git" all
     cluster-wip-update
+    : ${PORTSDIR:=/usr/ports}
+    cluster-run "cd $PORTSDIR/wip/wip-tools && make deinstall clean reinstall" all
     ;;
     
 *)

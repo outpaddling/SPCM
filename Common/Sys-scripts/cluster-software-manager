@@ -236,15 +236,7 @@ This will install the work-in-progress frameworks on all nodes.
 EOM
 	read -p "Proceed? [y]/n " proceed
 	if [ 0$proceed != 0n ]; then
-	    if ! which wip-update; then
-		auto-freebsd-wip-checkout
-	    fi
-	    cluster-dist-file /usr/ports/Mk/bsd.local.mk /usr/ports/Mk all
-	    cluster-run "auto-append-line USE_LOCAL_MK=yes /etc/make.conf $0" all
-	    cluster-run 'pkg install -y git' all
-	    cluster-wip-update
-	    : ${PORTSDIR:=/usr/ports}
-	    cluster-run "cd $PORTSDIR/wip/wip-tools && make deinstall clean reinstall" all
+	    cluster-wip-checkout
 	fi
 	pause
 	;;
