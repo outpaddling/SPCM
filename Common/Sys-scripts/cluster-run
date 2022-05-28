@@ -122,7 +122,7 @@ for node in $selected_nodes; do
     if [ $node = "localhost" ]; then
 	ssh_cmd="sh -c"
     else
-	ssh_cmd="ssh $flags $node"
+	ssh_cmd="ssh -o ConnectTimeout=10 $flags $node"
     fi
     
     if [ $parallel = 1 ]; then
