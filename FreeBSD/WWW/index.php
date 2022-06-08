@@ -45,12 +45,11 @@ please visit the ports web page:
 
 <p>
 Software not currently included in the FreeBSD ports collection can also
-be installed manually or using other tools such as pip or pkg.install under
-R.
+be installed manually or using other tools such as pkgsrc, pip, conda, or
+install.packages() of BiocManager::install() under R.
 
 <p>
 <img style="float:right" src="powerlogo.gif" alt="[Powered by FreeBSD]">
 
 </body>
 </html>
-
