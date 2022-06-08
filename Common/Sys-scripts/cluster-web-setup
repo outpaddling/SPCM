@@ -53,8 +53,7 @@ cp $datadir/*.gif $web_root || true
 chmod a+rX $web_root/*
 
 while [ 0$name = 0 ]; do
-    printf "Cluster name as it should appear on the main web page? "
-    read name
+    name=`auto-ask web-name "Cluster name as it should appear on the main web page? " ''`
 done
 sed -e "s|%%HOSTNAME%%|$name|g" -e "s|%%LOCALBASE%%|$LOCALBASE|g" \
     $datadir/index.php > $web_root/index.php

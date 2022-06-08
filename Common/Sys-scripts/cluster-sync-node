@@ -121,8 +121,9 @@ EOM
 	cluster-sync-packages $ref_node $node
     fi
     
-    # Sync sys files
-    cluster-sync-sysfiles $node
+    # Sync sys files to all nodes so they will have the new node in /etc/hosts
+    # for NFS, etc.
+    cluster-sync-sysfiles
     
     cluster-sync-files $node
     
@@ -182,8 +183,9 @@ EOM
 FreeBSD)
     # Install basic tools and updates
 
-    # Sync sys files
-    cluster-sync-sysfiles $node
+    # Sync sys files to all nodes so they will have the new node in /etc/hosts
+    # for NFS, etc.
+    cluster-sync-sysfiles
     
     cluster-sync-files $node
     

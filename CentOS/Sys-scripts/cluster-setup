@@ -933,6 +933,13 @@ if [ -e $CONF_DIR/site-mods.sh ]; then
     fi
 fi
 
+# Install cron command for slurm-update-idle-nodes
+printf "Adding idle node updates to cron..."
+pause
+auto-append-line "0-59/10 * * * * /usr/pkg/sbin/cluster-cron-updates" \
+    /var/cron/tabs/root $0
+crontab -e
+
 auto-update-system --binary || true
 touch $CONF_DIR/node-configured
 
