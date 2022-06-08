@@ -936,7 +936,7 @@ fi
 # Install cron command for slurm-update-idle-nodes
 printf "Adding idle node updates to cron...\n"
 pause
-auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/cluster-cron-updates" \
+auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/slurm-cron-updates" \
     /var/cron/tabs/root $0
 crontab -e
 
