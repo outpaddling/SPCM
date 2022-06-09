@@ -11,7 +11,7 @@
 #
 #       Add this script to the root crontab as follows:
 #
-#       0-59/10 * * * * /usr/pkg/sbin/cluster-cron-updates
+#       0-59/5 * * * * $(auto-localbase)/sbin/slurm-cron-updates
 #
 #       slurm-update-idle-nodes will gracefully exit if another
 #       instance is running, so feel free to schedule frequently in
