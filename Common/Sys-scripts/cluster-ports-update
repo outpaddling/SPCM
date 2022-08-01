@@ -6,7 +6,17 @@ FreeBSD)
     LOCALBASE=$(cluster-localbase)
 
     auto-check-ports-branch
-    (cd $PORTSDIR && git pull)
+    save_cwd=$(pwd)
+    cd $PORTSDIR
+    printf "Stashing bsd.local.mk...\n"
+    git stash push Mk/bsd.local.mk
+
+    printf "Pulling...\n"
+    git pull
+
+    printf "Unstashing...\n"
+    git stash pop
+    cd $save_cwd
     
     if [ -e $LOCALBASE/sbin/wip-update ]; then
 	wip-update
