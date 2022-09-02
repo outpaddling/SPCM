@@ -63,7 +63,8 @@ fi
 
 # Don't advertise which nodes are behind on updates.  Directory should
 # not be world-readable either.
-chmod 640 "$updated_nodes_file" `dirname "$updated_nodes_file"`
+chmod 640 "$updated_nodes_file"
+chmod 750 `dirname "$updated_nodes_file"`
 
 if test -t 0; then
     cat << EOM
