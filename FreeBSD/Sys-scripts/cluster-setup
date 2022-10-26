@@ -597,7 +597,7 @@ install_common_tools()
     line
     install_packages devel/gmake net/rsync converters/libiconv \
 	editors/nano ftp/wget devel/subversion \
-	shells/bash shells/dash sysutils/bsdstats
+	shells/bash shells/dash sysutils/bsdstats ports-mgmt/dialog4ports
 }
 
 
