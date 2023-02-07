@@ -882,15 +882,14 @@ if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
 fi
 resource_limits             # Configure login.conf.  After nfs_config.
 
-# Ganglia is deprecated, has vulnerabilities, and is non-essential.
-# Just configure the web server and let the user install their own
-# monitoring tools.
-# ganglia_config
-cluster-web-setup
-
 # Configuration steps that only occur on certain node types
 case $NODE_TYPE in
 head)
+    # Ganglia is deprecated, has vulnerabilities, and is non-essential.
+    # Just configure the web server and let the user install their own
+    # monitoring tools.
+    # ganglia_config
+    cluster-web-setup
     startup_scripts
     ;;
 
