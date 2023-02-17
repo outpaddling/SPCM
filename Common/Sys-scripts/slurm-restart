@@ -24,8 +24,9 @@ slurm-sync-config
 case `auto-ostype` in
 FreeBSD)
     # FIXME: service munged restart fails frequently
-    cluster-run 'service munged stop && sleep 1 && service munged start && service slurmd restart' compute
+    service munged restart
     service slurmctld restart
+    cluster-run 'service munged stop && sleep 1 && service munged start && service slurmd restart' compute
     ;;
 
 RHEL)
