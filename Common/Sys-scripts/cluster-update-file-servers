@@ -13,7 +13,7 @@ pause()
     read junk
 }
 
-if [ 0$(cluster-file-servers) = 0 ]; then
+if [ 0"$(cluster-file-servers)" = 0 ]; then
     printf "No file servers found.\n"
     exit
 fi
@@ -24,7 +24,7 @@ for node in $(cluster-file-servers); do
     ssh $node w
     pause
     node-iftop $node
-    node-iftop $node -i ib0 || true   # May not be an IB interface
+    node-iftop $node -i ib0 > /dev/null 2>&1 || true   # May not be an IB interface
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
