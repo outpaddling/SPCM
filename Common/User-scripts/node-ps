@@ -50,4 +50,4 @@ if ! (awk '{ print $2 }' /etc/hosts | fgrep -x $node || \
     exit 1
 fi
 
-ssh -t $node ps auxw "$@" | fgrep $(whoami)
+ssh -t $node ps -auxww "$@" | fgrep $(whoami)
