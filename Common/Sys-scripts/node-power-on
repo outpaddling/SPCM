@@ -13,7 +13,7 @@ usage()
 {
     cat << EOM
 
-Usage: $0 complete-node-name|compute-node-index
+Usage: $0 complete-node-name|compute-node-index [node ...]
 
 If the compute-<argument> is a valid compute node host name, then compute-
 is automatically prepended.
@@ -34,20 +34,21 @@ EOM
 #   Main
 ##########################################################################
 
-if [ $# != 1 ]; then
+if [ $# -lt 1 ]; then
     usage
 fi
 
-node=$1
-shift
-if [ 0$(node-type compute-$node) = 0compute ]; then
-    node=compute-$node
-fi
-
-if ! (awk '{ print $2 }' /etc/hosts | fgrep -x $node || \
-    awk '{ print $3 }' /etc/hosts | fgrep -x $node); then
-    printf "$0: $node not found in /etc/hosts.\n"
-    exit 1
-fi
-
-auto-ipmi-remote-power $node-mgmt on
+for node in $@; do
+    shift
+    if [ 0$(node-type compute-$node) = 0compute ]; then
+	node=compute-$node
+    fi
+    
+    if ! (awk '{ print $2 }' /etc/hosts | fgrep -x $node || \
+	awk '{ print $3 }' /etc/hosts | fgrep -x $node); then
+	printf "$0: $node not found in /etc/hosts.\n"
+	exit 1
+    fi
+    
+    auto-ipmi-remote-power $node-mgmt on
+done
