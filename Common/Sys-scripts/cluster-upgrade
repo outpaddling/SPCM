@@ -32,7 +32,7 @@ cluster-head-check $0
 for node in $(cluster-all-nodes); do
     printf "$node\n"
     ssh -o ConnectTimeout=5 $node 'uname -nr'
-    read -p "Upgrade $node? y/[n] " upgrade
+    read -p "Upgrade $node to $release? y/[n] " upgrade
     if [ 0$upgrade = 0y ]; then
 	node-upgrade $node $release
     fi

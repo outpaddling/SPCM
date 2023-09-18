@@ -200,15 +200,13 @@ complete head node updates before beginning compute node updates.  Rebooting
 the head node while compute node updates are in progress may leave a compute
 node in a partially updated state.
 
-1.. Install updates on backup head node
-2.. Verify scheduler restart on backup head node
-3.. Install updates on head node
-4.. Install updates on visualization nodes
-5.. Install updates on file servers
-6.. Check for down nodes
-7.. Install updates on idle compute nodes
-8.. Restart cron updates on idle compute nodes
-9.. Upgrade nodes to a new OS release
+1.. Install updates on head node
+2.. Check for down nodes
+3.. Install updates on visualization nodes
+4.. Install updates on file servers
+5.. Install updates on idle compute nodes
+6.. Restart cron updates on idle compute nodes
+7.. Upgrade nodes to a new OS release
 Q.. Quit / Return to main menu
 
 EOM
@@ -217,19 +215,20 @@ EOM
     clear
     case $selection in
     
-    1)  # Update backup head node
-	cluster-update-backup-nodes
-	;;
+#    1)  # Update backup head node
+#        cluster-update-backup-nodes
+#        ;;
+#    
+#    2)  # Verify scheduler running on backup head node
+#
+#        if [ -z $(cluster-backup-nodes) ]; then
+#            printf "No backup nodes found.\n"
+#        else
+#            ssh login-2 tail /var/log/slurm/slurmctld.log
+#        fi
+#        ;;
     
-    2)  # Verify scheduler running on backup head node
-	if [ -z $(cluster-backup-nodes) ]; then
-	    printf "No backup nodes found.\n"
-	else
-	    ssh login-2 tail /var/log/slurm/slurmctld.log
-	fi
-	;;
-    
-    3)  # Update head node
+    1)  # Update head node
 	# FIXME: Warn if cron updates are running
 	update_warning
 	if cluster-check-cron-updates; then
@@ -269,19 +268,19 @@ EOM
 	fi
 	;;
     
-    4)
-	cluster-update-vis-nodes
-	;;
-    
-    5)
-	cluster-update-file-servers
-	;;
-    
-    6)
+    2)
 	cluster-node-status
 	;;
     
-    7)  # Update all compute nodes
+    3)
+	cluster-update-vis-nodes
+	;;
+    
+    4)
+	cluster-update-file-servers
+	;;
+    
+    5)  # Update all compute nodes
 	# FIXME: Warn if cron updates are running
 	update_warning
 	cat << EOM
@@ -298,7 +297,7 @@ EOM
 	slurm-update-idle-nodes $updates_dir
 	;;
     
-    8) # Schedule compute node updates in cron
+    6) # Schedule compute node updates in cron
 	clear
 	update_warning
 	cat << EOM
@@ -326,9 +325,16 @@ EOM
 	fi
 	;;
 
-    9)
-	printf "Release? (e.g. 13.1-RELEASE) "
+    7)
+	this_release=$(uname -r | cut -d - -f 1)
+	major=${this_release%.*}
+	minor=${this_release#*.}
+	next_release=$major.$(($minor + 1))-RELEASE
+	printf "Release? [$next_release] "
 	read release
+	if [ -z "$release" ]; then
+	    release=$next_release
+	fi
 	cluster-upgrade $release
 	;;
     
