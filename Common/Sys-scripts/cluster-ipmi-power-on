@@ -148,7 +148,7 @@ for node in $nodes; do
     fi
 done
 
-first=true
+is_first_node=true
 for node in $selected_nodes; do
     printf "\n============================================================\n"
     printf "Starting $node...\n"
@@ -162,16 +162,31 @@ for node in $selected_nodes; do
 	delay=$default_delay
     fi
     
-    if [ $first != true ]; then
-	printf "Waiting $delay seconds before powering on $node...\n"
-	sleep $delay
+    # LOM (lights-out management) make take a minute or two to boot and accept
+    # IPMI commands, so retry for a while if the first attempt fails.
+    tries=0
+    exit_status=1   # Prime the loop
+    while [ $exit_status != 0 ] && [ $tries -lt 20 ]; do
+	if [ $is_first_node != true ]; then
+	    printf "Waiting $delay seconds before powering on $node...\n"
+	    sleep $delay
+	fi
+	
+	if ! auto-ipmi-remote-power $node-mgmt on; then
+	    printf "Unable to power on $node.  Retrying...\n"
+	    tries=$(($tries + 1))
+	    exit_status=1
+	else
+	    exit_status=0
+	fi
+    done
+    if [ $exit_status != 0 ]; then
+	printf "Gave up on $node.  Check it manually.\n"
     fi
-    first=false
-    
-    auto-ipmi-remote-power $node-mgmt on
 
     if [ $(node-type $node) = compute ]; then
 	printf "Resuming $node...\n"
 	scontrol update nodename=$node state=resume 2> /dev/null || true
     fi
+    is_first_node=false
 done
