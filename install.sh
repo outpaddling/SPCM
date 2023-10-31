@@ -19,7 +19,7 @@ fi
 
 os=$(auto-ostype)
 if [ $os = RHEL ]; then
-    os=CentOS
+    os=RHEL
 fi
 umask 022
 

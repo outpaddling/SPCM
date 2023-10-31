@@ -30,9 +30,9 @@ fi
 case $(auto-ostype) in
 RHEL)
     # Excellent firewalld tutorial:
-    # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7#creating-your-own-zones
+    # https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-rhel-7#creating-your-own-zones
     
-    # yum install firewalld Part of CentOS base?
+    # yum install firewalld Part of RHEL base?
     
     # Basic checks
     systemctl enable firewalld

@@ -266,7 +266,7 @@ This is NOT an emulation layer.  It simply adds Linux system calls to the
 FreeBSD kernel so that Linux binaries can be run directly.  In fact, some
 Linux binaries will run faster on FreeBSD than they do on Linux.
 
-Most binaries built for RHEL/CentOS will run on FreeBSD.  However, you may
+Most binaries built for RHEL will run on FreeBSD.  However, you may
 need to install the necessary shared libraries or other dependencies, just
 as you would on Linux.
 

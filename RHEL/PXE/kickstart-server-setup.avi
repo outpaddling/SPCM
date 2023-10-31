@@ -2,7 +2,7 @@
 
 # kickstart-server-setup
 
-# Creates, on a CentOS-6 machine, a server that can be PXE booted to and have it provide a kickstart file used for deploying an image to compute nodes.
+# Creates, on a RHEL-6 machine, a server that can be PXE booted to and have it provide a kickstart file used for deploying an image to compute nodes.
 
 ##vvvvvvvvv VARIABLES vvvvvvvvvv##
 
@@ -63,12 +63,12 @@ SUBNET=`ifconfig $PRIVNIC | awk '$1 == "inet" {print $2}' | cut -d ":" -f 2 | cu
 ## Create ISO
 ##
 
-if [ ! -f /root/centos6.iso ]; then
+if [ ! -f /root/rhel6.iso ]; then
     printf "\n\n"
-    read -p "Insert CentOS DVD, close its window that auto-opens, then press [ENTER]." 
+    read -p "Insert RHEL DVD, close its window that auto-opens, then press [ENTER]." 
     printf "Creating ISO file from CD. This will take a few minutes...\n"
     umount /dev/cdrom
-    dd if=/dev/cdrom of=/root/centos6.iso bs=2048
+    dd if=/dev/cdrom of=/root/rhel6.iso bs=2048
 fi
 
 
@@ -163,15 +163,15 @@ fi
 ## Network-install setup
 ##
 
-mkdir -p /var/pxe/centos6
-mkdir -p /var/lib/tftpboot/centos6
+mkdir -p /var/pxe/rhel6
+mkdir -p /var/lib/tftpboot/rhel6
 
-mount -t iso9660 -o loop ./centos6.iso /var/pxe/centos6
+mount -t iso9660 -o loop ./rhel6.iso /var/pxe/rhel6
 
 yum install syslinux -y
 
-cp /var/pxe/centos6/images/pxeboot/vmlinuz /var/lib/tftpboot/centos6/
-cp /var/pxe/centos6/images/pxeboot/initrd.img /var/lib/tftpboot/centos6/
+cp /var/pxe/rhel6/images/pxeboot/vmlinuz /var/lib/tftpboot/rhel6/
+cp /var/pxe/rhel6/images/pxeboot/initrd.img /var/lib/tftpboot/rhel6/
 cp /usr/share/syslinux/menu.c32 /var/lib/tftpboot/
 
 # Start with a fresh file.
@@ -186,7 +186,7 @@ touch /var/lib/tftpboot/pxelinux.cfg/default
  ./auto-append-line  "menu title ## Avi Boot Menu ##" /var/lib/tftpboot/pxelinux.cfg/default nocomment
 
 # Default first boot option is PXE boot on nodes.
-./auto-append-line "label 1" "\nlabel 1\n  menu label ^1) Install CentOS 6\n  kernel centos6/vmlinuz\n  append initrd=centos6/initrd.img ks=http://$HOSTIP/ks/centos6-ks.cfg ksdevice=$PRIVNIC" /var/lib/tftpboot/pxelinux.cfg/default nocomment
+./auto-append-line "label 1" "\nlabel 1\n  menu label ^1) Install RHEL 6\n  kernel rhel6/vmlinuz\n  append initrd=rhel6/initrd.img ks=http://$HOSTIP/ks/rhel6-ks.cfg ksdevice=$PRIVNIC" /var/lib/tftpboot/pxelinux.cfg/default nocomment
 
  ./auto-append-line "label 2" "\nlabel 2\n  menu label ^2) Boot from local drive\n  localboot" /var/lib/tftpboot/pxelinux.cfg/default nocomment
 
@@ -252,8 +252,8 @@ fi
 chkconfig httpd on
 
 
- ./auto-append-line  "Alias /centos6 /var/pxe/centos6" /etc/httpd/conf.d/pxeboot.conf nocomment
- ./auto-append-line  "<Directory /var/pxe/centos6>" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "Alias /rhel6 /var/pxe/rhel6" /etc/httpd/conf.d/pxeboot.conf nocomment
+ ./auto-append-line  "<Directory /var/pxe/rhel6>" /etc/httpd/conf.d/pxeboot.conf nocomment
  ./auto-append-line  "  Options Indexes FollowSymLinks" /etc/httpd/conf.d/pxeboot.conf nocomment
  ./auto-append-line  "  Order Deny,Allow" /etc/httpd/conf.d/pxeboot.conf nocomment
  ./auto-append-line  "  Deny from all" /etc/httpd/conf.d/pxeboot.conf nocomment
@@ -272,20 +272,20 @@ fi
 ##
 
 mkdir -p /var/www/html/ks
-cp /root/anaconda-ks.cfg /var/www/html/ks/centos6-ks.cfg
-chmod 644 /var/www/html/ks/centos6-ks.cfg
+cp /root/anaconda-ks.cfg /var/www/html/ks/rhel6-ks.cfg
+chmod 644 /var/www/html/ks/rhel6-ks.cfg
 
 # Editing the kickstart file.
-sed -i '/cdrom/ c\' /var/www/html/ks/centos6-ks.cfg
-sed -i '/selinux/ c\selinux --disabled' /var/www/html/ks/centos6-ks.cfg
+sed -i '/cdrom/ c\' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/selinux/ c\selinux --disabled' /var/www/html/ks/rhel6-ks.cfg
 
-sed -i '/install/ c\install\nclearpart --all --initlabel' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nzerombr' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nurl --url=http://'"$HOSTIP"'/centos6' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nreboot' /var/www/html/ks/centos6-ks.cfg
-sed -i '/install/ c\install\nautostep' /var/www/html/ks/centos6-ks.cfg
-sed -i '/bootproto/ c\network --device '"$PRIVNIC"' --bootproto dhcp' /var/www/html/ks/centos6-ks.cfg
-sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 --size=1024\npart / --fstype ext4 --size=16384\npart swap --size=32768\npart /var --fstype ext4 --size=32768\npart /data --fstype ext4 --size=1024 --grow' /var/www/html/ks/centos6-ks.cfg
+sed -i '/install/ c\install\nclearpart --all --initlabel' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/install/ c\install\nzerombr' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/install/ c\install\nurl --url=http://'"$HOSTIP"'/rhel6' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/install/ c\install\nreboot' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/install/ c\install\nautostep' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/bootproto/ c\network --device '"$PRIVNIC"' --bootproto dhcp' /var/www/html/ks/rhel6-ks.cfg
+sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 --size=1024\npart / --fstype ext4 --size=16384\npart swap --size=32768\npart /var --fstype ext4 --size=32768\npart /data --fstype ext4 --size=1024 --grow' /var/www/html/ks/rhel6-ks.cfg
 
 
 
@@ -299,9 +299,9 @@ chmod 755 /var/www/html/node-ks-post
 
 # New SHA-512 style passwords
 PSSWD=`grub-crypt`
-sed -i '/rootpw/ c\rootpw --iscrypted '"$PSSWD"'' /var/www/html/ks/centos6-ks.cfg 
+sed -i '/rootpw/ c\rootpw --iscrypted '"$PSSWD"'' /var/www/html/ks/rhel6-ks.cfg 
 
-sed -i '/%packages/,$d' /var/www/html/ks/centos6-ks.cfg 
+sed -i '/%packages/,$d' /var/www/html/ks/rhel6-ks.cfg 
 
 
 ##
@@ -316,22 +316,22 @@ cp /root/.ssh/id_rsa.pub /var/www/html/public_key
 ## Create Post-install of Kickstart 
 ##
 
-./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/centos6-ks.cfg nocomment
+./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/rhel6-ks.cfg nocomment
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\nmkdir /share1\nmkdir /share2\nmkdir /share3\nmkdir /share4\nmkdir /share5\nmkdir /share6\nmkdir /share7\nmkdir /share8\nmkdir /share9\nsleep 2\nmount '"$FILESRV"':/sharedapps /sharedapps/\nmount '"$FILESRV"':/share1 /share1/\nmount '"$FILESRV"':/share2 /share2/\nmount '"$FILESRV"':/share3 /share3/\nmount '"$FILESRV"':/share4 /share4/\nmount '"$FILESRV"':/share5 /share5/\nmount '"$FILESRV"':/share6 /share6/\nmount '"$FILESRV"':/share7 /share7/\nmount '"$FILESRV"':/share8 /share8/\nmount '"$FILESRV"':/share9 /share9/\nsleep 10\n/sharedapps/node-setup' /var/www/html/ks/centos6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\nmkdir /share1\nmkdir /share2\nmkdir /share3\nmkdir /share4\nmkdir /share5\nmkdir /share6\nmkdir /share7\nmkdir /share8\nmkdir /share9\nsleep 2\nmount '"$FILESRV"':/sharedapps /sharedapps/\nmount '"$FILESRV"':/share1 /share1/\nmount '"$FILESRV"':/share2 /share2/\nmount '"$FILESRV"':/share3 /share3/\nmount '"$FILESRV"':/share4 /share4/\nmount '"$FILESRV"':/share5 /share5/\nmount '"$FILESRV"':/share6 /share6/\nmount '"$FILESRV"':/share7 /share7/\nmount '"$FILESRV"':/share8 /share8/\nmount '"$FILESRV"':/share9 /share9/\nsleep 10\n/sharedapps/node-setup' /var/www/html/ks/rhel6-ks.cfg 
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\ncd /\nmount '"$FILESRV"':/sharedapps /sharedapps/\nsleep 5\n/sharedapps/node-ks-post' /var/www/html/ks/centos6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\ncd /\nmount '"$FILESRV"':/sharedapps /sharedapps/\nsleep 5\n/sharedapps/node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
 
-sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/centos6-ks.cfg 
+sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/centos6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/rhel6-ks.cfg 
 
-# ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/centos6-ks.cfg nocomment
-# sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/centos6-ks.cfg
+# ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/rhel6-ks.cfg nocomment
+# sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/rhel6-ks.cfg
 
-# If the head node has several PRIVNIC's, then there will be several "network" lines in /var/www/html/ks/centos6-ks.cfg  
+# If the head node has several PRIVNIC's, then there will be several "network" lines in /var/www/html/ks/rhel6-ks.cfg  
 # The sed substitutions will make them all identical and consecutive, so uniq the file. 
-cat /var/www/html/ks/centos6-ks.cfg | uniq > /var/www/html/ks/centos6-ks.cfg.uniq
-mv /var/www/html/ks/centos6-ks.cfg.uniq /var/www/html/ks/centos6-ks.cfg
+cat /var/www/html/ks/rhel6-ks.cfg | uniq > /var/www/html/ks/rhel6-ks.cfg.uniq
+mv /var/www/html/ks/rhel6-ks.cfg.uniq /var/www/html/ks/rhel6-ks.cfg
 
 

@@ -73,7 +73,7 @@ do
 			./auto-append-line "timeout 100" "timeout 100\ndefault menu.c32\n" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
 			./auto-append-line  "menu title ## Avi Boot Menu ##" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
 			./auto-append-line "label 1" "\nlabel 1\n  menu label ^1) Boot from local drive\n  localboot" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
-			./auto-append-line "label 2" "\nlabel 2\n  menu label ^2) Install CentOS 6\n  kernel centos6/vmlinuz\n  append initrd=centos6/initrd.img ks=http://$HOSTIP/ks/centos6-ks.cfg ksdevice=$NIC" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
+			./auto-append-line "label 2" "\nlabel 2\n  menu label ^2) Install RHEL 6\n  kernel rhel6/vmlinuz\n  append initrd=rhel6/initrd.img ks=http://$HOSTIP/ks/rhel6-ks.cfg ksdevice=$NIC" /var/lib/tftpboot/pxelinux.cfg/$DASHHWADD nocomment
 
 			sed -i '/option routers/ c\\toption routers '"$HOSTIP"';\n\n\thost '"$COMPUTE"' {\n\t\thardware ethernet '"$HWADD"';\n\t\toption host-name \"'"$COMPUTE"'\";\n\t\tfixed-address '"$NODEIP"';\n\t}' /etc/dhcp/dhcpd.conf
 			

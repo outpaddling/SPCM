@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       CentOS cluster node configurator
+#       RHEL cluster node configurator
 #
 #   Arguments:
 #       head|compute|io
@@ -871,7 +871,7 @@ cluster_startup_scripts
 case $NODE_TYPE in
 'head')
     # Allow root ssh or other remote execution only with keys
-    # On by default in CentOS
+    # On by default in RHEL
     
     # Set up cluster-run env to allow running a command on all nodes
     # ( Initially for updating /etc/hosts )

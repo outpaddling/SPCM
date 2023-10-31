@@ -143,7 +143,7 @@ for node in $nodes; do
 		if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
 		    
 		    # --binary+reboot always returns non-zero
-		    # on CentOS 7, so reboot separately
+		    # on RHEL 7, so reboot separately
 		    ssh $node shutdown -r now || true
 		    
 		    # shutdown may take some time to disable sshd

@@ -28,7 +28,7 @@ for node in $(cluster-file-servers); do
     printf "Update? y/[n] "
     read update
     if [ 0$update = 0y ]; then
-	# CentOS 7 ssh always returns non-zero when rebooting
+	# RHEL 7 ssh always returns non-zero when rebooting
 	ssh -t $node auto-update-system --binary+reboot || true
     fi
 done

@@ -33,7 +33,7 @@ extensive collection pre-packaged software.  The Pkgsrc system
 was developed by the NetBSD project, but is designed to work on any
 POSIX-compatible system.  In addition to being the native package-management
 system for NetBSD and SmartOS, Pkgsrc is widely used on Linux
-(especially Redhat Enterprise, CentOS, and similar distributions),
+(especially Redhat Enterprise, RHEL, and similar distributions),
 Mac OS X, and Solaris.
 
 <p>

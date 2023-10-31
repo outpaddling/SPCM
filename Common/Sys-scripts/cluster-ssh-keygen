@@ -7,7 +7,7 @@ fi
 user_name=$1
 group=$2
 
-# FIXME: This is CentOS and FreeBSD scripts pasted together.  Consolidate
+# FIXME: This is RHEL and FreeBSD scripts pasted together.  Consolidate
 # the code more when there's time to thoroughly test.
 
 case $(auto-ostype) in
