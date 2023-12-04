@@ -1,2 +1,6 @@
 
+software manager: Add io and vis nodes
+
+services manager: Remove Ganglia
+
 sysrc clear_tmp_enable YES on all nodes
