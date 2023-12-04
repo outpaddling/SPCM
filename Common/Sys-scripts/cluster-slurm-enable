@@ -61,15 +61,6 @@ RHEL)
     chmod 644 $LOCALBASE/etc/slurm.conf
     
     case `auto-os-release` in
-    RHEL6)
-	rm -f /etc/init.d/slurm
-	ln -s $LOCALBASE/share/examples/slurm/init.d.slurm /etc/init.d/slurm
-	chmod 755 /etc/init.d/slurm
-    
-	chkconfig slurm on
-	service slurm restart
-	;;
-    
     RHEL7)
 	case $NODE_TYPE in
 	head)

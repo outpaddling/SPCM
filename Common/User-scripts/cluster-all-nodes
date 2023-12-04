@@ -2,7 +2,6 @@
 
 # Do not include head node here.  Indicate it explicitly in scripts that
 # need to include it.
-cluster-backup-nodes
 cluster-file-servers
 cluster-vis-nodes
 cluster-compute-nodes

@@ -48,14 +48,13 @@ Nodes must be configured for remote IPMI power-on to utilize the power on
 features here.  This may require some BIOS setup.  Use auto-ipmi-install and
 auto-ipmi-remote-access for the rest.
 
-1.. Power on backup head node
-2.. Power on file servers
-3.. Power on compute nodes
-4.. Power on vis nodes
-5.. Power on nodes by hostname
-6.. Shut down idle compute nodes
-7.. Power on drained compute nodes
-8.. Shut down cluster
+1.. Power on file servers
+2.. Power on compute nodes
+3.. Power on vis nodes
+4.. Power on nodes by hostname
+5.. Shut down idle compute nodes
+6.. Power on drained compute nodes
+7.. Shut down cluster
 Q.. Quit
 
 EOM
@@ -65,22 +64,18 @@ EOM
     clear
     case $selection in
     1)
-	cluster-ipmi-power-on backup
-	;;
-    
-    2)
 	cluster-ipmi-power-on io
 	;;
     
-    3)
+    2)
 	cluster-ipmi-power-on compute
 	;;
     
-    4)
+    3)
 	cluster-ipmi-power-on vis
 	;;
     
-    5)
+    4)
 	printf "Enter hostnames separated by space\n"
 	read hostnames
 	for host in $hostnames; do
@@ -91,15 +86,15 @@ EOM
 	done
 	;;
     
-    6)
+    5)
 	cluster-power-saver
 	;;
     
-    7)
+    6)
 	cluster-power-waster
 	;;
 
-    8)
+    7)
 	cluster-shutdown
 	;;
 

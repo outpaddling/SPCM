@@ -60,11 +60,6 @@ if [ 0$(cluster-vis-nodes) != 0 ]; then
     read vis
 fi
 
-if [ 0$(cluster-backup-nodes) != 0 ]; then
-    printf "Shut down backup login nodes? (yes/[no]) "
-    read backup
-fi
-
 printf "Shut down head node? (yes/[no]) "
 read head
 
@@ -85,10 +80,6 @@ fi
 
 if [ 0$vis = 0yes ]; then
     cluster-run -c "shutdown $flag now" vis || true
-fi
-
-if [ 0$backup = 0yes ]; then
-    cluster-run -c "shutdown $flag now" backup || true
 fi
 
 if [ 0$head = 0yes ]; then

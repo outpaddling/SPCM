@@ -12,7 +12,7 @@
 usage()
 {
     cat << EOM
-Usage: $0 [-f first-host] [-l last-host] head|backup|io|compute|vis|all
+Usage: $0 [-f first-host] [-l last-host] head|io|compute|vis|all
 EOM
     exit 1
 }
@@ -74,10 +74,6 @@ done
 # cluster-ipmi-power-on
 while [ $# -ge 1 ]; do
     node_type=$1
-    
-    if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
-	nodes=" `cluster-backup-nodes`"
-    fi
     
     if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
 	nodes="$nodes `cluster-file-servers`"

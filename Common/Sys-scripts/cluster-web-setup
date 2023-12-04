@@ -33,7 +33,7 @@ FreeBSD-*)
     ifconfig=ifconfig
     ;;
 
-RHEL6|RHEL7)
+RHEL7)
     pkgin -y install apache
     web_root=$LOCALBASE/share/httpd/htdocs
     ifconfig='ip addr'

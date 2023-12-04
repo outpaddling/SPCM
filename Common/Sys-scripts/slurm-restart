@@ -31,20 +31,9 @@ FreeBSD)
 
 RHEL)
     case $(auto-os-release) in
-    RHEL6)
-	printf 'Compute and backup nodes...\n'
-	cluster-run -c 'service munge restart && sleep 1 && service slurm restart' compute backup
-	
-	printf 'Head node...\n'
-	service munge restart && sleep 1 && service slurm restart
-	;;
-    
     RHEL7)
 	printf 'Compute nodes...\n'
 	cluster-run -c 'systemctl restart munge && sleep 1 && systemctl restart slurmd' compute
-	
-	printf 'Backup head nodes...\n'
-	cluster-run -c 'systemctl restart munge && sleep 1 && systemctl restart slurmctld' backup
 	
 	printf 'Head node...\n'
 	systemctl restart munge && systemctl restart slurmctld

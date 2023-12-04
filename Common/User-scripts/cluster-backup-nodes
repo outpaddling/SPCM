@@ -1,3 +1,0 @@
-#!/bin/sh
-
-awk '$2 == "backup" { print $1 }' $(cluster-localbase)/etc/spcm/node-types

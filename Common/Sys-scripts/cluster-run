@@ -3,7 +3,7 @@
 usage()
 {
     cat << EOM
-Usage: $0 [-p] [-c] [-n] 'command' head|backup|io|compute|vis|all
+Usage: $0 [-p] [-c] [-n] 'command' head|io|compute|vis|all
     -c = continue running if there are errors.
     -p = run in parallel, redirecting output to files. (implies -c)
     -n = omit ssh -t flag to disable full terminal control.
@@ -62,10 +62,6 @@ while [ $# -gt 1 ]; do
     
     if [ $node_type = 'head' ] || [ $node_type = 'all' ]; then
 	nodes="$nodes localhost"
-    fi
-    
-    if [ $node_type = 'backup' ] || [ $node_type = 'all' ]; then
-	nodes="$nodes `cluster-backup-nodes`"
     fi
     
     if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then

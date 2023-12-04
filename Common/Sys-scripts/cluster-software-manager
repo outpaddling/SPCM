@@ -46,7 +46,7 @@ select_node_type()
 	NODE_TYPE=''
 	available_node_types='all head'
 	printf "\n1.. All\n2.. head"
-	for node_type in backup raid vis compute; do
+	for node_type in io vis compute; do
 	    if [ "0$(cluster-$node_type-nodes)" != 0 ]; then
 		n=$((n + 1))
 		printf "\n$n.. $node_type"

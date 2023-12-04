@@ -141,14 +141,6 @@ ib_config()
     
     # Required for ib
     case $OS_RELEASE in
-    RHEL6)
-	chkconfig ibacm on
-	chkconfig rdma on
-	service ibacm stop
-	service rdma restart
-	service ibacm start
-	;;
-    
     RHEL7)
 	systemctl enable ibacm.service
 	systemctl enable rdma.service
@@ -228,9 +220,6 @@ EOM
     sleep 5
     
     case $OS_RELEASE in
-    RHEL6)
-	service network restart
-	;;
     RHEL7)
 	systemctl restart network.service
 	;;
@@ -265,12 +254,6 @@ ntp_config()
     yum install -y ntp ntpdate
     ntpdate -u pool.ntp.org
     case $OS_RELEASE in
-    RHEL6)
-	chkconfig ntpd on
-	# FIXME: Why not restart?
-	service ntpd stop
-	service ntpd start
-	;;
     RHEL7)
 	systemctl enable ntpd
 	systemctl restart ntpd.service
@@ -335,9 +318,6 @@ nfs_config()
     sed -i "s|.*Domain = .*|Domain = $idmapd_domain|" /etc/idmapd.conf
     
     case $OS_RELEASE in
-    RHEL6)
-	service rpcidmapd restart
-	;;
     RHEL7)
 	systemctl restart rpcidmapd.service
 	;;
@@ -347,11 +327,6 @@ nfs_config()
     esac
 
     case $OS_RELEASE in
-    RHEL6)
-	chkconfig rpcbind on
-	chkconfig nfslock on
-	chkconfig nfs on
-	;;
     RHEL7)
 	systemctl enable rpcbind
 	systemctl enable nfs-server
@@ -392,12 +367,6 @@ nfs_config()
 	done
 	    
 	case $OS_RELEASE in
-	RHEL6)
-	    service rpcbind restart
-	    service nfslock restart
-	    service nfs restart
-	    ;;
-	
 	RHEL7)
 	    systemctl restart rpcbind
 	    systemctl restart nfs-server
@@ -454,11 +423,6 @@ EOM
 	fi
 	
 	case $OS_RELEASE in
-	RHEL6)
-	    service rpcbind restart
-	    service nfslock restart
-	    service nfs restart
-	    ;;
 	RHEL7)
 	    systemctl restart rpcbind.service
 	    systemctl restart nfslock.service
@@ -546,10 +510,6 @@ ssh_config()
     printf 'Configuring sshd...\n'
     
     case $OS_RELEASE in
-    RHEL6)
-	chkconfig sshd on
-	service sshd restart
-	;;
     RHEL7)
 	systemctl enable sshd.service
 	systemctl restart sshd.service
@@ -656,14 +616,6 @@ ganglia_install()
     fi
 
     case $OS_RELEASE in
-    RHEL6)
-	ln -sf /usr/pkg/share/examples/ganglia/gmond.init.linux \
-	    /etc/init.d/gmond
-	chkconfig --add gmond
-	chkconfig gmond on
-	service gmond restart
-	;;
-    
     RHEL7)
 	# FIXME: ganglia pkg should create this
 	mkdir -p /usr/pkg/var/run/
@@ -725,7 +677,7 @@ set -e
 : ${EDITOR:=vi}
 
 case $(auto-os-release) in
-RHEL6|RHEL7)
+RHEL7)
     ;;
 
 *)

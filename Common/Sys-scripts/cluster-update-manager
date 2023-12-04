@@ -102,6 +102,7 @@ EOM
 
 ##########################################################################
 #   Function description:
+#       FIXME: Factor out to a separate script?
 #       
 #   Arguments:
 #       
@@ -118,30 +119,24 @@ get_node_type()
     while [ $node_type = none ]; do
 	cat << EOM
 
-1.. Backup head nodes
-2.. File servers
-3.. Compute nodes
-4.. Visualization nodes
+1.. File servers
+2.. Compute nodes
+3.. Visualization nodes
 
 EOM
 	read node_type
 	case $node_type in
 	1)
-	    node_type=head
-	    default_digits=1
-	    default_prefix=login-
-	    ;;
-	2)
 	    node_type=io
 	    default_digits=2
 	    default_prefix=raid-
 	    ;;
-	3)
+	2)
 	    node_type=compute
 	    default_digits=3
 	    default_prefix=compute-
 	    ;;
-	4)
+	3)
 	    node_type=vis
 	    default_digits=1
 	    default_prefix=vis-
@@ -214,19 +209,6 @@ EOM
     read -p "Selection? " selection
     clear
     case $selection in
-    
-#    1)  # Update backup head node
-#        cluster-update-backup-nodes
-#        ;;
-#    
-#    2)  # Verify scheduler running on backup head node
-#
-#        if [ -z $(cluster-backup-nodes) ]; then
-#            printf "No backup nodes found.\n"
-#        else
-#            ssh login-2 tail /var/log/slurm/slurmctld.log
-#        fi
-#        ;;
     
     1)  # Update head node
 	# FIXME: Warn if cron updates are running

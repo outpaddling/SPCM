@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 head|backup|io|compute|vis\n"
+    printf "Usage: $0 head|io|compute|vis\n"
     exit 1
 }
 
@@ -54,7 +54,7 @@ RHEL)
     
     node_type=$1
     case $node_type in
-    head|backup)
+    head)
 	# Allow http traffic from outside the cluster
 	firewall-cmd --permanent --add-service=http
 	firewall-cmd --permanent --add-service=tftp

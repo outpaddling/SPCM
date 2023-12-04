@@ -16,7 +16,7 @@
 
 usage()
 {
-    printf "Usage: $0 [--unattended] host.domain backup|compute|io|vis\n"
+    printf "Usage: $0 [--unattended] host.domain compute|io|vis\n"
     exit 1
 }
 
@@ -81,7 +81,7 @@ EOM
 fi
 
 case $node_type in
-backup|compute|io|vis)
+compute|io|vis)
     ;;
 *)
     usage
