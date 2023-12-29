@@ -195,12 +195,12 @@ complete head node updates before beginning compute node updates.  Rebooting
 the head node while compute node updates are in progress may leave a compute
 node in a partially updated state.
 
-1.. Install updates on head node
+1.. Updates head node
 2.. Check for down nodes
-3.. Install updates on visualization nodes
-4.. Install updates on file servers
-5.. Install updates on idle compute nodes
-6.. Restart cron updates on idle compute nodes
+3.. Update visualization nodes
+4.. Update file servers
+5.. Interactively update idle compute nodes
+6.. Restart automated cron updates on idle compute nodes
 7.. Upgrade nodes to a new OS release
 Q.. Quit / Return to main menu
 
