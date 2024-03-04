@@ -187,8 +187,9 @@ while true; do
     spcm-banner
     cat << EOM
     
-Installing updates remotely is not recommended.  Servers occasionally fail to
-reboot, so you should be physically nearby in case of issues.
+Installing updates remotely is not recommended, due to the possibility of
+dropped network connections, etc.  Run updates on the head node console or
+over a highly reliable or stateless (e.g. VNC) network connection.
 
 Updates are best performed in the order presented below.  Most importantly,
 complete head node updates before beginning compute node updates.  Rebooting
