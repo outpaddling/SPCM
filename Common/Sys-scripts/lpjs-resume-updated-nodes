@@ -1,0 +1,49 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Resume updated compute nodes
+#
+#   History:
+#   Date        Name        Modification
+#   2015        Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+log_dir="/usr/local/var/log/lpjs"
+
+# FIXME: Use "updating" state rather than "pause"
+# any node that was unexpectedly rebooted.
+# Reason set when draining is overwritten at reboot
+# sinfo -h -o '%n %T'|grep compute-005
+updating_nodes=`lpjs nodes | awk 'NF == 8 && $2 == "pause" { print $1 }'`
+
+status=0
+for node in $updating_nodes; do
+    if fgrep -q $node "$log_dir/updated-nodes"; then
+	if ssh -o ConnectTimeout=2 $node ls > /dev/null 2>&1; then
+	    printf "Resuming $node, down for $reason...\n"
+	    # Scontrol reports invalid node state with resume sometimes.  This
+	    # seems to fix it.
+	    lpjs nodes up $node
+	else
+	    printf "$node is not responding.  May still be rebooting...\n"
+	    status=1
+	fi
+    fi
+done
+exit $status

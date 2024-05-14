@@ -85,13 +85,13 @@ update_warning()
 
 ================================ WARNING ===================================
 
-Rebooting the head node while slurm-update-idle-nodes is running may leave
+Rebooting the head node while lpjs-update-idle-nodes is running may leave
 a compute node partially updated and orphan
 
     $updates_dir/lockfile
 
 It is best to update and reboot the head node before running
-slurm-update-idle-nodes unless you really know what you are doing.
+lpjs-update-idle-nodes unless you really know what you are doing.
 
 If you have already started updating idle compute nodes, it would be best
 to allow *ALL* updates to finish before updating the head node.
@@ -181,7 +181,7 @@ cluster-head-check $0
 LOCALBASE=$(cluster-localbase)
 
 sinfo_format='%T %u %E %N'
-updates_dir="/home/slurm/Compute-node-updates"
+updates_dir="/usr/local/var/log/lpjs"
 default_domain=$(hostname | cut -d . -f 2-)
 
 while true; do
@@ -345,9 +345,9 @@ EOM
 		if [ 0$(node-type compute-$node) = 0compute ]; then
 		    node=compute-$node
 		fi
-		scontrol update State=drain NodeName=$node reason="$reason"
-		sinfo --list-reasons
-		printf "Update slurm.conf if this is a long-term outage.\n"
+		lpjs nodes pause $node
+		lpjs nodes
+		# printf "Update etc/lpjs/config if this is a long-term outage.\n"
 	    fi
 	fi
 	;;
@@ -363,7 +363,7 @@ EOM
 		node=compute-$node
 	    fi
 	    full_name=`awk '$3 == "'$node'" { print $2 }' /etc/hosts`
-	    slurm-resume-nodes $full_name
+	    lpjs-resume-nodes $full_name
 	fi
 	;;
     

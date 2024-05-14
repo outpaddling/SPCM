@@ -5,7 +5,7 @@
 #       Resume scheduling on one or more compute nodes.
 #
 #   Arguments:
-#       SLURM node spec
+#       Node list
 #       
 #   History:
 #   Date        Name        Modification
@@ -80,10 +80,9 @@ for node in $*; do
     printf "Resume $node? y/[n] "
     read proceed
     if [ 0$proceed = 0y ]; then
-	short_node=`echo $node | cut -d . -f 1`
-	scontrol update state=resume nodename="$short_node"
+	lpjs nodes up $node
 	printf "\nUpdated state:\n\n"
-	sinfo --list-reasons
-	printf "Update slurm.conf if necessary.\n"
+	lpjs nodes
+	# printf "Update etc/lpjs/config if necessary.\n"
     fi
 done

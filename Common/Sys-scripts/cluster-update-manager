@@ -79,13 +79,13 @@ update_warning()
 
 ================================ WARNING ===================================
 
-Rebooting the head node while slurm-update-idle-nodes is running may leave
+Rebooting the head node while lpjs-update-idle-nodes is running may leave
 a compute node partially updated and orphan
 
     $updates_dir/lockfile
 
 It is best to update and reboot the head node before running
-slurm-update-idle-nodes unless you really know what you are doing.
+lpjs-update-idle-nodes unless you really know what you are doing.
 
 If you have already started updating idle compute nodes, it would be best
 to allow *ALL* updates to finish before updating the head node.
@@ -174,12 +174,7 @@ fi
 LOCALBASE=$(cluster-localbase)
 
 sinfo_format='%T %u %E %N'
-updates_dir="/home/slurm/Compute-node-updates"
-
-# FIXME: Is default_domain used by another script called from here?
-if [ -e $LOCALBASE/etc/slurm.conf ]; then
-    default_domain=`awk -F = '$1 == "ClusterName" { print $2 }' $LOCALBASE/etc/slurm.conf`
-fi
+updates_dir="/usr/local/var/log/lpjs"
 
 while true; do
 
@@ -187,9 +182,8 @@ while true; do
     spcm-banner
     cat << EOM
     
-Installing updates remotely is not recommended, due to the possibility of
-dropped network connections, etc.  Run updates on the head node console or
-over a highly reliable or stateless (e.g. VNC) network connection.
+Installing updates remotely is not recommended.  Servers occasionally fail to
+reboot, so you should be physically nearby in case of issues.
 
 Updates are best performed in the order presented below.  Most importantly,
 complete head node updates before beginning compute node updates.  Rebooting
@@ -277,7 +271,7 @@ EOM
 	if [ 0$update_all = 0y ]; then
 	    rm -f $updates_dir/updated-nodes
 	fi
-	slurm-update-idle-nodes $updates_dir
+	lpjs-update-idle-nodes
 	;;
     
     6) # Schedule compute node updates in cron
@@ -296,10 +290,10 @@ Nodes will be updated one at a time shortly after they become idle.
 
 Note: cron must be configured with an entry like the following:
 
-    0-59/15 * * * * slurm-update-idle-nodes --yes \\
-	    >> /var/log/compute-node-updates 2>&1
+    0-59/15 * * * * lpjs-update-idle-nodes --yes \\
+	    >> $log_dir/compute-node-updates 2>&1
 
-slurm-update-idle-nodes and scripts it depends on must be in PATH.
+lpjs-update-idle-nodes and scripts it depends on must be in PATH.
 
 EOM
 	read -p "Proceed? y/[n] " proceed
