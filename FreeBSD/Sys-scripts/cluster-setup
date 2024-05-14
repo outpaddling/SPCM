@@ -124,8 +124,7 @@ add_node_name()
 install_scheduler()
 {
     line
-    install_packages sysutils/slurm-wlm
-    pw usermod slurm -d /home/slurm -m
+    install_packages sysutils/lpjs
 }
 
 
@@ -164,23 +163,18 @@ slurm_config()
     fi
     
     # Enable munge
-    auto-enable-service munged $0 > $LOG_DIR/munged_enable 2>&1 || true
-    service munged restart
+    lpjs munge-enable
 
     slurm_conf="$LOCALBASE/etc/slurm.conf"
     if [ $NODE_TYPE = 'head' ]; then
 	line
 	cat << EOM
 
-If you have a slurm.conf file prepared, restore it to $LOCALBASE/etc now.
+If you have an LPJS config file prepared, restore it to $LOCALBASE/etc/lpjs now.
 
 After you press return, slurm.conf will be opened in $EDITOR.
 
-You can also generate a SLURM config file using the web wizard at:
-
-    $LOCALBASE/share/doc/slurm-*/html/configurator.html
-
-The slurmctld daemon will be started after you exit the editor.
+The lpjs_dispatchd daemon will be started after you exit the editor.
 
 EOM
 	line

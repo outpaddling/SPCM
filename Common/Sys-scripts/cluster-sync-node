@@ -138,13 +138,6 @@ EOM
 	rsync -av /usr/pkg/etc/gmond.conf ${node}:/usr/pkg/etc
     fi
     
-    # SLURM config
-    for file in slurm.conf cgroup.conf; do
-	if [ -e /usr/pkg/etc/$file ]; then
-	    rsync -av /usr/pkg/etc/$file ${node}:/usr/pkg/etc
-	fi
-    done
-    
     # Install standard software packages
     yum_list=$LOCALBASE/etc/spcm/$node_type-node-yum-packages
     if [ -e $yum_list ]; then
@@ -177,7 +170,7 @@ EOM
 	node-sync-all-users $node || true
     fi
     
-    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
+    printf "Be sure to wait until the node reboots before restarting LPJS.\n"
     ;;
 
 FreeBSD)
@@ -216,9 +209,6 @@ FreeBSD)
 	munge_dir="$LOCALBASE/etc/munge"
 	ssh $node mkdir -p -m 0700 $munge_dir
 	scp -p $munge_dir/munge.key ${node}:$munge_dir
-	
-	slurm_conf="$LOCALBASE/etc/slurm.conf"
-	scp $slurm_conf ${node}:$slurm_conf
 	;;
     esac
     
@@ -234,7 +224,7 @@ FreeBSD)
     # Sync users (after cluster-setup, which may NFS mount /home)
     node-sync-all-users $node || true
     
-    printf "Be sure to wait until the node reboots before restarting SLURM.\n"
+    printf "Be sure to wait until the node reboots before restarting LPJS.\n"
     ;;
 
 *)

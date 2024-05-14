@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-cat << EOM
-
-"slurm-memory-use" has been merged info "slurm-cluster-load".
-
-This reminder will be removed after March 2022.
-
-EOM

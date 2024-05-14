@@ -134,18 +134,21 @@ EOM
 	;;
     
     6)
-	slurm-user-cores
+	printf "Not yet implemented.\n"
 	;;
     
     7)
-	slurm-cluster-load
+	lpjs nodes
+	pause
+	lpjs jobs
 	;;
     
     8)
+	printf "Not yet implemented.\n"
 	spcm-banner
 	printf "\nUsername of user with suspected strays? "
 	read username
-	slurm-find-strays $username
+	lpjs-find-strays $username
 	;;
 
     9)

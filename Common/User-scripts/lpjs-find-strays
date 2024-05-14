@@ -101,7 +101,7 @@ for node in `cluster-compute-nodes`; do
 	# might start after the check.
 	
 	# squeue -o '%n' is not working.  Use short list and expand.
-	host_list=`squeue -hu $user_name -o '%N'`
+	host_list=`lpjs jobs | awk -v user=$user_name '$7 == user { print $8 }'`
 	if [ -n "$host_list" ]; then
 	    host_list=`hostlist --expand $host_list`
 	fi
@@ -143,4 +143,3 @@ for node in `cluster-compute-nodes`; do
     fi
 done
 printf "\n"
-

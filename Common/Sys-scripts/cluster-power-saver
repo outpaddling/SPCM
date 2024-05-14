@@ -22,7 +22,7 @@
 #   2020-02-23  Jason Bacon Begin
 ##########################################################################
 
-auto-root-check $0 "Needs to set drain state."
+auto-root-check $0 "Needs to set paused state."
 
 case `auto-ostype` in
 FreeBSD)
@@ -57,26 +57,21 @@ printf "Compute-only nodes:\n$compute_only_nodes\n"
 printf "File servers:\n$file_servers\n"
 
 for node in $compute_only_nodes; do
-    printf "Draining idle node $node...\n"
-    scontrol update nodename=$node state=drain reason=power-save
+    printf "Pausing idle node $node...\n"
+    lpjs nodes pause $node
 done
 
 # Strip spaces
 temp=$(echo "$compute_only_nodes" | sed -e 's| ||g')
 if [ ! -z $temp ]; then
-    printf "\nGiving SLURM time to set drain state...\n"
+    printf "\nGiving LPJS time to set paused state...\n"
     sleep 5
 fi
 
 for node in $compute_only_nodes; do
     state=$(sinfo -h -n $node -o '%T')
-    reason=$(sinfo -h -n $node -o '%E')
     case $state in
-    "drained"|"drained*")
-	if [ 0"$reason" = 0power-save ]; then
-	    printf "Shutting down idle node $node...\n"
-	    ssh -o ConnectTimeout=5 $node shutdown -p now || true
-	fi
+    "paused")   # FIXME: Add power-save state to LPJS
 	;;
     
      *)
@@ -86,34 +81,32 @@ done
 
 temp=$(echo "$file_servers" | sed -e 's| ||g')
 if [ ! -z $temp ]; then
-    if [ "0$(squeue -h)" = 0 ]; then
+    # FIXME: Add feature to lpjs jobs to see if 0 jobs are running
+    if [ "0$(lpjs jobs| awk 'NF == 9 && $9 != \"Script\"')" = 0 ]; then
 	printf "No jobs running.  Shutting down file servers.\n"
 	for node in $file_servers; do
 	    if [ $(node-type $node) = compute ]; then
-		printf "Draining $node...\n"
-		scontrol update nodename=$node state=drain reason=power-save || true
+		printf "Pausing $node...\n"
+		lpjs nodes paused $node
 	    fi
 	done
     
 	# Strip spaces
-	printf "\nGiving SLURM time to set drain state...\n"
+	printf "\nGiving LPJS time to set paused state...\n"
 	sleep 5
 	
 	for node in $file_servers; do
 	    state=$(sinfo -h -n $node -o '%T')
-	    reason=$(sinfo -h -n $node -o '%E')
 	    case $state in
-	    "drained"|"drained*")
-		if [ 0"$reason" = 0power-save ]; then
-		    printf "Unmounting $node on head node...\n"
-		    for mount_point in $(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab); do
-			if [ "0$mount_point" != 0 ]; then
-			    printf "Unmounting $mount_point...\n"
-			    umount -f $mount_point
-			    ssh -o ConnectTimeout=10 $node shutdown -p now
-			fi
-		    done
-		fi
+	    "paused")
+		printf "Unmounting $node on head node...\n"
+		for mount_point in $(awk -v node=$node '$1 ~ node { print $2 }' /etc/fstab); do
+		    if [ "0$mount_point" != 0 ]; then
+			printf "Unmounting $mount_point...\n"
+			umount -f $mount_point
+			ssh -o ConnectTimeout=10 $node shutdown -p now
+		    fi
+		done
 		;;
 	    
 	    *)

@@ -62,9 +62,8 @@ if [ -e $os/WWW ]; then
 fi
 
 install -c Common/*.awk ${DESTDIR}${PREFIX}/libexec
-sed -e "s|add-gecos.awk|${PREFIX}/libexec/add-gecos.awk|g" \
-    Common/Sys-scripts/slurm-usage-report \
-    > ${DESTDIR}${PREFIX}/sbin/slurm-usage-report
+
+# FIXME: Generate lpjs-usage-report script
 
 sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
     Common/Sys-scripts/cluster-lowest-uid \

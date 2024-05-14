@@ -20,7 +20,6 @@ while [ 0$resp != 0q ]; do
     cat << EOM
 
 1.. Restart scheduler daemons
-2.. Restart Ganglia
 Q.. Quit / Return to main menu
 
 EOM
@@ -29,10 +28,7 @@ EOM
     read resp
     case $resp in
     1)
-	slurm-restart
-	;;
-    2)
-	cluster-ganglia-restart
+	cluster-lpjs-restart
 	;;
     Q|q)
 	exit 0
@@ -42,4 +38,3 @@ EOM
     esac
     pause
 done
-

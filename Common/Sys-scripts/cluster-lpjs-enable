@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       Enable SLURM on head or compute node
+#       Enable LPJS on head or compute node
 #
 #   Arguments:
 #       head|compute

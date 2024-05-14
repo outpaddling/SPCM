@@ -68,15 +68,15 @@ RHEL)
 	firewall-cmd --permanent --add-service=rpc-bind
 	firewall-cmd --permanent --add-service=nfs
 	
-	# SLURM
-	firewall-cmd --permanent --add-port=6817/udp    # slurmctld
-	firewall-cmd --permanent --add-port=6817/tcp    # slurmd
+	# LPJS
+	firewall-cmd --permanent --add-port=6818/udp
+	firewall-cmd --permanent --add-port=6818/tcp
 	;;
     
     compute)
-	# SLURM
-	firewall-cmd --permanent --add-port=6817/udp    # slurmctld
-	firewall-cmd --permanent --add-port=6817/tcp    # slurmd
+	# LPJS
+	firewall-cmd --permanent --add-port=6818/udp
+	firewall-cmd --permanent --add-port=6818/tcp
 	;;
     
     io)
