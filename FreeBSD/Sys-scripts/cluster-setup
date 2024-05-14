@@ -139,16 +139,8 @@ install_mpi()
 }
 
 
-slurm_config()
+lpjs_config()
 {
-    # FIXME: creating these directories should not be necessary
-    # --syslog?
-    mkdir -p /var/log/munge /var/run/munge /var/lib/munge
-    mkdir -p /var/log/slurm /var/run/slurm \
-	/var/spool/slurm/d /var/spool/slurm/ctld
-    chown slurm:slurm /var/log/slurm /var/run/slurm \
-	/var/spool/slurm/d /var/spool/slurm/ctld
-
     # Generate munge.key
     service munged stop > /dev/null 2>&1 || true
     munge_dir="$LOCALBASE/etc/munge"
@@ -165,31 +157,27 @@ slurm_config()
     # Enable munge
     lpjs munge-enable
 
-    slurm_conf="$LOCALBASE/etc/slurm.conf"
+    lpjs_conf="$LOCALBASE/etc/lpjs/config"
     if [ $NODE_TYPE = 'head' ]; then
 	line
 	cat << EOM
 
-If you have an LPJS config file prepared, restore it to $LOCALBASE/etc/lpjs now.
+If you have an LPJS config file prepared, copy it to $LOCALBASE/etc/lpjs now.
 
-After you press return, slurm.conf will be opened in $EDITOR.
+After you press return, it will be opened in $EDITOR.
 
 The lpjs_dispatchd daemon will be started after you exit the editor.
 
 EOM
 	line
 	pause
-	if [ ! -e $slurm_conf ]; then
-	    cp $slurm_conf.example $slurm_conf
+	if [ ! -e $lpjs_conf ]; then
+	    cp $lpjs_conf.sample $lpjs_conf
 	fi
-	$EDITOR $slurm_conf
-	stop_service slurmctld
-	auto-enable-service slurmctld $0 > $LOG_DIR/slurmctld_enable 2>&1 || true
-	service slurmctld restart || true
-    else
-	stop_service slurmd
-	auto-enable-service slurmd $0 > $LOG_DIR/slurmd_enable 2>&1 || true
-	service slurmd restart || true
+	$EDITOR $lpjs_conf
+	lpjs dispatchd-enable
+    else    # compute node
+	lpjs compd-enable
     fi
 }
 
@@ -197,10 +185,10 @@ EOM
 scheduler_config()
 {
     line
-    if auto-package-installed sysutils/slurm-wlm; then
-	slurm_config
+    if auto-package-installed wip/lpjs; then
+	lpjs_config
     fi
-    printf "Done with slurm_config.\n"
+    printf "Done with lpjs_config.\n"
 }
 
 
@@ -935,10 +923,10 @@ if [ -e $CONF_DIR/site-mods.sh ]; then
     fi
 fi
 
-# Install cron command for slurm-update-idle-nodes
+# Install cron command for lpjs-update-idle-nodes
 printf "Adding idle node updates to cron...\n"
 pause
-auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/slurm-cron-updates" \
+auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/lpjs-cron-updates" \
     /var/cron/tabs/root $0
 crontab -e
 

@@ -25,9 +25,12 @@ export AUTO_ASK_TAG_PREFIX=cluster-web-setup-
 
 case $os_release in
 FreeBSD-*)
-    apache=apache24
-    # FIXME: Auto-detect this
-    php=php80
+    server_version=$(awk '$1 ~ "^APACHE_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
+    apache=apache$server_version
+
+    php_version=$(awk '$1 ~ "^PHP_DEFAULT" { print $2 }' /usr/ports/Mk/bsd.default-versions.mk | tr -d '.')
+    php=php$php_version
+    
     pkg install -y $apache $php mod_$php
     web_root=$LOCALBASE/www/apache24/data
     ifconfig=ifconfig
