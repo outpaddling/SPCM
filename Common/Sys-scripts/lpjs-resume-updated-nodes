@@ -26,11 +26,7 @@ fi
 
 log_dir="/usr/local/var/log/lpjs"
 
-# FIXME: Use "updating" state rather than "pause"
-# any node that was unexpectedly rebooted.
-# Reason set when draining is overwritten at reboot
-# sinfo -h -o '%n %T'|grep compute-005
-updating_nodes=`lpjs nodes | awk 'NF == 8 && $2 == "pause" { print $1 }'`
+updating_nodes=`lpjs nodes | awk 'NF == 8 && $2 == "updating" { print $1 }'`
 
 status=0
 for node in $updating_nodes; do

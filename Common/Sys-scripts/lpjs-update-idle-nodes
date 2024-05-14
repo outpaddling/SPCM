@@ -66,8 +66,8 @@ chmod 750 `dirname "$updated_nodes_file"`
 if test -t 0; then
     cat << EOM
 
-All nodes will be paused and will not accept new jobs until they have
-been updated.
+All nodes will be places in "updating" state and will not accept new
+jobs until they have been updated.
 
 If there are jobs currently running, this script will need to be run
 repeatedly until all current jobs are finished in order to update all nodes.
@@ -102,16 +102,15 @@ for node in $nodes; do
     if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`lpjs nodes | awk -v node=$node '$1 == node { print $2 }'`
 	case $state in
-	'pause')
+	'updating')
 	    ;;
 	
-	'down')
+	'down'|'pause')
 	    # Don't change state of down nodes!
 	    ;;
 	
 	*)
-	    # FIXME: Add "updating" state, same as pause
-	    lpjs nodes pause $node
+	    lpjs nodes updating $node
 	    ;;
 	esac
     fi
@@ -123,7 +122,7 @@ for node in $nodes; do
     if ! fgrep -q $node "$updated_nodes_file"; then
 	state=`lpjs nodes | awk -v node=$node '$1 == node { print $2 }'`
 	case $state in
-	'pause')
+	'updating')
 	    printf "Updating $node...\n"
 	    # Why was this here?
 	    #scontrol update nodename=$node state=down \
@@ -168,7 +167,7 @@ for node in $nodes; do
 	    
 	*)
 	    # If not updated and not drained, drain it now
-	    lpjs nodes pause $node
+	    lpjs nodes updating $node
 	    ;;
 	esac
     fi
