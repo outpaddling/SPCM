@@ -49,8 +49,8 @@ printf '\n'
 
 updates_dir="/usr/local/var/log/lpjs"
 mkdir -p $updates_dir
-log=$updates_dir/log
-lpjs-update-idle-nodes $updates_dir >> $log
+log=$updates_dir/lpjs-cron-updates
+lpjs-update-idle-nodes >> $log
 
 # Trim log
 tail -50000 $log > $log.tmp
