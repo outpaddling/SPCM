@@ -4,7 +4,8 @@ case $(auto-ostype) in
 FreeBSD)
     # FreeBSD ports
     wip-update
-    pkg remove -y auto-admin
+    # Use -f to avoid removing auto-admin dependents
+    pkg remove -fy auto-admin || true
     wip-reinstall-port -nu -r spcm
     ;;
 
@@ -15,13 +16,8 @@ Darwin|NetBSD|RHEL)
     git pull
     
     # Allow auto-admin deinstall
-    pkgin remove -y auto-admin spcm || true
-    
-    cd $pkgsrc/wip/auto-admin
-    bmake clean reinstall
-    
-    cd $pkgsrc/wip/spcm
-    bmake clean reinstall
+    pkg_delete -fy auto-admin spcm || true
+    wip-reinstall-port -nu -r spcm
     ;;
 
 *)
