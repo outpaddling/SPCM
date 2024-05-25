@@ -2,19 +2,19 @@
 CC      ?= cc
 CFLAGS  ?= -O
 RM      ?= rm
-BIN     = cluster-passwd
+BIN     = spcm-passwd
 SED     ?= sed
 PREFIX  ?= /usr/local
 DESTDIR ?= .
 
 all: ${BIN}
 
-cluster-passwd: Common/Src/cluster-passwd.c
-	${SED} -e "s|%%PREFIX%%|$$PREFIX|g" Common/Src/cluster-passwd.c > cluster-passwd.c
-	${CC} ${CFLAGS} -o cluster-passwd ${LDFLAGS} cluster-passwd.c
+spcm-passwd: Common/Src/spcm-passwd.c
+	${SED} -e "s|%%PREFIX%%|$$PREFIX|g" Common/Src/spcm-passwd.c > spcm-passwd.c
+	${CC} ${CFLAGS} -o spcm-passwd ${LDFLAGS} spcm-passwd.c
 
 clean:
-	${RM} -f cluster-passwd
+	${RM} -f spcm-passwd
 
 realclean:  clean
 
