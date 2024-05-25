@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+spcm-dist-file /etc/hosts /etc all 644
+
+for node in `spcm-all-nodes`; do
+    printf "$node\n"
+    spcm-init-node $node
+done
+

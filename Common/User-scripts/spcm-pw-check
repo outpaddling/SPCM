@@ -1,0 +1,64 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Check age of password
+#
+#   History:
+#   Date        Name        Modification
+#   2018-12-17  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [user-name]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+spcm-head-check $0
+
+case $# in
+0)
+    user_name=`whoami`
+    ;;
+
+1)
+    user_name=$1
+    ;;
+
+*)
+    usage
+    ;;
+
+esac
+
+LOCALBASE=$(spcm-localbase)
+
+pw_age_dir=$LOCALBASE/etc/spcm/pw-age
+pw_age_file=$pw_age_dir/$user_name
+max_pw_age=`awk '{ print $1 }' $pw_age_file`
+last_pw_change=`awk '{ print $2 }' $pw_age_file`
+today=`date +%s`
+today=$(($today / 3600 / 24))
+pw_age=$(($today - $last_pw_change))
+printf "\n============================\n"
+printf "Maximum password age:   $max_pw_age\n"
+printf "Days since last change: $pw_age\n"
+printf "============================\n\n"
+
+if [ `whoami` = $user_name ] && [ $pw_age -ge $max_pw_age ]; then
+    printf "Your password is expired.\n"
+    # Prevent user from cheating
+    # It's still possible to kill spcm-passwd by other means, but
+    # it is assumed that root will run periodic password checks and
+    # lock expired accounts.
+    stty -isig
+    spcm-passwd
+    stty isig
+fi
+

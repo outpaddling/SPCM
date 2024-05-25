@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+cat << EOM
+
+"spcm-down-nodes" has been renamed to "spcm-spcm-node-status".
+
+This reminder will be removed after December 2021.
+
+EOM

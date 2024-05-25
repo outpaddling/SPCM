@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+LOCALBASE=$(spcm-localbase)
+
+cat << EOM
+
+SPCM has not yet been ported to $(auto-ostype).
+
+Doing so will require adding $(auto-ostype)-specific cases to some scripts
+in SPCM and in auto-admin and writing a new spcm-setup script specific
+to $(auto-ostype).  Model spcm-setup scripts are available in the
+source distribution under FreeBSD/Sys-scripts and RHEL/Sys-scripts.
+
+Please edit scripts in-place in \$LOCALBASE/bin and \$LOCALBASE/sbin and fully
+test before sending patches.
+
+EOM
+exit 1

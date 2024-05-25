@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-cat << EOM
-
-"cluster-down-nodes" has been renamed to "cluster-node-status".
-
-This reminder will be removed after December 2021.
-
-EOM

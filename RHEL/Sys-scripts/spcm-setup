@@ -1,0 +1,903 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       RHEL cluster node configurator
+#
+#   Arguments:
+#       head|compute|io
+#
+#   Returns:
+#       0 on success, non-zero error codes
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+#               Jim Wagner  Many improvements
+##########################################################################
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-14  bacon       Begin
+##########################################################################
+
+backup_file()
+{
+    if [ $# != 2 ] || [ ! -d $2 ]; then
+	printf "Usage: backup_file file backup-dir\n"
+	exit 1
+    fi
+    
+    file=$1
+    dir=$2
+    
+    if [ ! -e $dir/$file ]; then
+	cp $file $dir
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause script until user presses return.
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    read -p "Press return to continue..." junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Print usage message and exit.
+#
+#   Arguments:
+#       Program name ($0 from main)
+#
+#   Returns:
+#       Does not return.
+#
+#   History:
+#   Date        Name        Modification
+#   2012-10-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [--infiniband] head|compute|io\n"
+    exit 1
+}
+
+
+line()
+{
+    printf '================================================================\n'
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+# FIXME: Is this still useful?  spcm-bootstrap handle it?
+pkgsrc_setup()
+{
+    line
+    auto-binary-pkgsrc-setup /usr/pkg auto
+
+    # Add pkgsrc to current path, exclusive
+    . /usr/pkg/etc/pkgsrc.sh
+}
+
+
+##########################################################################
+#   Function description:
+#       Install Infiniband packages and configure interface
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ib_config()
+{
+    # Can we avoid using a groupinstall and just install the essential packages?
+    # Are these necessary, or do we just need to enable rdma?
+    # Obsolete: libibmad-devel
+    yum groupinstall -y "Infiniband Support"
+    yum install -y \
+	libibverbs-devel \
+	libibcommon-devel \
+	infiniband-diags-devel \
+	librdmacm-devel \
+	infiniband-diags \
+	perftest
+    
+    # SCSI RDMA Protocol
+    # yum install -y srptools rdma
+    
+    # Required for ib
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl enable ibacm.service
+	systemctl enable rdma.service
+	sleep 5 # Guessing how to avoid ibacm start failure
+	systemctl stop ibacm.service || true
+	sleep 5
+	# Failed to restart rdma.service: Operation refused, unit rdma.service
+	# may be requested by dependency only (it is configured to refuse
+	# manual start/stop).
+	# systemctl restart rdma.service
+	while ! systemctl start ibacm.service; do
+	    printf "ibacm failed to start.  Sleeping 5 seconds and retrying...\n"
+	    sleep 5
+	done
+	;;
+    
+    *)
+	printf "$0: Not supported on $OS_RELEASE.\n"
+	exit 1
+	;;
+
+    esac
+    
+    # SCSI RDMA protocol
+    # Set SRP_LOAD=yes in /etc/rdma/rdma.conf
+    # sed -i'.bak' 's/SRP_LOAD=no/SRP_LOAD=yes/' /etc/rdma/rdma.conf
+    
+    # chkconfig srpd on
+    # service srpd restart
+
+    # Enable and test IB interface
+    ip addr | egrep 'mtu|inet'
+    if ip link show | fgrep -q eth0; then
+	default_if=eth0
+    elif ip link show | fgrep -q eno1; then
+	default_if=eno1
+    else
+	default_if=em1
+    fi
+    interface=`auto-ask eth-int 'Local Ethernet interface?' $default_if`
+    current_ip=`ip addr show $interface | awk '$1 == "inet" { print $2 }' | awk -F / ' { print $1 }'`
+    # FIXME: Specific to x.y.1.z networks
+    ib_ip=`printf "$current_ip" | awk -F '.' ' { printf("%d.%d.%d.%d",$1,$2,$3+128,$4); }'`
+    ib_ip=`auto-ask ib-ip 'ib0 IP address?' $ib_ip`
+    
+    # FIXME: Unmount NFS shares on ib0 first
+    
+    # Strip down ifcfg-ib0
+    ip link set ib0 down
+    file=/etc/sysconfig/network-scripts/ifcfg
+    # FIXME: How to we generate ifcfg-ib0 with type, uuid, etc?
+    touch $file-ib0
+    if [ ! -e $file-ib0.orig ]; then
+	cp $file-ib0 $file-ib0.orig
+    fi
+    #if egrep 'DEVICE|HWADDR|TYPE|UUID' $file-ib0 > temp-ib0; then
+    #    printf "Preserving existing ib0 settings.\n"
+    #fi
+    hwaddr=`ip addr show ib0 | awk '$1 == "link/infiniband" { print $2 }'`
+    netmask='255.255.192.0'
+    netmask=`auto-ask ib-netmask 'ib0 netmask?' $netmask`
+    cat << EOM > $file-ib0
+DEVICE=ib0
+HWADDR=$hwaddr
+NETMASK=$netmask
+TYPE=InfiniBand
+IPADDR=$ib_ip
+BOOTPROTO=none
+ONBOOT=yes
+CONNECTED_MODE=yes
+EOM
+    # Causes network to hang if done remotely
+    # Start ib0 by other means
+    ip link set ib0 up
+    
+    # Fails on first try.  Guessing at solution...
+    sleep 5
+    
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl restart network.service
+	;;
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+    esac
+    
+    ip addr show ib0
+    
+    # Set ipath lanes to twice the number of cores?
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ntp_config()
+{
+    line
+    printf "Running ntpdate...\n"
+    # Start with correct date
+    yum install -y ntp ntpdate
+    ntpdate -u pool.ntp.org
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl enable ntpd
+	systemctl restart ntpd.service
+	;;
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+    esac
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+boot_block_backup()
+{
+    # Save boot block for restoring software RAID
+    if [ ! -e $CONF_DIR/boot-block.$NODE_TYPE ]; then
+	line
+	printf "Backing up boot block...\n"
+	mkdir -p $CONF_DIR
+	dd if=/dev/sda of=$CONF_DIR/boot-block.$NODE_TYPE bs=512 count=1
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+nfs_config()
+{
+    line
+    nfs=`auto-ask nfs 'Configure NFS?' y`
+    if [ $nfs = 'n' ]; then
+	return 0
+    fi
+    
+    # Install NFS to all nodes
+    # https://www.unixmen.com/setting-nfs-server-client-centos-7/
+    printf "Installing NFS utilities...\n"
+    yum install -y nfs-utils
+    
+    idmapd_domain=cluster
+    sed -i "s|.*Domain = .*|Domain = $idmapd_domain|" /etc/idmapd.conf
+    
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl restart rpcidmapd.service
+	;;
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+    esac
+
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl enable rpcbind
+	systemctl enable nfs-server
+	systemctl enable nfs-lock
+	systemctl enable nfs-idmap
+	;;
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+    esac
+
+    # Configure shared directories
+    case $NODE_TYPE in
+    'head'|'io')
+	default_range='192.168.0.0/16'
+	range=`auto-ask nfs-range 'NFS export range?' $default_range`
+	
+	printf '\nCurrent local mounts:\n\n'
+	df -l
+	
+	printf '\nCurrent exports:\n\n'
+	cat /etc/exports
+	printf '\n'
+	
+	export='prime'
+	while [ x$export != x ]; do
+	    printf 'Enter another path to export, or press return to move on: '
+	    read export
+	    
+	    if [ ! -e $export ]; then
+		mkdir -p $export
+	    fi
+	    
+	    # Add to NFS exports if not already there
+	    auto-append-line "$export" \
+		"$export $range(rw,no_root_squash)" \
+		/etc/exports $0
+	done
+	    
+	case $OS_RELEASE in
+	RHEL7)
+	    systemctl restart rpcbind
+	    systemctl restart nfs-server
+	    systemctl restart nfs-lock
+	    systemctl restart nfs-idmap
+	    ;;
+	
+	*)
+	    printf "$0: Not supported on $OS_RELEASE\n"
+	    exit 1
+	    ;;
+	
+	esac
+    
+	# Signal NFS daemon to update exports
+	# Unnecessary after restarting daemons?
+	# exportfs -a
+	;;
+    esac
+    
+    printf "Currently configured mounts:\n\n"
+    awk '$3 == "nfs" { print $0 }' /etc/fstab
+    
+    case $NODE_TYPE in
+    'head'|'compute'|'io'|'vis')
+	# Compute nodes
+	fstab=$CONF_DIR/fstab.$NODE_TYPE
+	if [ -e $fstab ]; then
+	    printf "Automatically adding shares from $fstab...\n"
+	    auto-amend-fstab $fstab
+	else
+	    cat << EOM
+
+Adding share manually.  If you would like this done automatically, create
+the file $fstab on the head node with the desired entries
+for $NODE_TYPE nodes.
+
+EOM
+	    nfs_server='prime'
+	    while [ x$nfs_server != x ]; do
+		printf 'Enter an NFS server to mount from, or press return to move on: '
+		read nfs_server
+		
+		if [ 0$nfs_server != 0 ]; then
+		    printf "Exported directory to mount? "
+		    read export
+		    # Add to fstab if not already there
+		    auto-append-line "$export$num" \
+			"${nfs_server}:$export\t$export\tnfs\trw,intr\t0\t0" \
+			/etc/fstab nocomment
+		    mkdir -p $export
+		fi
+	    done
+	fi
+	
+	case $OS_RELEASE in
+	RHEL7)
+	    systemctl restart rpcbind.service
+	    systemctl restart nfslock.service
+	    systemctl restart nfs
+	    ;;
+	*)
+	    printf "$0: Not supported on $OS_RELEASE\n"
+	    exit 1
+	esac
+
+	# mount and test
+	mount -a
+	df
+    esac
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+install_core_rpms()
+{
+    line
+    printf "Installing man pages...\n"
+    yum install -y man man-pages
+    
+    printf "Installing core utilities...\n"
+    yum install -y \
+	sysstat \
+	bind-utils \
+	ksh tcsh zsh \
+	finger \
+	bc \
+	mailx \
+	parted \
+	lsof \
+	words \
+	environment-modules \
+	yum-utils \
+	dmidecode
+    # No such package yum install -y impitool     # Remote management and LOM
+    
+    if [ $NODE_TYPE = compute ]; then
+	yum install -y openmpi-devel numactl numactl-devel
+    fi
+
+    # Install compilers, etc.
+    line
+    printf "Installing base development tools...\n"
+    # gcc-* and cvs required for pkgsrc
+    yum install -y gcc gcc-c++ gcc-gfortran gdb
+
+    # Enable X11 apps without installing a desktop system like KDE
+    line
+    printf "Enabling X11 apps without installing desktop...\n"
+    yum install -y xauth
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-10  bacon        Begin
+##########################################################################
+
+ssh_config()
+{
+    # Enable incoming ssh
+    line
+    printf 'Configuring sshd...\n'
+    
+    case $OS_RELEASE in
+    RHEL7)
+	systemctl enable sshd.service
+	systemctl restart sshd.service
+	;;
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+    esac
+
+    if [ $NODE_TYPE = 'head' ]; then
+	cat << EOM > /etc/profile.d/ssh-keygen.sh
+# Generated by spcm-setup
+if [ ! -f ~/.ssh/id_rsa ]; then
+    ssh-keygen -f ~/.ssh/id_rsa -N ""
+    cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+fi
+EOM
+
+	cat << EOM > /etc/profile.d/ssh-keygen.csh
+# Generated by spcm-setup
+if ( ! -f ~/.ssh/id_rsa ) then
+    ssh-keygen -f ~/.ssh/id_rsa -N ""
+    cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+endif
+EOM
+	chmod 755 /etc/profile.d/ssh-keygen.*sh
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  bacon        Begin
+##########################################################################
+
+cluster_startup_scripts()
+{
+    ln -sf /usr/pkg/share/spcm/profile.d/* /etc/profile.d
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+slurm_install()
+{
+    case $NODE_TYPE in
+    'head'|'compute')
+	pkgin -y install hdf5   # Work around dep issue with slurm-wlm
+	pkgin -y install slurm-wlm
+	# Allow finishing setup on nodes before they're in slurm.conf
+	spcm-munge-enable $NODE_TYPE || true
+	spcm-slurm-enable $NODE_TYPE || true
+	;;
+    'io')
+	;;
+    esac
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+ganglia_install()
+{
+    if [ $# != 0 ]; then
+	printf "Usage: ganglia_install\n"
+	exit 1
+    fi
+    
+    # Redundant check due to name diff between pkg and port
+    if ! pkg_info ganglia-monitor-core > /dev/null; then
+	# FIXME: Work around llvm* dep issue in pkgsrc-current
+	# Remove this when fixed upstream
+	pkgin -y install llvm libXrandr
+	pkgin -y install ganglia-monitor-core
+    fi
+
+    case $OS_RELEASE in
+    RHEL7)
+	# FIXME: ganglia pkg should create this
+	mkdir -p /usr/pkg/var/run/
+	systemctl disable gmond.service || true
+	systemctl enable /usr/pkg/share/examples/ganglia/gmond.service
+	systemctl daemon-reload
+	systemctl restart gmond.service
+	;;
+    
+    *)
+	printf "$0: Not supported on $OS_RELEASE\n"
+	exit 1
+	;;
+    
+    esac
+
+    if [ $NODE_TYPE = head ]; then
+	ganglia-web-setup
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-05-02  root        Begin
+##########################################################################
+
+disable_overcommit()
+{
+    # Tighten memory allocation to prevent overcommits from crashing nodes
+    # Memory limits are controlled primarily by the scheduler, but
+    # this is done on a sampling basis and overcommits could happen
+    # between samples.
+    # vm.memory_overcommit
+    #   0 = Default: Heuristic, overcommit_ration, and OOM killer
+    #   1 = Unlimited overcommit (all mallocs succeed)
+    #   2 = No overcommit.  Configure enough swap to allow some slack.
+    auto-append-line 'vm.overcommit_memory = 2' /etc/sysctl.conf $0
+    sysctl vm.overcommit_memory='2'
+    auto-append-line 'vm.overcommit_ratio = 100' /etc/sysctl.conf $0
+    sysctl vm.overcommit_ratio='100'
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+# Quit on first error
+set -e
+
+: ${EDITOR:=vi}
+
+case $(auto-os-release) in
+RHEL7)
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-os-release).\n"
+    exit 1
+    ;;
+
+esac
+
+auto-root-check $0
+
+if [ $1 = --infiniband ]; then
+    ib=y
+    shift
+fi
+
+if [ $# != 1 ]; then
+    usage $0
+fi
+
+export AUTO_ASK_TAG_PREFIX=spcm-setup-
+
+LOCALBASE=$(spcm-localbase)
+NODE_TYPE=$1
+OS_RELEASE=`auto-os-release`
+CONF_DIR=$LOCALBASE/etc/spcm
+
+# Source for default files
+DATADIR=$LOCALBASE/share/spcm
+
+# FIXME: Install bsdstats?
+
+if [ 0$(spcm-node-type) != 0 ] && [ $NODE_TYPE != $(spcm-node-type) ]; then
+    cat << EOM
+
+$0:
+
+Node-type "$NODE_TYPE" contradicts previous node type set for $(hostname -s).
+If you really want to change the node type, edit
+
+$LOCALBASE/etc/spcm-node-types
+
+on the head node and
+
+$LOCALBASE/etc/my-spcm-node-type
+
+on $(hostname) and run $0 again.
+
+EOM
+    exit 1
+fi
+
+case $NODE_TYPE in
+'head')
+    read -p "Hostname for this head node? [$(hostname)] " host_name
+    if [ 0$host_name != 0 ]; then
+	hostnamectl set-hostname $host_name
+    fi
+
+    # spcm-init-node does this for all but head node
+    printf "$NODE_TYPE\n" > $CLUSTER_DATA/my-spcm-node-type
+    if [ 0$(spcm-node-type) = 0 ]; then
+	printf "$(hostname -s)\t$NODE_TYPE\n" >> $CLUSTER_DATA/spcm-node-types
+    fi
+
+    printf "Install/edit /etc/hosts.\n"
+    pause
+    $EDITOR /etc/hosts
+    ;;
+'compute'|'io'|'vis')
+    ;;
+*)
+    usage $0
+    ;;
+esac
+
+if [ -e $CONF_DIR/spcm-node-configured ]; then
+    reconfig=`auto-ask reconfigure "Node already configured. Configure again? " n`
+    if [ $reconfig != y ]; then
+	exit 0
+    fi
+fi
+
+if [ ! -e /root/.ssh/id_rsa ]; then
+    printf "Setting up public key...\n"
+    ssh-keygen -f /root/.ssh/id_rsa -N ""
+else
+    printf "id_rsa already exists.\n"
+fi
+
+for file in /root/.ssh /etc/fstab; do
+    if [ ! -e $file.backup ]; then
+	printf 'Backing up $file...\n'
+	cp -R $file $file.backup
+    fi
+done
+
+# Save downloaded RPMs
+sed -i 's|keepcache=0|keepcache=1|' /etc/yum.conf
+
+START_DIR=`pwd`
+export PATH=${PATH}:$START_DIR
+
+#########################################
+# Basic tasks that do not require pkgsrc
+
+boot_block_backup
+ntp_config
+install_core_rpms
+pkgsrc_setup
+auto-ipmi-install
+
+# Workaround: git install looks for missing older version
+pkgin -y install tcl
+# Workaround lvm* dep issue
+pkgin -y install llvm
+pkgin -y install cvs subversion git rsync iftop nano
+yum remove -y cvs subversion git rsync
+yum autoremove -y
+
+# Configure firewall
+auto-enable-passwdqc
+spcm-firewall-config $NODE_TYPE
+
+# May be set by --infiniband
+if [ 0$ib != 0y ]; then
+    read -p "Configure Infiniband? y/[n] " ib
+fi
+if [ 0$ib = 0y ]; then
+    ib_config
+fi
+
+nfs_config
+ssh_config
+
+# Common packages
+ganglia_install
+
+disable_overcommit
+
+cluster_startup_scripts
+
+case $NODE_TYPE in
+'head')
+    # Allow root ssh or other remote execution only with keys
+    # On by default in RHEL
+    
+    # Set up spcm-run env to allow running a command on all nodes
+    # ( Initially for updating /etc/hosts )
+
+    # Set per-process memory limits to a fraction of RAM
+    auto-set-memory-limits 16777216
+    auto-set-umask 027
+    
+    kickstart=`auto-ask pxe-server 'Enable PXE installation server?' y`
+    if [ $kickstart = 'y' ]; then
+	iso_path=`auto-ask pxe-iso-path 'Full pathname of ISO image? ' ''`
+	auto-pxe-installer-setup $iso_path
+    fi
+    ;;
+
+'compute')    # Compute nodes
+    spcm-set-compute-memory-limits
+    
+    # Set default OMP threads to 1 for all jobs
+    ;;
+
+'io')
+    ;;
+
+esac
+
+# Do this LAST to ensure node is fully operational before going live
+case $NODE_TYPE in
+'head'|'compute')
+    slurm_install
+    ;;
+*)
+    ;;
+esac
+
+# Save Kickstart file
+mkdir -p $CONF_DIR
+backup_file ~/anaconda-ks.cfg $CONF_DIR
+
+if [ $NODE_TYPE = head ]; then
+    if ! fgrep -q clusteradmin /etc/passwd; then
+	printf "Adding clusteradmin user...\n"
+	spcm-adduser clusteradmin
+    fi
+
+    printf "Checking/setting UID limits...\n"
+    spcm-lowest-uid
+    spcm-highest-uid
+fi
+
+# Run local site hooks
+if [ -e $CONF_DIR/site-mods.sh ]; then
+    if auto-file-secure $CONF_DIR/site-mods.sh; then
+	$CONF_DIR/site-mods.sh
+    else
+	printf "ALERT: $CONF_DIR/site-mods.sh is not secure!\n"
+	printf "Investigate this problem before proceeding!\n"
+	exit 1           
+    fi
+fi
+
+# Install cron command for slurm-update-idle-nodes
+printf "Adding idle node updates to cron...\n"
+pause
+auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/slurm-cron-updates" \
+    /var/cron/tabs/root $0
+crontab -e
+
+auto-update-system --binary || true
+touch $CONF_DIR/spcm-node-configured
+
+cat << EOM
+
+You must reboot to test the new configuration.  If this is the first time
+you completed the spcm-setup $NODE_TYPE process, you should reboot now.
+
+EOM

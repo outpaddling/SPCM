@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-for node in `cluster-compute-nodes`; do
+for node in `spcm-compute-nodes`; do
     printf "$node\n"
     ssh $node service irqbalance stop
     ssh $node chkconfig irqbalance off

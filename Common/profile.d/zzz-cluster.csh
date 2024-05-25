@@ -5,7 +5,7 @@
 #   a modified copy) from /etc/csh.login or /etc/csh.cshrc.
 ##########################################################################
 
-set LOCALBASE=$(cluster-localbase)
+set LOCALBASE=$(spcm-localbase)
 
 # Set prompt to show more than just "login" for a host like
 # login.avi.hpc.uwm.edu
@@ -20,5 +20,5 @@ alias dir 'ls -als'
 
 if ( $?prompt2 && (`hostname -s` == login) && \
     -e $LOCALBASE/etc/spcm/check-local-password-age ) then
-    cluster-pw-check
+    spcm-pw-check
 endif

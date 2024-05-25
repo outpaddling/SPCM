@@ -14,7 +14,7 @@
 
 usage()
 {
-    printf "Usage: $0 node-spec\n"
+    printf "Usage: $0 spcm-node-spec\n"
     exit 1
 }
 
@@ -46,7 +46,7 @@ Make sure all nodes are up-to-date before resuming them.
 
 o   Install all security updates
 
-o   Run cluster-sync-node if system changes were made while the node was offline
+o   Run spcm-sync-node if system changes were made while the node was offline
 
 o   If hardware was replaced, be sure to configure it to match the rest
     of the cluster (disable hyperthreading, etc.)
@@ -71,10 +71,10 @@ for node in $*; do
 	fi
     fi
     
-    printf "Run cluster-sync-node $node? [y]/n "
+    printf "Run spcm-sync-node $node? [y]/n "
     read sync
     if [ 0$sync != 0n ]; then
-	cluster-sync-node $node compute
+	spcm-sync-node $node compute
     fi
     
     printf "Resume $node? y/[n] "

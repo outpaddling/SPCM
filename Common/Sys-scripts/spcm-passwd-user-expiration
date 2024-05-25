@@ -1,0 +1,42 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Change expiration period for a local password
+#
+#   History:
+#   Date        Name        Modification
+#   2017-04-01  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 user-name expire-days]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 2 ]; then
+    usage
+fi
+user_name=$1
+days=$2
+
+LOCALBASE=$(spcm-localbase)
+
+pw_age_file="$LOCALBASE/etc/spcm/pw-age/$user_name"
+if [ -e $pw_age_file ]; then
+    tmpfile=$pw_age_file.tmp
+    printf "Old age data: "
+    cat $pw_age_file
+    awk -v days=$days '{ printf("%s %s\n", days, $2) }' $pw_age_file > $tmpfile
+    mv -f $tmpfile $pw_age_file
+    printf "New age data: "
+    cat $pw_age_file
+else
+    spcm-create-pw-age $user_name $days
+fi

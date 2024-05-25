@@ -1,0 +1,138 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Create a new user account on all nodes
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-28  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username uid primary-group-name 'Comment' shell max-password-age additional useradd flags]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+spcm-head-check $0
+auto-root-check $0
+
+if [ $# -lt 6 ]; then
+    usage
+fi
+
+LOCALBASE=$(spcm-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
+
+os_type=`auto-ostype`
+
+user_name="$1"
+user_id="$2"
+group_name="$3"
+gecos="$4"
+shell="$5"
+max_pw_age=$6
+shift; shift; shift; shift; shift; shift
+
+printf "Checking cluster integrity.  One moment please...\n"
+if ! spcm-spcm-node-status; then
+    cat << EOM
+
+Nodes are currently down.  The useradd operation will not be able to complete.
+You will need to spcm-node-sync-user for the nodes listed above after they are
+restored.
+
+EOM
+    printf "Continue anyway? y/[n] "
+    read continue
+    if [ 0$continue != 0y ]; then
+	exit
+    fi
+fi
+
+# Create group if necessary
+found_name=`awk -F : '$1 == "'$group_name'" { print $1 }' /etc/group`
+if [ 0$found_name = 0$group_name ]; then
+    printf "$group_name already exists.\n"
+else
+    printf "Creating $group_name\n"
+    case $os_type in
+    FreeBSD)
+	pw groupadd $group_name -g $user_id
+	;;
+    
+    RHEL)
+	groupadd -g $user_id $group_name
+	;;
+    
+    *)
+	printf "$0: Not supported on $os_type.\n"
+	exit 1
+	;;
+
+    esac
+fi
+
+# Create user
+case $os_type in
+RHEL)
+    useradd -c "$gecos" -g $group_name -m -s $shell -u $user_id $@ \
+	$user_name
+    ;;
+
+FreeBSD)
+    pw useradd $user_name -c "$gecos" -g $group_name -m \
+	-s $shell -u $user_id $@
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
+
+spcm-ssh-keygen $user_name $group_name
+
+# Record password age info
+# Simple file with two fields:
+#   1. Maximum password age in days
+#   2. Date of last change in days since epoch (init to 0)
+# Writable only by root, readable only by user's primary group
+pw_age_dir=$CONF_DIR/pw-age
+mkdir -p $pw_age_dir
+chmod 755 $pw_age_dir
+pw_age_file=$pw_age_dir/$user_name
+touch $pw_age_file
+chown root:$group_name $pw_age_file
+chmod 750 $pw_age_file
+printf "$max_pw_age 0\n" > $pw_age_file
+
+# Sync user to all nodes
+spcm-sync-user $user_name
+if [ 0$NOPW != 0true ]; then
+    printf "Set local password? (Not needed if using LDAP/AD) [y]/n "
+    read local_pw
+    if [ 0$local_pw != 0n ]; then
+	spcm-passwd $user_name
+    else
+	spcm-lock-local-pw $user_name
+    fi
+fi
+
+post_setup=$CONF_DIR/useradd-post-setup
+if [ -e $post_setup ]; then
+    if auto-file-secure $post_setup; then
+	$post_setup $user_name
+    else
+	exit 1
+    fi
+else
+    printf "No $post_setup found; ignoring.\n"
+fi

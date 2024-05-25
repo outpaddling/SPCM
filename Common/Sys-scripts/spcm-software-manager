@@ -1,0 +1,290 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Manage software packages
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-12-27  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Ask user which node type is to be processed
+#       
+#   History:
+#   Date        Name        Modification
+#   2021-01-17  Charlie &   Begin
+##########################################################################
+
+select_node_type()
+{
+    while true; do
+	n=2
+	NODE_TYPE=''
+	available_node_types='all head'
+	printf "\n1.. All\n2.. head"
+	for node_type in io vis compute; do
+	    if [ "0$(spcm-$node_type-nodes)" != 0 ]; then
+		n=$((n + 1))
+		printf "\n$n.. $node_type"
+		available_node_types="$available_node_types $node_type"
+	    fi
+	done
+	printf "\nQ.. Quit\n\nSelection? "
+	read selection
+	if [ 0$selection = 0q ]; then
+	    return
+	elif [ 0$selection -ge 1 ] && [ 0$selection -le $n ]; then
+	    NODE_TYPE=`echo $available_node_types | awk -v n=$selection '{ print $n }'`
+	    if [ $NODE_TYPE = head ]; then
+		SSH_NODE=''
+	    else
+		node=$(spcm-$NODE_TYPE-nodes | head -n 1)
+		SSH_NODE="ssh $node "
+	    fi
+	    return
+	fi
+    done
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+case $(auto-ostype) in
+FreeBSD)
+    installed_cmd='pkg info'
+    available_cmd='pkg search ".*"'
+    search_cmd='pkg search'
+    install_cmd='pkg install -y'
+    install_from_source_cmd='auto-install-packages -n -s'
+    remove_cmd='pkg remove -y'
+    autoremove_cmd='pkg autoremove -y'
+    ;;
+
+Darwin|NetBSD|RHEL)
+    if ! which pkgin; then
+	cat << EOM
+
+$0 currently depends on pkgsrc binary packages and no pkgin
+command has been found.
+
+EOM
+	exit 1
+    fi
+    installed_cmd='pkgin list'
+    available_cmd='pkgin avail'
+    search_cmd='pkgin search'
+    install_cmd='pkgin -y install'
+    remove_cmd='pkgin -y remove'
+    autoremove_cmd='pkgin -y autoremove'
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
+
+while true
+do
+    clear
+    spcm-banner
+    cat << EOM
+
+To see ports by category, run "ls /usr/ports" and e.g. "ls /usr/ports/audio"
+or browse the collection at https://www.freebsd.org/ports/index.html.
+
+NOTE: It's best to install new packages when your current packages are
+up-to-date.  Developers do their best to specify proper dependency versions
+but there could be issues installing new packages alongside much older ones.
+
+1.. List installed packages
+2.. List available packages
+3.. Search available packages
+4.. Install packages
+5.. Remove packages
+6.. Install port/package from source
+7.. Install WIP repo on all nodes
+8.. Update WIP repo on all nodes
+9.. Enable Linux compatibility (non-Linux clusters, of course)
+Q.. Quit
+
+EOM
+
+    read -p 'Selection? ' resp
+    case 0$resp in
+    01)
+	select_node_type
+	if [ 0$NODE_TYPE != 0 ]; then
+	    $SSH_NODE $installed_cmd | more
+	    printf "$($SSH_NODE pkg info | wc -l) packages installed.\n"
+	    pause
+	fi
+	;;
+
+    02)
+	tmpfile=.auto-software-manager-packages.txt
+	$search_cmd '.*' > $tmpfile
+	more $tmpfile
+	printf "$(cat $tmpfile | wc -l) packages available.\n"
+	rm -f $tmpfile
+	pause
+	;;
+
+    03)
+	read -p 'Enter any part of the package name: ' pattern
+	$search_cmd "$pattern" | more
+	pause
+	;;
+    
+    04)
+	select_node_type
+	if [ 0$NODE_TYPE != 0 ]; then
+	    read -p 'Enter the package name(s): ' names
+	    if [ 0"$names" != 0 ]; then
+		if [ $NODE_TYPE = head ]; then
+		    $install_cmd $names
+		else
+		    spcm-run "$install_cmd $names" $NODE_TYPE
+		fi
+		pause
+	    fi
+	fi
+	;;
+    
+    05)
+	select_node_type
+	if [ 0$NODE_TYPE != 0 ]; then
+	    read -p 'Enter the package name(s): ' names
+	    cat << EOM
+
+Dependencies that are no longer needed can be automatically removed.  This is
+a good idea if you do not plan to reinstall the software, but will waste time
+if you are going to reinstall or install a newer WIP version.
+
+EOM
+	    read -p 'Autoremove dependencies? y/[n] ' autoremove
+	    if [ 0"$names" != 0 ]; then
+		if [ 0$autoremove = 0y ]; then
+		    ar="$autoremove_cmd"
+		else
+		    ar=''
+		fi
+		if [ $NODE_TYPE = head ]; then
+		    $remove_cmd $names
+		    $ar
+		else
+		    spcm-run \
+			"($remove_cmd $names; $ar) || true" \
+			$NODE_TYPE
+		fi
+		pause
+	    fi
+	fi
+	;;
+    
+    06)
+	select_node_type
+	if [ 0$NODE_TYPE != 0 ]; then
+	    read -p 'Enter category/name: ' names
+	    if [ 0"$names" != 0 ]; then
+		if [ $NODE_TYPE = head ]; then
+		    $install_from_source_cmd $names
+		else
+		    spcm-run "$install_from_source_cmd $names" $NODE_TYPE || true
+		fi
+		pause
+	    fi
+	fi
+	;;
+    
+    07)
+	cat << EOM
+
+This will install the work-in-progress frameworks on all nodes.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    spcm-wip-checkout
+	fi
+	pause
+	;;
+
+    08)
+	cat << EOM
+
+This will update the work-in-progress frameworks on all nodes, but will not
+upgrade installed ports/packages.  To upgrade an installed WIP package, first
+remove it and then install it again from source.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    spcm-wip-update
+	fi
+	pause
+	;;
+
+    09)
+	cat << EOM
+
+This will enable the FreeBSD Linux compatibility module on all nodes except
+file servers.  This will allow users to run closed-source Linux binaries.
+
+This is NOT an emulation layer.  It simply adds Linux system calls to the
+FreeBSD kernel so that Linux binaries can be run directly.  In fact, some
+Linux binaries will run faster on FreeBSD than they do on Linux.
+
+Most binaries built for RHEL will run on FreeBSD.  However, you may
+need to install the necessary shared libraries or other dependencies, just
+as you would on Linux.
+
+This will also mount Linux procfs, sysfs, and tmpfs.
+
+EOM
+	read -p "Proceed? [y]/n " proceed
+	if [ 0$proceed != 0n ]; then
+	    spcm-run auto-install-linux_base head compute vis
+	fi
+	pause
+	;;
+
+    0Q|0q)
+	exit 0
+	;;
+
+    *)
+	printf "Invalid option: $resp\n"
+    esac
+done

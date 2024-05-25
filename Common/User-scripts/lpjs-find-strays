@@ -70,7 +70,7 @@ pause
 # Continue if a node is unresponsive
 set +e
 
-for node in `cluster-compute-nodes`; do
+for node in `spcm-compute-nodes`; do
     printf "$node\r"
 
     case `auto-ostype` in

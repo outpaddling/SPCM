@@ -1,3 +1,0 @@
-#!/bin/sh -e
-
-awk '$2 == "io" { print $1 }' $(cluster-localbase)/etc/spcm/node-types

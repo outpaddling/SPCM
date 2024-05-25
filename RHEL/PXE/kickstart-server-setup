@@ -298,8 +298,8 @@ sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 
 
 
 
-cp /root/node-ks-post /var/www/html/
-chmod 755 /var/www/html/node-ks-post
+cp /root/spcm-node-ks-post /var/www/html/
+chmod 755 /var/www/html/spcm-node-ks-post
 
 # Old md5 style passwords
 #openssl passwd -1 > pw.txt
@@ -327,9 +327,9 @@ cp /root/.ssh/id_rsa.pub /var/www/html/public_key
 
 ./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/rhel6-ks.cfg nocomment
 
-sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
+sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O spcm-node-ks-post http://'"$HOSTIP"'/spcm-node-ks-post\nmv spcm-node-ks-post /root/\nchmod 700 /root/spcm-node-ks-post\n/root/spcm-node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/rhel6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O spcm-setup http://'"$HOSTIP"'/spcm-setup\nmv spcm-setup /root/\nchmod 700 /root/spcm-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./spcm-setup compute' /var/www/html/ks/rhel6-ks.cfg 
 
 # ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/rhel6-ks.cfg nocomment
 # sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/rhel6-ks.cfg

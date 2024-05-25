@@ -1,3 +1,0 @@
-#!/bin/sh -e
-
-cluster-run -c 'ipmitool chassis policy always-off' all

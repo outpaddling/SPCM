@@ -1,3 +1,0 @@
-#!/bin/sh -e
-
-cluster-run auto-hardware-specs all

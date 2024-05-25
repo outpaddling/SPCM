@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+# Return 0 status regardless
+spcm-raid-nodes
+spcm-pfs-nodes
+spcm-io-nodes

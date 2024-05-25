@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+LOCALBASE=$(spcm-localbase)
+
+age_dir=$LOCALBASE/etc/spcm/pw-age
+mkdir -p $age_dir
+chmod 755 $age_dir $LOCALBASE/etc/spcm
+for user in `spcm-users`; do
+    echo $user
+    now=$(date +%s)
+    now=$(($now / 3600 / 24))
+    awk -F : -v user=$user -v now=$now \
+	'$1 == user { a = $6 / 3600 / 24 - 365; printf("180 %d\n", a >= 0 ? a : now ) }' /etc/master.passwd \
+	> $age_dir/$user
+    chmod 750 $age_dir/$user
+    group=$(awk -F : -v user=$user '$1 == user { print $4 }' /etc/passwd)
+    chown root:$group $age_dir/$user
+done

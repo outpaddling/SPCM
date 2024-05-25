@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+auto-root-check $0
+spcm-head-check $0
+if ! spcm-check-cron-updates; then
+    exit 0
+fi
+
+cat << EOM
+
+Restarting the scheduler may kill running jobs, depending on what changes
+have been made to the configuation.
+
+EOM
+
+printf "Are you sure you want to restart the scheduler? (yes/[no]) "
+read sure
+if [ 0$sure != 0yes ]; then
+    exit 0
+fi
+
+spcm-run 'lpjs restart' compute

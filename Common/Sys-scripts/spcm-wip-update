@@ -1,0 +1,30 @@
+#!/bin/sh -e
+
+case $(auto-ostype) in
+FreeBSD)
+    : ${PORTSDIR:=/usr/ports}
+    
+    wip-update
+    for node in $(spcm-all-nodes); do
+	echo $node
+	rsync -a --delete ${PORTSDIR}/wip ${node}:${PORTSDIR}
+    done
+    ;;
+
+Darwin|NetBSD|RHEL)
+    pkgsrc=$(auto-pkgsrc-dir)
+    cd $pkgsrc/wip
+    git pull
+    cd ..
+    for node in $(spcm-all-nodes); do
+	printf "$node...\n"
+	rsync -a --delete wip ${node}:$pkgsrc
+    done
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

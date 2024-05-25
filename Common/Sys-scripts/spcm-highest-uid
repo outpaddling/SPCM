@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+LOCALBASE=$(spcm-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
+
+if ! fgrep -q highest-uid $CONF_DIR/spcm.conf 2> /dev/null; then
+    cat << EOM >> /dev/stderr
+
+You must indicate the highest UID for a regular cluster user on this
+system.  This setting is used by the spcm-users script to identify
+users who must exist on all nodes.
+
+This UID should be lower than any UIDs used for system accounts such
+as "nobody", which is 65534 on some systems.
+
+If users already exist on this system, check /etc/password to determine
+the highest UID in use.
+
+EOM
+    printf "Highest UID for regular users on this cluster? [20000] " >> `tty`
+    read highest_uid
+    if [ 0$highest_uid = 0 ]; then
+	highest_uid=20000
+    fi
+    printf "highest-uid $highest_uid\n" >> $CONF_DIR/spcm.conf
+fi
+
+awk '$1 == "highest-uid" { print $2 }' $CONF_DIR/spcm.conf
+

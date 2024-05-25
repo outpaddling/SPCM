@@ -1,0 +1,78 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Share pkg cache between all nodes
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-06-11  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+spcm-head-check $0
+
+case $(auto-ostype) in
+FreeBSD)
+    cat << EOM
+
+				*** WARNING ***
+
+You must ensure that only one node writes to the package cache at any
+given time.  Do not run "pkg install" or "pkg fetch" on more than one
+node at a time.
+
+EOM
+    pause
+    # If /var is on ZFS, separate /var/cache to make it exportable
+    if zfs list | grep -q '/var$'; then
+	pool=$(zfs list | grep '/var$' | cut -d / -f 1)
+	echo $pool
+	if ! zfs list | fgrep -q /var/cache; then
+	    # FIXME: Make sure it's on ZFS
+	    mv /var/cache /var/cache.old
+	    zfs create -o mountpoint=/var/cache $pool/var/cache
+	    mv /var/cache.old/* /var/cache
+	else
+	    printf "/var/cache is already a ZFS filesystem.\n"
+	fi
+    fi
+    auto-nfs-add-share /var/cache 'r610 proliant1 proliant2' -maproot=root
+    spcm-run -c "/home/bacon/auto-nfs-mount-pkg-cache $(hostname -s)" backup io compute vis
+    exit
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac

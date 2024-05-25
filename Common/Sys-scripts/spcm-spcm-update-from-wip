@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+spcm-wip-update
+spcm-run spcm-update-from-wip all

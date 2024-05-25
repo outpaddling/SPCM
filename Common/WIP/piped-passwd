@@ -40,7 +40,7 @@ fi
 # Check for interactive use
 
 read user_name
-read pw         # FIXME: guard special characters like old cluster-passwd?
+read pw         # FIXME: guard special characters like old spcm-passwd?
 
 expect << EOF > /dev/null
 spawn passwd $user_name

@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-for user_name in `cluster-users`; do
-    echo $user_name
-    cluster-sync-groups $user_name
-done
-

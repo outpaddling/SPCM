@@ -1,0 +1,49 @@
+.\" MDOC man page template
+.\" Use MDOC only for system-specific man pages where groff is the
+.\" default nroff command.  For portable software meant to run on
+.\" all *nix platforms, use the older MAN format.  ( *.man in APE )
+.Dd 2011-11-03  
+.Dt CLUSTER-SHUTDOWN 1
+.Os
+.\"----------------------------------------------------------------------
+.Sh NAME
+.Nm spcm-shutdown
+.Nd shut down the cluster in a rational order
+.\"----------------------------------------------------------------------
+.Sh SYNOPSIS
+.\" Form 1
+.Nm
+.\"----------------------------------------------------------------------
+.Sh DESCRIPTION
+The
+.Nm
+command shuts down all compute nodes, confirms that they are down,
+and then optionally shuts down the head node.
+.Pp
+The user is prompted for the grace period and other options.
+.\"----------------------------------------------------------------------
+.Sh EXIT STATUS
+.Ex -std
+.\"----------------------------------------------------------------------
+.Sh SEE ALSO
+.Xr spcm-adduser
+.Xr spcm-admin
+.Xr spcm-cp
+.Xr spcm-update-ssh_config
+.Xr spcm-pkg_add
+.Xr spcm-port_add
+.Xr spcm-rmuser
+.Xr spcm-run
+.Xr spcm-setup
+.\"----------------------------------------------------------------------
+.Sh HISTORY
+The
+.Nm
+command first appeared as part of the spcm-admin port in FreeBSD 8.2.
+.At v7 .
+.\"----------------------------------------------------------------------
+.Sh AUTHORS
+.An Jason Bacon                             
+.\"----------------------------------------------------------------------
+.Sh BUGS
+Yes.

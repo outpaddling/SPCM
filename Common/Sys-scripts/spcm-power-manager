@@ -1,0 +1,110 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Main menu for cluster admin tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2014-01-08  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+while true; do
+
+    clear
+    spcm-banner
+    cat << EOM
+
+Nodes must be configured for remote IPMI power-on to utilize the power on
+features here.  This may require some BIOS setup.  Use auto-ipmi-install and
+auto-ipmi-remote-access for the rest.
+
+1.. Power on file servers
+2.. Power on compute nodes
+3.. Power on vis nodes
+4.. Power on nodes by hostname
+5.. Shut down idle compute nodes
+6.. Power on drained compute nodes
+7.. Shut down cluster
+Q.. Quit
+
+EOM
+
+    printf "Selection? "
+    read selection
+    clear
+    case $selection in
+    1)
+	spcm-ipmi-power-on io
+	;;
+    
+    2)
+	spcm-ipmi-power-on compute
+	;;
+    
+    3)
+	spcm-ipmi-power-on vis
+	;;
+    
+    4)
+	printf "Enter hostnames separated by space\n"
+	read hostnames
+	for host in $hostnames; do
+	    if [ ${host##*-} != mgmt ]; then
+		host=$host-mgmt
+	    fi
+	    auto-ipmi-remote-power $host on
+	done
+	;;
+    
+    5)
+	spcm-power-saver
+	;;
+    
+    6)
+	spcm-power-waster
+	;;
+
+    7)
+	spcm-shutdown
+	;;
+
+    Q|q)
+	exit 0
+	;;
+    
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+    pause
+done

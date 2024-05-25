@@ -1,0 +1,54 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Conveniently run ps on a cluster node
+#       
+#   History:
+#   Date        Name        Modification
+#   2023-07-21  Jason Bacon Adapt from spcm-node-ps
+##########################################################################
+
+usage()
+{
+    cat << EOM
+
+Usage: $0 complete-spcm-node-name|compute-spcm-node-index [node ...]
+
+If the compute-<argument> is a valid compute node host name, then compute-
+is automatically prepended.
+
+Example:
+    spcm-node-ps 002         # same as spcm-node-ps compute-002
+    spcm-node-ps compute-002
+    spcm-node-ps 256g-004
+    spcm-node-ps compute-256g-001
+    spcm-node-ps raid-01
+
+EOM
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+for node in $@; do
+    shift
+    if [ 0$(spcm-node-type compute-$node) = 0compute ]; then
+	node=compute-$node
+    fi
+    
+    if ! (awk '{ print $2 }' /etc/hosts | fgrep -x $node || \
+	awk '{ print $3 }' /etc/hosts | fgrep -x $node); then
+	printf "$0: $node not found in /etc/hosts.\n"
+	exit 1
+    fi
+    
+    auto-ipmi-remote-power $spcm-node-mgmt on
+done

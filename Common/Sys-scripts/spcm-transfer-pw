@@ -1,0 +1,72 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Transfer a password from another shadow file to all relevant
+#       nodes.
+#       
+#   History:
+#   Date        Name        Modification
+#   2018-12-12  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 username shadow-file old-pw-age-dir\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 3 ]; then
+    usage
+fi
+
+spcm-head-check $0
+
+LOCALBASE=$(spcm-localbase)
+
+# This script is called from spcm-passwd, which runs suid root.
+# Prevent malicious users from running imposter programs.
+PATH=/usr/pkg/sbin:/usr/pkg/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+user_name="$1"
+old_shadow_pw="$2"
+old_pw_age_file="$3/$user_name"
+
+case $(auto-ostype) in
+FreeBSD|RHEL)
+    ;;
+
+*)
+    printf "$0: Not supported on $(auto-ostype).\n"
+    exit 1
+    ;;
+
+esac
+
+pw="`awk -F : '$1 == "'$user_name'" { print $2 }' $old_shadow_pw`"
+if [ "0$pw" = 0 ]; then
+    printf "No such user: $user_name\n"
+    exit 1
+fi
+
+# Store cluster pw aging info
+pw_age_file=$LOCALBASE/etc/spcm/pw-age/$user_name
+if [ -e $old_pw_age_file ]; then
+    if [ $old_pw_age_file != $pw_age_file ]; then
+	cp $old_pw_age_file $pw_age_file
+    fi
+else
+    printf "No password age info.  Using defaults.\n"
+    now=$(date +%e)
+    now=$(($now / 3600 / 24))
+    printf "180 $now\n" > $pw_age_file
+fi
+
+$LOCALBASE/sbin/auto-transfer-pw $user_name "$pw"
+$LOCALBASE/sbin/spcm-run "auto-transfer-pw $user_name '$pw'" all
+

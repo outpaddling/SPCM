@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-cluster-run \
+spcm-run \
     "printf '%s ' \$(hostname); ifconfig em1 | grep em1 | awk ' { print \$5 }'" \
     compute | tee mac-addresses.tmp
 grep -v '===' mac-addresses.tmp > mac-addresses

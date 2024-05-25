@@ -1,0 +1,16 @@
+#!/bin/sh -e
+
+auto-root-check $0
+
+set +e
+
+if ! spcm-check-cron-updates; then
+    exit 0
+fi
+
+service gmetad restart
+service gmond restart
+
+# gmond doesn't restart unless -n is used here.  Why?
+spcm-run -c -n 'service gmond restart' all
+

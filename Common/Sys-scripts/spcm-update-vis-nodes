@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+if [ 0$(spcm-vis-nodes) = 0 ]; then
+    printf "No visualization nodes found.\n"
+    exit
+fi
+
+# FIXME: Warn if cron updates are running
+for node in $(spcm-vis-nodes); do
+    echo $node
+    ssh $node w
+    pause
+    spcm-node-iftop $node
+    spcm-node-iftop $node -i ib0 || true   # May not be an IB interface
+    printf "Update? y/[n] "
+    read update
+    if [ 0$update = 0y ]; then
+	ssh $node "echo 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.' | wall" || true
+	# RHEL 7 ssh always returns non-zero when rebooting
+	ssh -t $node auto-update-system --binary || true
+	ssh -t $node w
+	read -p "Reboot? [y]/n " reboot
+	if [ 0$reboot != 0n ]; then
+	    read -p "Minutes before reboot? [2] " minutes
+	    if [ 0$minutes = 0 ]; then
+		minutes=2
+	    fi
+	    ssh $node shutdown -r +$minutes
+	fi
+    fi
+done

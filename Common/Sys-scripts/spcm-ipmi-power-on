@@ -1,0 +1,188 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Synopsis:
+#       spcm-ipmi-power-on \
+#           [-f first-host] [-l last-host] head|io|compute|vis|all
+#
+#   Description:
+#       .B spcm-ipmi-power-on
+#       remotely powers on nodes that have this capability and are
+#       configured for remote IPMI access.
+#
+#       If $LOCALBASE/etc/spcm/ipmi-boot-delay exists, it should contain
+#       one or more lines with a host name in the first column and an
+#       integer in the second, which is the number of seconds to wait
+#       before power-up.  If the first column is "*", the delay represents
+#       a custom default delay before powering on all nodes that are not
+#       listed by name.  In the absense of either the node name or a "*"
+#       entry, the default delay is 5 seconds.
+#
+#       This is important to prevent a spike in power
+#       draw since servers tend to draw large current during the power up
+#       process, ramping up fans, etc.
+#
+#       If -f first-host and/or -l last-host are provided, they apply to
+#       the final list after concatenating all host classes, such as io,
+#       compute, and vis.  E.g. if the host list is io-01, compute-001
+#       through compute-050, vis-01, and first-host is compute-010, then
+#       io-01 and compute-001 through compute-009 will not be powered on.
+#
+#   Arguments:
+#       -f first-host   First host in the list to power on
+#       -l last-host    Last host in the list to power on
+#       
+#   Returns:
+#       0 on success, non-zero otherwise
+#
+#   Examples:
+#       spcm-ipmi-power-on io compute
+#
+#   Files:
+#       $LOCALBASE/etc/spcm/ipmi-boot-deley
+#
+#   See also:
+#       auto-ipmi-remote-power(1)
+#       
+#   History:
+#   Date        Name        Modification
+#   2020-04-04  Jason Bacon Begin
+##########################################################################
+
+usage()
+{
+    cat << EOM
+Usage: $0 [-f first-host] [-l last-host] head|io|compute|vis|all
+EOM
+    exit 1
+}
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+auto-root-check $0 "Needs to resume compute nodes."
+
+delay_file=$(spcm-localbase)/etc/spcm/ipmi-boot-delay
+if [ -e $delay_file ]; then
+    default_delay=$(awk '$1 == "*" { print $2 }' $delay_file)
+fi
+if [ -z "$default_delay" ]; then
+    default_delay=5
+fi
+
+while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
+    if [ $1 = '-f' ]; then
+	shift
+	first_node=$1
+	shift
+    elif [ $1 = '-l' ]; then
+	shift
+	last_node=$1
+	shift
+    else
+	usage $0
+    fi
+done
+
+if [ $# -lt 1 ]; then
+    usage $0
+fi
+
+while [ $# -ge 1 ]; do
+    node_type=$1
+    
+    if [ $node_type = 'io' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `spcm-file-servers`"
+    fi
+    
+    if [ $node_type = 'vis' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `spcm-vis-nodes`"
+    fi
+    
+    if [ $node_type = 'compute' ] || [ $node_type = 'all' ]; then
+	nodes="$nodes `spcm-compute-nodes`"
+    fi
+    shift
+done
+
+# If blank or only spaces
+if [ -z "$(echo "$nodes" | sed -e 's| ||g')" ]; then
+    printf "No nodes selected.\n"
+    exit
+fi
+
+if [ -z $first_node ]; then
+    first_node=`echo $nodes | awk '{ print $1 }'`
+fi
+if [ -z $last_node ]; then
+    last_node=`echo $nodes | awk '{ print $NF }'`
+fi
+if ! echo "$nodes" | fgrep -q $first_node; then
+    printf "$first_node is not among the selected nodes.\n"
+    exit 1
+fi
+if ! echo "$nodes" | fgrep -q $last_node; then
+    printf "$last_node is not among the selected nodes.\n"
+    exit 1
+fi
+
+in_range=0
+for node in $nodes; do
+    if [ $node = $first_node ]; then
+	in_range=1
+    fi
+    if [ $in_range = 1 ]; then
+	selected_nodes="$selected_nodes $node "
+    fi
+    if [ $node = $last_node ]; then
+	in_range=0
+    fi
+done
+
+is_first_node=true
+for node in $selected_nodes; do
+    printf "\n============================================================\n"
+    printf "Starting $node...\n"
+    printf "============================================================\n\n"
+    
+    # Avoid power surge from powering on too many nodes at once
+    if [ -e $delay_file ]; then
+	delay=$(awk -v node=$node '$1 == node { print $2 }' $delay_file)
+    fi
+    if [ -z "$delay" ]; then
+	delay=$default_delay
+    fi
+    
+    # LOM (lights-out management) make take a minute or two to boot and accept
+    # IPMI commands, so retry for a while if the first attempt fails.
+    tries=0
+    exit_status=1   # Prime the loop
+    while [ $exit_status != 0 ] && [ $tries -lt 20 ]; do
+	if [ $is_first_node != true ]; then
+	    printf "Waiting $delay seconds before powering on $node...\n"
+	    sleep $delay
+	fi
+	
+	if ! auto-ipmi-remote-power $spcm-node-mgmt on; then
+	    printf "Unable to power on $node.  Retrying...\n"
+	    tries=$(($tries + 1))
+	    exit_status=1
+	else
+	    exit_status=0
+	fi
+    done
+    if [ $exit_status != 0 ]; then
+	printf "Gave up on $node.  Check it manually.\n"
+    fi
+
+    if [ $(spcm-node-type $node) = compute ]; then
+	printf "Resuming $node...\n"
+	scontrol update nodename=$node state=resume 2> /dev/null || true
+    fi
+    is_first_node=false
+done

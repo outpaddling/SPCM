@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+: ${EDITOR:=vi}
+: ${LOCALBASE:=/usr/local}
+conf_dir=$LOCALBASE/etc/spcm
+
+$EDITOR $conf_dir/spcm-node-types $LOCALBASE/etc/lpjs/config
+spcm-dhcp-cleanup
+spcm-lpjs-restart

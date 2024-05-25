@@ -235,7 +235,7 @@ fi
 ## NAT Setup
 ##
 
-# Set up routing thru head node. Pass em1 (node-facing) traffic thru eth1 (Internet-facing).
+# Set up routing thru head node. Pass em1 (spcm-node-facing) traffic thru eth1 (Internet-facing).
 
 sed -i '/net.ipv4.ip_forward = 0/ c\net.ipv4.ip_forward = 1' /etc/sysctl.conf
 
@@ -289,8 +289,8 @@ sed -i '/#clearpart/ c\clearpart --linux --drives=sda\npart /boot --fstype ext4 
 
 
 
-cp /root/node-ks-post /var/www/html/
-chmod 755 /var/www/html/node-ks-post
+cp /root/spcm-node-ks-post /var/www/html/
+chmod 755 /var/www/html/spcm-node-ks-post
 
 # Old md5 style passwords
 #openssl passwd -1 > pw.txt
@@ -318,13 +318,13 @@ cp /root/.ssh/id_rsa.pub /var/www/html/public_key
 
 ./auto-append-line  "\n#Avi Install Packages" /var/www/html/ks/rhel6-ks.cfg nocomment
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\nmkdir /share1\nmkdir /share2\nmkdir /share3\nmkdir /share4\nmkdir /share5\nmkdir /share6\nmkdir /share7\nmkdir /share8\nmkdir /share9\nsleep 2\nmount '"$FILESRV"':/sharedapps /sharedapps/\nmount '"$FILESRV"':/share1 /share1/\nmount '"$FILESRV"':/share2 /share2/\nmount '"$FILESRV"':/share3 /share3/\nmount '"$FILESRV"':/share4 /share4/\nmount '"$FILESRV"':/share5 /share5/\nmount '"$FILESRV"':/share6 /share6/\nmount '"$FILESRV"':/share7 /share7/\nmount '"$FILESRV"':/share8 /share8/\nmount '"$FILESRV"':/share9 /share9/\nsleep 10\n/sharedapps/node-setup' /var/www/html/ks/rhel6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\nmkdir /share1\nmkdir /share2\nmkdir /share3\nmkdir /share4\nmkdir /share5\nmkdir /share6\nmkdir /share7\nmkdir /share8\nmkdir /share9\nsleep 2\nmount '"$FILESRV"':/sharedapps /sharedapps/\nmount '"$FILESRV"':/share1 /share1/\nmount '"$FILESRV"':/share2 /share2/\nmount '"$FILESRV"':/share3 /share3/\nmount '"$FILESRV"':/share4 /share4/\nmount '"$FILESRV"':/share5 /share5/\nmount '"$FILESRV"':/share6 /share6/\nmount '"$FILESRV"':/share7 /share7/\nmount '"$FILESRV"':/share8 /share8/\nmount '"$FILESRV"':/share9 /share9/\nsleep 10\n/sharedapps/spcm-node-setup' /var/www/html/ks/rhel6-ks.cfg 
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\ncd /\nmount '"$FILESRV"':/sharedapps /sharedapps/\nsleep 5\n/sharedapps/node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nmkdir /sharedapps\ncd /\nmount '"$FILESRV"':/sharedapps /sharedapps/\nsleep 5\n/sharedapps/spcm-node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
 
-sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O node-ks-post http://'"$HOSTIP"'/node-ks-post\nmv node-ks-post /root/\nchmod 700 /root/node-ks-post\n/root/node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
+sed -i '/#Avi Install Packages/ c\#Avi Install Packages\n%packages\n@core\nwget\nrsync\nnfs-utils\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O spcm-node-ks-post http://'"$HOSTIP"'/spcm-node-ks-post\nmv spcm-node-ks-post /root/\nchmod 700 /root/spcm-node-ks-post\n/root/spcm-node-ks-post' /var/www/html/ks/rhel6-ks.cfg 
 
-#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O cluster-setup http://'"$HOSTIP"'/cluster-setup\nmv cluster-setup /root/\nchmod 700 /root/cluster-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./cluster-setup compute' /var/www/html/ks/rhel6-ks.cfg 
+#sed -i '/#Pigeon Install Packages/ c\#Pigeon Install Packages\n%packages\n@core\nwget\n%post\nmkdir /root/.ssh\nwget -O authorized_keys http://'"$HOSTIP"'/public_key\nmv authorized_keys /root/.ssh\nchmod 700 /root/.ssh\nchmod 600 /root/.ssh/*\nwget -O spcm-setup http://'"$HOSTIP"'/spcm-setup\nmv spcm-setup /root/\nchmod 700 /root/spcm-setup\nwget -O auto-append-line http://'"$HOSTIP"'/auto-append-line\nmv auto-append-line /root/\nchmod 700 /root/auto-append-line\ncd /root\n./spcm-setup compute' /var/www/html/ks/rhel6-ks.cfg 
 
 # ./auto-append-line "rootpw --iscrypted" "\nrootpw --iscrypted " /var/www/html/ks/rhel6-ks.cfg nocomment
 # sed -i 's~rootpw\ --iscrypted\ ~rootpw\ --iscrypted\ '"$PSSWD"'~' /var/www/html/ks/rhel6-ks.cfg

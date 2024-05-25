@@ -1,0 +1,400 @@
+#!/bin/sh
+
+##########################################################################
+#   Script description:
+#       Submenu for node management tasks
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-19  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    read -p "Press return to continue..." junk
+}
+
+
+##########################################################################
+#   Function description:
+#       Collect info on hosts to be managed
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-12-23  J Bacon     Begin
+##########################################################################
+
+get_host_info()
+{
+    default_digits=$1
+    read -p "Digits in hostname #? [$default_digits] " host_digits
+    if [ 0$host_digits = 0 ]; then
+	host_digits=$default_digits
+    fi
+    
+    if [ $host_digits = 0 ]; then
+	first_num=''
+	last_num=''
+	return 0
+    fi
+
+    # Remove leading zeros so printf doesn't interpret it as octal
+    read -p "First host number? " first_num
+    if [ 0$first_num = 0 ]; then
+	return 1
+    fi
+    first_num=`echo $first_num | sed -E 's|^0+||'`
+    read -p "Last host number? " last_num
+    if [ 0$last_num = 0 ]; then
+	return 1
+    fi
+    last_num=`echo $last_num | sed -E 's|^0+||'`
+    return 0
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-10-27  root        Begin
+##########################################################################
+
+update_warning()
+{
+    cat << EOM
+
+================================ WARNING ===================================
+
+Rebooting the head node while lpjs-update-idle-nodes is running may leave
+a compute node partially updated and orphan
+
+    $updates_dir/lockfile
+
+It is best to update and reboot the head node before running
+lpjs-update-idle-nodes unless you really know what you are doing.
+
+If you have already started updating idle compute nodes, it would be best
+to allow *ALL* updates to finish before updating the head node.
+
+Other sysadmin tasks such as new user addition are likely to fail while
+cron updates are active, as nodes may reboot at any time.  Wait until most
+nodes are updated before performing any sysadmin tasks that require access
+to all compute nodes and be prepared to correct potential failures.
+
+============================================================================
+EOM
+    pause
+}
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2019-01-24  root        Begin
+##########################################################################
+
+get_node_type()
+{
+    node_type=none
+    while [ $node_type = none ]; do
+	cat << EOM
+
+1.. File servers
+2.. Compute nodes
+3.. Visualization nodes
+
+EOM
+	read node_type
+	case $node_type in
+	1)
+	    node_type=io
+	    default_digits=2
+	    default_prefix=raid-
+	    ;;
+	2)
+	    node_type=compute
+	    default_digits=3
+	    default_prefix=compute-
+	    ;;
+	3)
+	    node_type=vis
+	    default_digits=1
+	    default_prefix=vis-
+	    ;;
+	*)
+	    printf "Invalid selection.\n"
+	    return 1
+	esac
+    done
+    echo $node_type
+}
+
+
+default_responses_info()
+{
+    cat << EOM
+
+At least one node must be configured manually before using default responses
+to all prompts.
+
+$LOCALBASE/etc/spcm should also contain fstab fragments for all NFS mounts.
+
+EOM
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+spcm-head-check $0
+
+LOCALBASE=$(spcm-localbase)
+
+sinfo_format='%T %u %E %N'
+updates_dir="/usr/local/var/log/lpjs"
+default_domain=$(hostname | cut -d . -f 2-)
+
+while true; do
+
+    clear
+    spcm-banner
+    cat << EOM
+    
+1.. Configure head node
+2.. PXE install new nodes
+3.. Initialize new nodes
+4.. Synchronize nodes
+5.. Drain a node
+6.. Resume a node
+7.. Drain all nodes
+8.. Enable IPMI remote access on nodes
+Q.. Quit / Return to main menu
+
+EOM
+
+    read -p "Selection? " selection
+    clear
+    case $selection in
+    
+    1)
+	spcm-setup head
+	pause
+	;;
+    
+    2)  # PXE
+	spcm-banner
+	if get_node_type; then
+	    read -p "Host name prefix? [$default_prefix] " host_prefix
+	    if [ 0$host_prefix = 0 ]; then
+		host_prefix=$default_prefix
+	    fi
+	    read -p "Digits in hostname #? [$default_digits] " host_digits
+	    if [ 0$host_digits = 0 ]; then
+		host_digits=$default_digits
+	    fi
+	    read -p "Domain? [$default_domain] " domain
+	    if [ 0$domain = 0 ]; then
+		domain=$default_domain
+	    fi
+	    auto-pxe-spcm-node-discover $host_prefix $host_digits $domain
+	fi
+	;;
+    
+    3)  # Initialize nodes
+	set -e  # Stop if init fails
+	spcm-banner
+	if get_node_type; then
+	    read -p "Host name prefix? [$default_prefix] " host_prefix
+	    if [ 0$host_prefix = 0 ]; then
+		host_prefix=$default_prefix
+	    fi
+	    read -p "Domain? [$default_domain] " domain
+	    if [ 0$domain = 0 ]; then
+		domain=$default_domain
+	    fi
+	    if get_host_info $default_digits; then
+		read -p "Unattended init? [y]/n " unattended
+		if [ 0$unattended != 0n ]; then
+		    flags=--unattended
+		fi
+		if [ -z $first_num ]; then
+		    node=`printf '%s.%s' $host_prefix $domain`
+		    printf "Initializing $node...\n"
+		    spcm-init-node $flags $node $node_type
+		    printf "Done with $node...\n"
+		else
+		    num=$first_num
+		    while [ $num -le $last_num ]; do
+			node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			printf "Initializing $node...\n"
+			spcm-init-node $flags $node $node_type
+			printf "Done with $node...\n"
+			num=$((num + 1))
+		    done
+		fi
+	    fi
+	fi
+	set +e
+	;;
+    
+    4)  # Sync nodes
+	set -e  # Stop if init fails
+	spcm-banner
+	if get_node_type; then
+	    case $node_type in
+	    io|vis|head)
+		# Sync File servers
+		read -p"Fully qualified host name? " node
+		if [ 0$node != 0 ]; then
+		    default_responses_info
+		    read -p "Default responses to all prompts? y/[n] " use_defaults
+		    if [ 0$use_defaults = 0y ]; then
+			read -p "Reference node for binary packages? " ref_node
+			sync_opts="--use-defaults $ref_node"
+		    fi
+		    printf "Synchronizing $node...\n"
+		    spcm-sync-node $sync_opts $node $node_type
+		    printf "Done with $node...\n"
+		fi
+		;;
+    
+	    compute)
+		# Sync compute nodes
+		sinfo
+		read -p "Host name prefix? [compute-] " host_prefix
+		if [ 0$host_prefix = 0 ]; then
+		    host_prefix='compute-'
+		fi
+		read -p "Domain? [$default_domain] " domain
+		if [ 0$domain = 0 ]; then
+		    domain=$default_domain
+		fi
+		default_responses_info
+		read -p "Default responses to all prompts? y/[n] " use_defaults
+		if [ 0$use_defaults = 0y ]; then
+		    read -p "Reference node for binary packages? " ref_node
+		    sync_opts="--use-defaults $ref_node"
+		    read -p "Automatically configure infiniband on all nodes? y/[n] " infiniband
+		    if [ 0$infiniband = 0y ]; then
+			sync_opts="$sync_opts --infiniband"
+		    fi
+		fi
+		if get_host_info 3; then
+		    if [ -z $first_num ]; then
+			node=`printf '%s.%s' $host_prefix $domain`
+			printf "Synchronizing $node...\n"
+			spcm-sync-node $sync_opts $node $node_type
+			printf "Done with $node...\n"
+		    else
+			num=$first_num
+			while [ $num -le $last_num ]; do
+			    node=`printf '%s%0*d.%s' $host_prefix $host_digits $num $domain`
+			    printf "Synchronizing $node...\n"
+			    spcm-sync-node $sync_opts $node $node_type
+			    printf "Done with $node...\n"
+			    num=$((num + 1))
+			done
+		    fi
+		fi
+		;;
+	    esac
+	fi
+	set +e
+	;;
+    
+    5) # Drain node
+	spcm-banner
+	printf "\nCurrent node status:\n\n"
+	sinfo -o "$sinfo_format"
+	printf "\nCompute node name or number? "
+	read node
+	if [ 0$node != 0 ]; then
+	    printf "Reason? "
+	    read reason
+	    if [ 0"$reason" != 0 ]; then
+		if [ 0$(spcm-node-type compute-$node) = 0compute ]; then
+		    node=compute-$node
+		fi
+		lpjs nodes pause $node
+		lpjs nodes
+		# printf "Update etc/lpjs/config if this is a long-term outage.\n"
+	    fi
+	fi
+	;;
+
+    6)  # Resume node
+	spcm-banner
+	printf "\nNodes currently down:\n\n"
+	sinfo --list-reasons
+	printf "\nCompute node name or number? "
+	read node
+	if [ 0$node != 0 ]; then
+	    if [ 0$(spcm-node-type compute-$node) = 0compute ]; then
+		node=compute-$node
+	    fi
+	    full_name=`awk '$3 == "'$node'" { print $2 }' /etc/hosts`
+	    lpjs-resume-nodes $full_name
+	fi
+	;;
+    
+    7)  # Drain all nodes
+	spcm-banner
+	printf "\nThis will prevent any new jobs from running.\n"
+	printf "Are you sure you want to proceed? yes/[no] "
+	read proceed
+	if [ 0$proceed = 0yes ]; then
+	    read -p "Reason for draining all nodes? " reason
+	    all_nodes=`sinfo -ho '%N'`
+	    scontrol update state=drain nodename="$all_nodes" reason="$reason"
+	    sinfo
+	else
+	    printf "Operation canceled.\n"
+	fi
+	;;
+
+    8)
+	if get_node_type; then
+	    spcm-ipmi-remote-access $node_type
+	fi
+	;;
+	
+    Q|q)
+	exit 0
+	;;
+    
+    *)
+	printf "Invalid selection: '$selection'\n"
+	;;
+    esac
+    pause
+done

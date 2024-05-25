@@ -1,0 +1,7 @@
+#!/bin/sh -e
+
+# Do not include head node here.  Indicate it explicitly in scripts that
+# need to include it.
+spcm-file-servers
+spcm-vis-nodes
+spcm-compute-nodes

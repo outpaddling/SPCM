@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+spcm-run auto-hardware-specs all

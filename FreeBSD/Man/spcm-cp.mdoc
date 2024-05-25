@@ -1,0 +1,53 @@
+.\" MDOC man page template
+.\" Use MDOC only for system-specific man pages where groff is the
+.\" default nroff command.  For portable software meant to run on
+.\" all *nix platforms, use the older MAN format.  ( *.man in APE )
+.Dd 2011-11-03  
+.Dt CLUSTER-CP 1
+.Os
+.\"----------------------------------------------------------------------
+.Sh NAME
+.Nm spcm-cp
+.Nd distribute files to all compute nodes
+.\"----------------------------------------------------------------------
+.Sh SYNOPSIS
+.\" Form 2
+.Nm
+.Ar file
+.Op Ar
+.Ar destination-directory
+.\"----------------------------------------------------------------------
+.Sh DESCRIPTION
+The
+.Nm
+command copies files from to
+.Ar destination-directory
+on all cluster nodes.  Multiple source files may be specified.
+The pathname
+.Ar destination-directory
+must be an existing directory on all nodes.
+.\"----------------------------------------------------------------------
+.Sh EXIT STATUS
+.Ex -std
+.\"----------------------------------------------------------------------
+.Sh SEE ALSO
+.Xr spcm-adduser
+.Xr spcm-admin
+.Xr spcm-update-ssh_config
+.Xr spcm-pkg_add
+.Xr spcm-port_add
+.Xr spcm-rmuser
+.Xr spcm-run
+.Xr spcm-setup
+.Xr spcm-shutdown
+.\"----------------------------------------------------------------------
+.Sh HISTORY
+The
+.Nm
+command first appeared as part of the spcm-admin port on FreeBSD 8.2.
+.\"----------------------------------------------------------------------
+.Sh AUTHORS
+.An "Jason W. Bacon"
+.\"----------------------------------------------------------------------
+.Sh BUGS
+Yes.

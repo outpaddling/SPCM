@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-for user in `cluster-users`; do
-    echo $user
-    cluster-sync-pw $user
-done
-

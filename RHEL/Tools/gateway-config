@@ -31,7 +31,7 @@ fi
 ## NAT Setup
 ##
 
-# Set up routing thru head node. Pass em1 (node-facing) traffic thru eth1 (Internet-facing).
+# Set up routing thru head node. Pass em1 (spcm-node-facing) traffic thru eth1 (Internet-facing).
 
 # Ask which internal/external interfaces on head node.
 # External should already be known and in use.

@@ -1,0 +1,58 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Script description:
+#       Sync previously selected files to all nodes
+#       
+#   History:
+#   Date        Name        Modification
+#   2016-08-15  J Bacon     Begin
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0 [node ...]\n"
+    exit 1
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# = 0 ]; then
+    nodes=$(spcm-compute-nodes)
+else
+    nodes="$@"
+fi
+
+auto-root-check $0
+
+if ! spcm-check-cron-updates; then
+    exit 0
+fi
+
+LOCALBASE=$(spcm-localbase)
+
+repo=$LOCALBASE/etc/spcm/sync-files
+if [ ! -d $repo ]; then
+    printf "$0: No files to sync.\n"
+    exit 0
+fi
+
+cd $repo
+set +e  # Rsync may return non-zero status
+for node in $nodes; do
+    rsync -avR * ${node}:/
+done
+
+case `auto-ostype` in
+FreeBSD)
+    # Assume login.conf was modified.  No harm in this.
+    printf "Rebuilding login.conf db...\n"
+    spcm-run -c 'cap_mkdb /etc/login.conf' compute || true
+    ;;
+*)
+    ;;
+esac
+

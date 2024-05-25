@@ -1,0 +1,936 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Description:
+#       Automate setup of a simple FreeBSD cluster.
+#       Installs common software and configures settings to facilitate
+#       cluster operation.  Assumes a single head node will handle
+#       job initiation/scheduling and act as a file server for all nodes.
+#
+#   Usage:
+#       First, run 
+#
+#           spcm-setup head
+#
+#       on the head node.
+#
+#   Then, run
+#
+#           spcm-setup compute
+#
+#       on the rest.
+#       
+#   History:
+#       Dec 2009    J Bacon
+##########################################################################
+
+
+usage()
+{
+    printf "Usage: $0 head|compute|io|vis\n"
+    exit 1
+}
+
+
+line()
+{
+    printf "==============================================================================\n"
+}
+
+
+pause()
+{
+    local junk
+    printf "Press enter to continue..."
+    read junk
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-03  Charlie &   Begin
+##########################################################################
+
+stop_service()
+{
+    if [ $# != 1 ]; then
+	printf "Usage: stop_service service\n"
+    fi
+    service $1 stop > /dev/null 2>&1 || true
+    sleep 2
+    killall $1 > /dev/null 2>&1 || true
+    sleep 1
+    killall -9 $1 > /dev/null 2>&1 || true
+}
+
+
+##########################################################################
+#   Description:
+#       Install ports or packages specified by arguments if they are not
+#       already installed.  If $AUTO_BUILD_FROM_SOURCE is true, installs from source,
+#       otherwise attempts to install using pkg add.
+#
+#   Arguments:
+#       List of ports in the for "category/name"
+##########################################################################
+
+install_packages()
+{
+    printf "Installing:\n"
+    for pkg in $*; do
+    {
+	printf "\t$pkg...\n"
+	if [ ! -e $LOG_DIR ]; then
+	    mkdir $LOG_DIR
+	fi
+	log_file=$LOG_DIR/`echo $pkg | tr / -`
+	if ! auto-install-packages -l $pkg 2>&1 | tee $log_file; then
+	    more $log_file
+	    exit 1
+	fi
+    }
+    done
+}
+
+
+add_node_name()
+{
+    if [ $# != 2 ]; then
+	printf "Usage: $0 spcm-node-name spcm-node-file\n"
+	exit 1
+    fi
+    
+    name=$1
+    file=$2
+    
+    # Prevent fgrep from failing
+    if [ ! -e $file ]; then
+	touch $file
+    fi
+    
+    if ! fgrep -q $name $file; then
+	printf "$name\n" >> $file
+    fi
+}
+
+
+install_scheduler()
+{
+    line
+    install_packages sysutils/lpjs
+}
+
+
+install_mpi()
+{
+    line
+    # Install OpenMPI from source so we can choose build options
+    if ! auto-package-installed net/openmpi; then
+	printf "\nInstalling openmpi...\n"
+	install_packages net/openmpi
+    fi
+}
+
+
+lpjs_config()
+{
+    # Generate munge.key
+    service munged stop > /dev/null 2>&1 || true
+    munge_dir="$LOCALBASE/etc/munge"
+    if [ $NODE_TYPE = 'head' ]; then
+	if [ ! -e $munge_dir/munge.key ]; then
+	    mkdir -p -m 0700 $munge_dir
+	    touch $munge_dir/munge.key
+	    chmod 400 $munge_dir/munge.key
+	    printf "Generating munge key...\n"
+	    dd if=/dev/random bs=1 count=1024 > $munge_dir/munge.key
+	fi
+    fi
+    
+    # Enable munge
+    lpjs munge-enable
+
+    lpjs_conf="$LOCALBASE/etc/lpjs/config"
+    if [ $NODE_TYPE = 'head' ]; then
+	line
+	cat << EOM
+
+If you have an LPJS config file prepared, copy it to $LOCALBASE/etc/lpjs now.
+
+After you press return, it will be opened in $EDITOR.
+
+The lpjs_dispatchd daemon will be started after you exit the editor.
+
+EOM
+	line
+	pause
+	if [ ! -e $lpjs_conf ]; then
+	    cp $lpjs_conf.sample $lpjs_conf
+	fi
+	$EDITOR $lpjs_conf
+	lpjs dispatchd-enable
+    else    # compute node
+	lpjs compd-enable
+    fi
+}
+
+
+scheduler_config()
+{
+    line
+    if auto-package-installed wip/lpjs; then
+	lpjs_config
+    fi
+    printf "Done with lpjs_config.\n"
+}
+
+
+nfs_config()
+{
+    cat << EOM
+
+Some schedulers require a shared spool or config directory.  Check the
+documentation for your scheduler before deciding which directories to
+share via NFS.
+
+Some other directories you may want to share include:
+
+    /usr/home (or /home)
+    /var/cache/pkg
+
+EOM
+
+    line
+    nfs_config=`auto-ask nfs-config 'Configure NFS?' y`
+    if [ $nfs_config != 'y' ]; then
+	return
+    fi
+    
+    default_nfs4_domain=$(hostname | cut -d . -f 2-)
+    if [ $NODE_TYPE = head ]; then
+	nfs4_domain=`auto-ask nfs4-domain "Domain name for NFSv4?" $default_nfs4_domain`
+	if [ -z $nfs4_domain ]; then
+	    nfs4_domain=$default_nfs4_domain
+	fi
+	printf "$nfs4_domain\n" > $CONF_DIR/nfs4_domain
+    else
+	nfs4_domain=$(cat $CONF_DIR/nfs4_domain)
+    fi
+
+    auto-nfs-client-setup daemon $nfs4_domain
+    
+    # FIXME: Use auto-admin
+    #touch /etc/exports
+    #auto-append-line 'V4: /' /etc/exports $0
+    #auto-enable-service -s nfsclient nfs_client $0
+    #auto-enable-service nfsuserd $0
+    #auto-enable-service -s statd rpc_statd $0
+    #auto-enable-service -s lockd rpc_lockd $0
+    
+    case $NODE_TYPE in
+    head|io)
+	# Configure NFS whether or not compute nodes will use it
+	# Export /usr (which should include /usr/home)
+	# FIXME: Make sure NFS server is enabled in rc.conf first
+	# Does not work for multi-homed host
+	# ip=`fgrep $head_host $HOSTS | awk ' { print $1 }' | uniq`
+	default_subnet=$(auto-get-network octet)
+	subnet=`auto-ask subnet "\nSubnet for NFS?" $default_subnet`
+
+	# FIXME: Use auto-nfs-client/server-setup and sysrc when nfsuserd
+	# option exists.  Must use nfsuserd for hybrid clusters.
+	printf "Updating $RC_CONF...\n"
+    
+	# FIXME: Use auto-admin
+	auto-nfs-server-setup "-network $subnet -mask $NETMASK" \
+	    daemon $nfs4_domain
+	
+	# Need UDP for some PXE ROMs
+	#auto-append-line 'nfs_server_flags="-t -u -n 16"' $RC_CONF $0
+
+	# For NFSv4.  Some configs don't need nfsuser.
+	# man nfsv4 for details
+	#auto-append-line 'nfsv4_server_enable="YES"' $RC_CONF $0
+
+	#touch /etc/exports  # Must be present for NFS to start
+	#auto-enable-service nfs_server $0 > $LOG_DIR/nfsd_enable 2>&1
+	#auto-nfs-restart
+	
+	share='x'
+	while [ 0$share != 0 ]; do
+	    line
+	    printf "\nMounted filesystems:\n\n"
+	    df
+	    printf "\nCurrent mounts:\n\n"
+	    showmount -e || true
+	    cat << EOM
+
+Note: There should be only one export within each filesystem/partition.
+
+If you want multiple mount points within the same partition, specify the
+highest level directory and use the -alldirs flag in the exports file.
+
+EOM
+	    printf "Directory to export? [Press enter to quit] "
+	    read share
+	    
+	    if [ 0$share != 0 ]; then
+		if [ ! -e $share ]; then
+		    printf "$share does not exist.  Create directory? y/[n] "
+		    read create
+		    if [ 0$create = 0y ]; then
+			mkdir -p $share
+		    else
+			continue
+		    fi
+		elif [ ! -d $share ]; then
+		    printf "$share exists but is not a directory.\n"
+		    continue
+		fi
+		mount_flags="-maproot=root -network $subnet -mask $NETMASK"
+		read -p "Allow mounting any subdirectory of $share? [y]/n " alldirs
+		if [ 0$alldirs != 0n ]; then
+		    mount_flags="-alldirs $mount_flags"
+		fi
+		fs_type=`mount | awk -v share=$share '$3 == share { print $4 }'`
+		if [ 0$fs_type = 0'(zfs,' ]; then
+		    zfs_share=`mount | awk -v share=$share '$3 == share { print $1 }'`
+		    zfs set sharenfs="$mount_flags" $zfs_share
+		    cat << EOM
+
+Disabling the ZIL (ZFS Intent Log) will vastly improve NFS write performance
+in exchange for increased data loss in the event of power outages and other
+sudden failures.  Such loss is generally of no concern in HPC, where the
+jobs will simply be rerun anyway.
+
+EOM
+		    read -p "Disable ZIL? [y]/n " no_zil
+		    if [ 0$no_zil != 0y ]; then
+			zfs set sync=disabled $zfs_share
+		    fi
+		    auto-nfs-restart
+		    zfs get sharenfs
+		else
+		    printf "Updating /etc/exports...\n"
+		    auto-append-line "$share $mount_flags" /etc/exports $0
+		    auto-nfs-restart
+		fi
+	    fi
+	done
+	
+	printf "\nYou may need to reboot before NFS clients can mount the new shared folder.\n\n"
+	pause
+	;;
+	
+    *)
+	;;
+    esac
+    
+    pkg clean -ay   # Clean /var/cache/pkg before NFS mounting
+
+    # FIXME: Automatically eliminate local mounts that conflict
+    case $NODE_TYPE in
+    compute|io|vis)
+	fstab=$CONF_DIR/fstab.$NODE_TYPE
+	if [ -e $fstab ]; then
+	    printf "Automatically adding shares from $fstab...\n"
+	    auto-amend-fstab $fstab
+	else
+	    nfs_server='x'
+	    while [ 0$nfs_server != 0 ]; do
+		df
+		printf "\nHost name of NFS server? [Press enter to quit] "
+		read nfs_server
+		
+		if [ 0$nfs_server != 0 ]; then
+		    printf "Directory to mount from $nfs_server? "
+		    read share
+		    
+		    printf "Local mount point? [$share] "
+		    read mount
+		    if [ 0$mount = 0 ]; then
+			mount=$share
+		    fi
+		    
+		    # FIXME: Make sure mount dir is empty
+		    
+		    # Unmount local if necessary
+		    # First try ZFS
+		    zfs_ds=`zfs list | awk -v mount=$mount '$5 == mount { print $1 }'`
+		    if [ 0$zfs_ds != 0 ]; then
+			zfs set mountpoint=none $zfs_ds
+		    fi
+		    # Not a ZFS mount?  Maybe some other FS.
+		    if mount | fgrep $mount; then
+			umount $mount
+		    fi
+		    
+		    # Configure shared directory
+		    found=`awk '$1 == "'${nfs_server}:$share'" { print $1 }' /etc/fstab`
+		    if [ 0$found = 0 ]; then
+			printf "\nUpdating /etc/fstab...\n\n"
+			printf "# Generated by $0.\n" >> /etc/fstab
+			printf "${nfs_server}:$share\t\t$mount\tnfs\trw,bg,nfsv4\t0\t0\n" >> /etc/fstab
+		    else
+			printf "Remote filesystem ${nfs_server}:$share already configured.\n"
+		    fi
+		    mkdir -p $mount
+		fi
+	    done
+	fi
+	mount -a
+	;;
+	
+    *)
+	;;
+    esac
+}
+
+
+##########################################################################
+#   Function description:
+#       Add this host to authorized_hosts on remote host
+#
+#   Arguments:
+#       1) remote host
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-03-01  Charlie &   Begin
+##########################################################################
+
+ssh_authorize()
+{
+    if [ $# -lt 1 ] ; then
+       echo "usage: ssh-authorize remotehost"
+       exit 1
+    fi
+    remotehost=$1
+    
+    cd
+    
+    user=`whoami`
+    echo "Authorizing ${user}@${HOST} on $remotehost."
+    ssh $remotehost 'umask 077; mkdir -p .ssh'
+
+    # See if key already exists on remote host
+    if ssh $remotehost "grep -q ${user}@${HOST} .ssh/authorized_keys"; then
+	printf "Key already exists for this host.\n"
+	return
+    fi
+    
+    #
+    # If a key hasn't been generated then do it.
+    #
+    if [ ! -f .ssh/id_rsa.pub ] ; then
+	printf "Error: ssh_authorize must be called AFTER id_rsa is installed.\n"
+	exit 1
+    fi
+    
+    key=`cat .ssh/id_rsa.pub`
+    ssh $remotehost "echo $key >> .ssh/authorized_keys ; chmod 600 .ssh/authorized_keys"
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-07-30  Charlie &   Begin
+##########################################################################
+
+ssh_config()
+{
+    # Verify that nfs_config has been run
+
+    line
+    printf "Configuring ssh...\n"
+    
+    # Permit root login over ssh
+    if ! grep -iq '^PermitRootLogin without-password' /etc/ssh/sshd_config; then
+	sed -i ".bak" 's|#PermitRootLogin no|PermitRootLogin without-password|g' /etc/ssh/sshd_config
+	# killall -HUP sshd
+	service sshd reload
+	line
+	cat << EOM
+
+WARNING: 'PermitRootLogin without-password' has been enabled.
+
+This is necessary for clusters that use keyed SSH between nodes for system
+activities.  If you are concerned about security, you can manually
+reconfigure the head node.
+
+EOM
+    fi
+    
+    # All nodes should already accept passwordless login from the head node
+    # This is set up by auto-pxe-installer-setup and left to the user
+    # if they are not using it.
+    #if [ $NODE_TYPE = 'head' ]; then
+    #    # Disable prompting for new hosts, etc.
+    #    spcm-update-all-ssh_config
+    #fi
+}
+
+
+##########################################################################
+#   Function description:
+#       Must be done after NFS config due to use of $HEAD_USR.
+#
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2012-07-30  Charlie &   Begin
+##########################################################################
+
+resource_limits()
+{
+    # Set resource limits
+    line
+    printf "Configuring resource limits...\n"
+    if [ ! -e /etc/login.conf.orig ]; then
+	cp /etc/login.conf /etc/login.conf.orig
+    fi
+
+    cat << EOM
+Setting desired resource limits in /etc/login.conf.
+
+It is a good idea to limit vmemoryuse and maxproc on the head node
+to prevent it from being overloaded by careless users.
+
+The scheduler should manage limits on compute nodes, but some generous hard
+limits on vmemoryuse and maxproc in login.conf can help protect nodes from
+fork() bombs and memory leaks that the scheduler does not catch (fast enough).
+Usually, something like 10 + the number of cores is a good limit for compute
+nodes.
+
+EOM
+    # Be generous, but prevent fork bombs
+    # default_maxproc=$(( `sysctl -n kern.smp.cpus` * 4 ))
+    default_maxproc=128
+    maxproc=`auto-ask max-proc "Max processes for each user on $NODE_TYPE node?" $default_maxproc`
+    
+    # FIXME: Use auto-set-memory-limits
+    default_vmem=$(( `sysctl -n hw.realmem` / 1024 / 1024 ))m
+    vmem=`auto-ask vmem "Max memory use for processes on $NODE_TYPE node? (use 'm' or 'g' suffix)" $default_vmem`
+    
+    umask=`auto-ask umask "umask for the $NODE_TYPE node?" 027`
+    sed -i '' -e "s/maxproc=unlimited/maxproc=$maxproc/g" \
+	     -e "s/vmemoryuse=unlimited/vmemoryuse=$vmem/g" \
+	     /etc/login.conf
+    cap_mkdb /etc/login.conf
+    auto-set-umask $umask
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-02-15  Charlie &   Begin
+##########################################################################
+
+update_clock()
+{
+    line
+    printf "Updating system clock...\n"
+    stop_service ntpd
+    ntpdate -u pool.ntp.org
+    auto-enable-service ntpd spcm-setup > /dev/null 2>&1
+    service ntpd restart
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-02  Jason Bacon Begin
+##########################################################################
+
+install_common_tools()
+{
+    # Quick-install some common tools
+    line
+    install_packages devel/gmake net/rsync converters/libiconv \
+	editors/nano ftp/wget devel/subversion \
+	shells/bash shells/dash sysutils/bsdstats ports-mgmt/dialog4ports
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-02  Jason Bacon Begin
+##########################################################################
+
+get_port_install_method()
+{
+    line
+    #resp=`auto-ask use-source "Build ports from source?" n`
+    resp=n
+    if [ 0$resp = 0'y' ]; then
+	export AUTO_BUILD_FROM_SOURCE='yes'
+    else
+	export AUTO_BUILD_FROM_SOURCE='fall-back'
+	if [ x$AUTO_PACKAGEROOT = x ]; then
+	    printf "Finding fastest mirror... "
+	    export AUTO_PACKAGEROOT=`auto-fastest-mirror`
+	    printf "$AUTO_PACKAGEROOT\n"
+	fi
+    fi
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-02  Jason Bacon Begin
+##########################################################################
+
+startup_scripts()
+{
+    # Install extra login logic
+    line
+    printf "Installing startup scripts...\n"
+    if [ ! -e $CONF_DIR/profile ]; then
+	cp $DATADIR/profile $CONF_DIR
+    fi
+    if [ ! -e $CONF_DIR/csh.login ]; then
+	cp $DATADIR/csh.login $CONF_DIR
+    fi
+    auto-append-line cluster/profile ". $CONF_DIR/profile" /etc/profile spcm-setup
+    auto-append-line cluster/csh.login "source $CONF_DIR/csh.login" /etc/csh.login spcm-setup
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-02  Jason Bacon Begin
+##########################################################################
+
+enable_procfs()
+{
+    line
+    auto-enable-procfs
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2013-12-02  Jason Bacon Begin
+##########################################################################
+
+reboot_msg()
+{
+    line
+    cat << EOM
+
+You must reboot to test the new configuration.  If this is the first time
+you completed the spcm-setup $NODE_TYPE process, you should reboot now.
+
+EOM
+}
+
+
+##########################################################################
+#   Function description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       
+#   History:
+#   Date        Name        Modification
+#   2015-01-30  Charlie &   Begin
+##########################################################################
+
+get_head_host()
+{
+    case $NODE_TYPE in
+    compute|io|vis)
+	# If spcm-setup was previously completed on this node,
+	# get head node from configuration, otherwise ask.
+	head_host=$(cat $CONF_DIR/head-node)
+	;;
+    
+    head)
+	head_host=`hostname -s`
+	hostname -s > $CONF_DIR/head-node
+	;;
+    
+    esac
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 1 ]; then
+    usage $0
+fi
+
+LOCALBASE=$(spcm-localbase)
+
+NODE_TYPE=$1
+case $NODE_TYPE in
+head|compute|io|vis)
+    ;;
+*)
+    usage $0
+    ;;
+esac
+
+auto-root-check $0
+
+##########################################################################
+#   Set common variables
+##########################################################################
+
+export AUTO_ASK_TAG_PREFIX=spcm-setup-
+
+LOCALBASE=$(spcm-localbase)
+CONF_DIR=$LOCALBASE/etc/spcm
+# Source for default files
+DATADIR=$LOCALBASE/share/spcm
+RC_CONF=/etc/rc.conf
+HOSTS=/etc/hosts
+HOSTS_ALLOW=/etc/hosts.allow
+START_DIR=`pwd`
+
+# Used by child scripts, so export it
+LOG_DIR=$START_DIR/spcm-setup-log
+line
+printf "Command output will be stored in $LOG_DIR.\n"
+line
+
+if ! fgrep -q $(hostname) $HOSTS; then
+    cat << EOM
+
+Error: $HOSTS must contain an entry for $(hostname) with the IP of the
+cluster LAN.  My best guess for the proper entry is:
+
+$(auto-get-ip octet)  $(hostname)  $(hostname -s)
+
+EOM
+    read -p "Add this to $HOSTS? [y]/n " add_host
+    if [ 0$add_host != 0n ]; then
+	auto-add-hosts-entry
+    else
+	printf "\nOK, edit $HOSTS and run $0 again.\n\n"
+	exit
+    fi
+fi
+
+for file in /root/.ssh /etc/fstab; do
+    if [ -e $file ] && [ ! -e $file.backup ]; then
+	printf "Backing up $file...\n"
+	cp -R $file $file.backup
+    fi
+done
+
+# Needed by openjdk, bash, etc.
+auto-add-fdesc-mount
+
+auto-ipmi-install || true
+
+# Configure files used by spcm
+if [ $NODE_TYPE = head ]; then
+    # May or may not have been done by spcm-bootstrap
+    if [ $(auto-pkg-branch) = latest ]; then
+	printf "Already using latest packages.\n"
+    else
+	read -p 'Use latest packages instead of quarterly? [y]/n ' latest
+	if [ 0$latest != 0n ]; then
+	    auto-pkg-latest --no-reboot
+	else
+	    auto-update-system --defaults
+	fi
+    fi
+    
+    # spcm-init-node will do this for other node types
+    spcm-node-set-type $(hostname -s) $NODE_TYPE
+    
+    if [ -z $EDITOR ]; then
+	export EDITOR=vi
+    fi
+
+    cat << EOM
+
+You should configure a firewall ASAP to protect your head node.  FreeBSD
+has three firewalls built-in, namely IPFW, PF, and IPFILTER.
+
+We can quickly configure an IPFW firewall here for basic protection.  You
+will need to edit /etc/ipfw.rules to allow connections from outside the
+cluster LAN before enabling the firewall, or risk losing access to this
+host.
+
+EOM
+    firewall=`auto-ask firewall 'Configure IPFW firewall?' n`
+    if [ $firewall = y ]; then
+	auto-firewall-setup
+    fi
+
+    cat << EOM
+
+It's a good idea to start with a fully updated system, to ensure ports and
+package compatibility and to maximize security.
+
+EOM
+    update=`auto-ask update-system 'Update system before continuing?' y`
+    if [ $update != n ]; then
+	auto-update-system --defaults
+	read -p "Reboot? [y]/n " reboot
+	if [ 0"$reboot" != 0n ]; then
+	    shutdown -r now
+	fi
+    fi
+fi
+
+default_netmask=$(auto-get-netmask octet)
+NETMASK=`auto-ask netmask 'Netmask for cluster LAN?' $default_netmask`
+export NETMASK  # Pass to other scripts like ganglia-web-setup
+
+##########################################################################
+#   Begin setup
+##########################################################################
+
+# The following configuration must be done on all nodes, although
+# different node types may be configured differently.
+update_clock                # NTP update
+enable_procfs               # Needed for?
+# get_port_install_method     # Build ports from source?
+install_common_tools        # gmake, etc.
+get_head_host
+if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
+    install_scheduler           # Select and install a scheduler
+fi
+nfs_config                  # Set up head node NFS server.
+ssh_config                  # Enable keys between nodes. After nfs_config.
+if [ $NODE_TYPE = head ] || [ $NODE_TYPE = compute ]; then
+    scheduler_config            # Configure scheduler.  After ssh_config.
+fi
+resource_limits             # Configure login.conf.  After nfs_config.
+
+# Configuration steps that only occur on certain node types
+case $NODE_TYPE in
+head)
+    # Ganglia is deprecated, has vulnerabilities, and is non-essential.
+    # Just configure the web server and let the user install their own
+    # monitoring tools.
+    # ganglia_config
+    spcm-web-setup
+    startup_scripts
+    ;;
+
+compute|vis)
+    install_packages lang/gcc devel/llvm lang/python
+    # Install after scheduler.  OpenMPI port has options for scheduler
+    # integration.
+    install_mpi
+    
+    # Limit ZFS memory use to keep RAM available for jobs
+    compute-spcm-node-set-arc-max    
+    ;;
+*)
+    ;;
+esac
+
+if [ $NODE_TYPE = head ]; then
+    printf "Checking/setting UID limits...\n"
+    spcm-lowest-uid
+    spcm-highest-uid
+fi
+
+line
+image=$(auto-install-media-distname disc1)
+pxedir=/pxeserver/imags/${image%.iso}
+if [ $NODE_TYPE = head ] && [ ! -e $pxedir ]; then
+    read -p 'Configure PXE installer for other nodes? [y]/n ' pxe
+    if [ 0$pxe != 0n ]; then
+	save_cwd=$(pwd)
+	mkdir -p /root/PXE
+	cd /root/PXE
+	if [ ! -e $image ]; then
+	    auto-fetch-install-media disc1
+	    unxz -f $image.xz
+	fi
+	auto-pxe-installer-setup $image
+	cd $save_cwd
+    fi
+fi
+
+# Run local site hooks
+if [ -e $CONF_DIR/site-mods.sh ]; then
+    if auto-file-secure $CONF_DIR/site-mods.sh; then
+	$CONF_DIR/site-mods.sh
+    else
+	printf "ALERT: $CONF_DIR/site-mods.sh is not secure!\n"
+	printf "Investigate this problem before proceeding!\n"
+	exit 1           
+    fi
+fi
+
+# Install cron command for lpjs-update-idle-nodes
+printf "Adding idle node updates to cron...\n"
+pause
+auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/lpjs-cron-updates" \
+    /var/cron/tabs/root $0
+crontab -e
+
+touch $CONF_DIR/spcm-node-configured
+
+# Reboot to test new config after initial setup
+reboot_msg
