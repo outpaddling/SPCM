@@ -14,7 +14,7 @@ RHEL|NetBSD)
 esac
 
 status=0
-tmpfile=spcm-spcm-node-status-uptime
+tmpfile=spcm-node-status-uptime
 printf "%-20s %-10s %s\n" "Host" "Ping" "ssh node uptime"
 for node in `spcm-all-nodes`; do
     printf "%-20s " $node

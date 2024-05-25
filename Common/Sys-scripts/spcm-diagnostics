@@ -92,7 +92,7 @@ EOM
     clear
     case $selection in
     1)
-	spcm-spcm-node-status
+	spcm-node-status
 	;;
     
     2)

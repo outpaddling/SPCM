@@ -2,7 +2,7 @@
 
 ##########################################################################
 #   Script description:
-#       Store spcm-node-type in etc/spcm
+#       Store node-type in etc/spcm
 #       
 #   History:
 #   Date        Name        Modification
@@ -11,7 +11,7 @@
 
 usage()
 {
-    printf "Usage: $0 short-hostname spcm-node-type\n"
+    printf "Usage: $0 short-hostname node-type\n"
     exit 1
 }
 
@@ -37,11 +37,11 @@ $0:
 Node-type "$node_type" contradicts previous node type "$(spcm-node-type $node_name)" set for
 $node_name. If you really want to change the node type, edit
 
-$CONF_DIR/spcm-node-types
+$CONF_DIR/node-types
 
 on the head node and
 
-$CONF_DIR/my-spcm-node-type
+$CONF_DIR/my-node-type
 
 on $node_name and run $0 again.
 
@@ -51,16 +51,16 @@ fi
 
 mkdir -p $CONF_DIR
 
-# Set $CONF_DIR/my-spcm-node-type on all nodes
+# Set $CONF_DIR/my-node-type on all nodes
 # This is used by the spcm-node-type command with no args below, so do it first
 if [ $node_type = head ]; then
-    printf "$node_type\n" > $CONF_DIR/my-spcm-node-type
+    printf "$node_type\n" > $CONF_DIR/my-node-type
 else
-    ssh $node_name "mkdir -p $CONF_DIR && printf \"$node_type\n\" > $CONF_DIR/my-spcm-node-type"
+    ssh $node_name "mkdir -p $CONF_DIR && printf \"$node_type\n\" > $CONF_DIR/my-node-type"
 fi
 
-# Add to $CONF_DIR/spcm-node-types only if running on the head node
+# Add to $CONF_DIR/node-types only if running on the head node
 # and not already there
 if [ $(spcm-node-type) = head ] && [ 0$(spcm-node-type $node_name) = 0 ]; then
-    printf "$node_name\t$node_type\n" >> $CONF_DIR/spcm-node-types
+    printf "$node_name\t$node_type\n" >> $CONF_DIR/node-types
 fi

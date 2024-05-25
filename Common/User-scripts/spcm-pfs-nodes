@@ -1,3 +1,3 @@
 #!/bin/sh -e
 
-awk '$2 == "pfs" { print $1 }' $(spcm-localbase)/etc/spcm/spcm-node-types
+awk '$2 == "pfs" { print $1 }' $(spcm-localbase)/etc/spcm/node-types

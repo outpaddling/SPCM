@@ -24,16 +24,16 @@ LOCALBASE=$(spcm-localbase)
 
 case $# in
 0)
-    if [ -e $LOCALBASE/etc/spcm/my-spcm-node-type ]; then
-	cat $LOCALBASE/etc/spcm/my-spcm-node-type
+    if [ -e $LOCALBASE/etc/spcm/my-node-type ]; then
+	cat $LOCALBASE/etc/spcm/my-node-type
     fi
     ;;
 
 1)
-    if [ -e $LOCALBASE/etc/spcm/spcm-node-types ]; then
+    if [ -e $LOCALBASE/etc/spcm/node-types ]; then
 	short_host=$(echo $1 | cut -d . -f 1)
 	awk -v hostname=$short_host '$1 == hostname { print $2 }' \
-	    $LOCALBASE/etc/spcm/spcm-node-types
+	    $LOCALBASE/etc/spcm/node-types
     fi
     ;;
 

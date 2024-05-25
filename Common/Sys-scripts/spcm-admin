@@ -85,7 +85,7 @@ EOM
     
     3)
 	set -e
-	spcm-spcm-node-manager
+	spcm-node-manager
 	set +e
 	;;
     
