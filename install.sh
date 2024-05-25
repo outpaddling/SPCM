@@ -47,7 +47,8 @@ fi
 chmod o-rwx ${DESTDIR}${PREFIX}/sbin/*
 
 install -c spcm-passwd ${DESTDIR}${PREFIX}/bin
-chmod 6555 ${DESTDIR}${PREFIX}/bin/spcm-passwd
+# Package manager should handle this after staging
+# chmod 6555 ${DESTDIR}${PREFIX}/bin/spcm-passwd
 
 # FIXME: Create and install man pages
 
