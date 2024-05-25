@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-cat << EOM
-
-"psnode" has been renamed to "spcm-node-ps".
-
-This reminder will be removed after December 2021.
-
-EOM

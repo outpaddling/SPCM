@@ -1,9 +1,0 @@
-#!/bin/sh -e
-
-cat << EOM
-
-"topnode" has been renamed to "spcm-node-top".
-
-This reminder will be removed after December 2021.
-
-EOM

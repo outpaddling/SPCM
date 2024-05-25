@@ -882,7 +882,7 @@ compute|vis)
     install_mpi
     
     # Limit ZFS memory use to keep RAM available for jobs
-    compute-spcm-node-set-arc-max    
+    spcm-set-arc-max
     ;;
 *)
     ;;
