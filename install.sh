@@ -31,14 +31,14 @@ for dir in bin sbin libexec; do
 done
 
 # FIXME: What's this for?  Does it predate the use of DESTDIR?
-rm -f ${DESTDIR}${PREFIX}/sbin/cluster-*
-rm -f ${DESTDIR}${PREFIX}/bin/cluster-*
+rm -f ${DESTDIR}${PREFIX}/sbin/spcm-*
+rm -f ${DESTDIR}${PREFIX}/bin/spcm-*
 
 install -c Common/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
 install -c Common/User-scripts/* ${DESTDIR}${PREFIX}/bin
 
 # Overwrite Common scripts from above with OS-specific scripts if both exist.
-# Most scripts should be in Common, but a few such as cluster-setup are so
+# Most scripts should be in Common, but a few such as spcm-setup are so
 # OS-specific that it doesn't make sense to unify them.
 if [ -e $os/Sys-scripts ]; then
     install -c $os/Sys-scripts/* ${DESTDIR}${PREFIX}/sbin
@@ -46,8 +46,8 @@ fi
 
 chmod o-rwx ${DESTDIR}${PREFIX}/sbin/*
 
-install -c cluster-passwd ${DESTDIR}${PREFIX}/bin
-chmod 6555 ${DESTDIR}${PREFIX}/bin/cluster-passwd
+install -c spcm-passwd ${DESTDIR}${PREFIX}/bin
+chmod 6555 ${DESTDIR}${PREFIX}/bin/spcm-passwd
 
 # FIXME: Create and install man pages
 
@@ -65,9 +65,9 @@ install -c Common/*.awk ${DESTDIR}${PREFIX}/libexec
 
 # FIXME: Generate lpjs-usage-report script
 
-sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
-    Common/Sys-scripts/cluster-lowest-uid \
-    > ${DESTDIR}${PREFIX}/sbin/cluster-lowest-uid
-sed -e "s|cluster-admin.conf|${PREFIX}/etc/spcm/cluster-admin.conf|g" \
-    Common/Sys-scripts/cluster-highest-uid \
-    > ${DESTDIR}${PREFIX}/sbin/cluster-highest-uid
+sed -e "s|spcm-admin.conf|${PREFIX}/etc/spcm/spcm-admin.conf|g" \
+    Common/Sys-scripts/spcm-lowest-uid \
+    > ${DESTDIR}${PREFIX}/sbin/spcm-lowest-uid
+sed -e "s|spcm-admin.conf|${PREFIX}/etc/spcm/spcm-admin.conf|g" \
+    Common/Sys-scripts/spcm-highest-uid \
+    > ${DESTDIR}${PREFIX}/sbin/spcm-highest-uid
