@@ -91,7 +91,7 @@ RHEL)
 	;;
     
     esac
-    sinfo
+    lpjs nodes
     ;;
 
 *)

@@ -50,5 +50,5 @@ for node in $@; do
 	exit 1
     fi
     
-    auto-ipmi-remote-power $spcm-node-mgmt on
+    auto-ipmi-remote-power $node-mgmt on
 done

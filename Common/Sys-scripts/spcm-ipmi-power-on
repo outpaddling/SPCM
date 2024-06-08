@@ -168,7 +168,7 @@ for node in $selected_nodes; do
 	    sleep $delay
 	fi
 	
-	if ! auto-ipmi-remote-power $spcm-node-mgmt on; then
+	if ! auto-ipmi-remote-power $node-mgmt on; then
 	    printf "Unable to power on $node.  Retrying...\n"
 	    tries=$(($tries + 1))
 	    exit_status=1

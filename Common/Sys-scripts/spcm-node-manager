@@ -180,7 +180,6 @@ spcm-head-check $0
 
 LOCALBASE=$(spcm-localbase)
 
-sinfo_format='%T %u %E %N'
 updates_dir="/usr/local/var/log/lpjs"
 default_domain=$(hostname | cut -d . -f 2-)
 
@@ -290,7 +289,7 @@ EOM
     
 	    compute)
 		# Sync compute nodes
-		sinfo
+		lpjs nodes
 		read -p "Host name prefix? [compute-] " host_prefix
 		if [ 0$host_prefix = 0 ]; then
 		    host_prefix='compute-'
@@ -335,7 +334,7 @@ EOM
     5) # Drain node
 	spcm-banner
 	printf "\nCurrent node status:\n\n"
-	sinfo -o "$sinfo_format"
+	lpjs nodes
 	printf "\nCompute node name or number? "
 	read node
 	if [ 0$node != 0 ]; then
@@ -355,7 +354,7 @@ EOM
     6)  # Resume node
 	spcm-banner
 	printf "\nNodes currently down:\n\n"
-	sinfo --list-reasons
+	lpjs nodes
 	printf "\nCompute node name or number? "
 	read node
 	if [ 0$node != 0 ]; then
@@ -368,15 +367,17 @@ EOM
 	;;
     
     7)  # Drain all nodes
+	printf "FIXME: Not yet switched to LPJS.\n"
+	pause
 	spcm-banner
 	printf "\nThis will prevent any new jobs from running.\n"
 	printf "Are you sure you want to proceed? yes/[no] "
 	read proceed
 	if [ 0$proceed = 0yes ]; then
-	    read -p "Reason for draining all nodes? " reason
-	    all_nodes=`sinfo -ho '%N'`
-	    scontrol update state=drain nodename="$all_nodes" reason="$reason"
-	    sinfo
+	    # FIXME: Switch to LPJS
+	    # all_nodes=`s info -ho '%N'`
+	    # scontrol update state=drain nodename="$all_nodes" reason="$reason"
+	    lpjs nodes
 	else
 	    printf "Operation canceled.\n"
 	fi

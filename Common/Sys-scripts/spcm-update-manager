@@ -173,7 +173,6 @@ fi
 
 LOCALBASE=$(spcm-localbase)
 
-sinfo_format='%T %u %E %N'
 updates_dir="/usr/local/var/log/lpjs"
 
 while true; do

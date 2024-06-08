@@ -40,6 +40,7 @@ RHEL)
 
 esac
 
+# FIXME: Switch to LPJS
 idle_nodes=$(sinfo -h -o '%T %n' | awk '$1 ~ "idle" { print $2 }')
 idle_nodes="$idle_nodes"
 printf "Idle nodes:\n$idle_nodes\n"
@@ -69,6 +70,7 @@ if [ ! -z $temp ]; then
 fi
 
 for node in $compute_only_nodes; do
+    # FIXME: Switch to LPJS
     state=$(sinfo -h -n $node -o '%T')
     case $state in
     "paused")   # FIXME: Add power-save state to LPJS
@@ -96,6 +98,7 @@ if [ ! -z $temp ]; then
 	sleep 5
 	
 	for node in $file_servers; do
+	    # FIXME: Switch to LPJS
 	    state=$(sinfo -h -n $node -o '%T')
 	    case $state in
 	    "paused")

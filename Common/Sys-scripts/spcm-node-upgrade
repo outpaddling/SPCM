@@ -77,6 +77,7 @@ FreeBSD)
     ssh $node spcm-node-type
     if [ $(spcm-node-type $node) = compute ]; then
 	scontrol update nodename=$node state=drain reason="OS upgrade"
+	# FIXME: Switch to LPJS
 	sinfo --list-reasons
 	state=`sinfo -n $node -o %T -h`
 	if [ $state != drained ]; then
