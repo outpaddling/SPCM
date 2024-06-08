@@ -70,17 +70,21 @@ if [ $# != 2 ]; then
     usage
 fi
 node=$1
+if ! echo $node | fgrep '.'; then
+    printf "$0: Please use an FQDN (complete hostname).\n" >> /dev/stderr
+    exit 1
+fi
 version=$2
 
 case $(auto-ostype) in
 FreeBSD)
     ssh $node spcm-node-type
     if [ $(spcm-node-type $node) = compute ]; then
-	scontrol update nodename=$node state=drain reason="OS upgrade"
-	# FIXME: Switch to LPJS
-	sinfo --list-reasons
-	state=`sinfo -n $node -o %T -h`
-	if [ $state != drained ]; then
+	lpjs nodes updating $node
+	lpjs nodes
+	used_processors=$(lpjs nodes | awk -v node=$node '$1 == node { print $6 }')
+	printf "$used_processors processors in use.\n"
+	if [ $used_processors != 0 ]; then
 	    printf "$node is busy.  Try again later.\n"
 	    exit 1
 	fi
