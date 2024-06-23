@@ -297,7 +297,8 @@ lpjs-update-idle-nodes and scripts it depends on must be in PATH.
 EOM
 	read -p "Proceed? y/[n] " proceed
 	if [ 0"$proceed" = 0y ]; then
-	    rm -f $updates_dir/updated-nodes $updates_dir/updates.log
+	    rm -f $updates_dir/updated-nodes $updates_dir/updates.log \
+		  $updates_dir/lockfile
 	fi
 	;;
 
