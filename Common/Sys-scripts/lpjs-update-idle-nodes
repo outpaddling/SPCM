@@ -177,5 +177,6 @@ for node in $nodes; do
     lpjs-resume-updated-nodes || true
 done
 lpjs-resume-all-updated-nodes
-wc -l $updated_nodes_file
+wc -l $updated_nodes_file || true
+printf "Removing $lock_file...\n"
 rm -f "$lock_file"
