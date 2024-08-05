@@ -25,8 +25,7 @@ FreeBSD)
     procs=0
     for node in `spcm-all-nodes`; do
 	printf "Syncing ports to $node...\n"
-	if ! rsync --archive --inplace --delete \
-		/usr/ports ${node}:/usr; then
+	if ! rsync --archive --delete /usr/ports ${node}:/usr; then
 	    printf "$node\n" >> spcm-ports-update-failed-nodes
 	fi
     done
