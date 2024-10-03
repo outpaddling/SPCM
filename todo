@@ -1,4 +1,6 @@
 
+Make sure node-types contains FQDNs
+
 software manager: Add io and vis nodes
 
 services manager: Remove Ganglia
