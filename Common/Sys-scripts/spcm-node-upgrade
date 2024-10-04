@@ -11,8 +11,8 @@
 
 usage()
 {
-    printf "Usage: $0 hostname version\n"
-    printf "Example: $0 compute-001 12.2-RELEASE\n"
+    printf "Usage: $0 hostname.domain version\n"
+    printf "Example: $0 compute-001.albacore 14.1-RELEASE\n"
     exit 1
 }
 
@@ -52,9 +52,7 @@ reboot_node()
 {
     local node=$1
     local reboot=''
-    while [ 0$reboot != 0y ] && [ 0$reboot != 0n ]; do
-	read -p "Reboot $node? y/n " reboot
-    done
+    read -p "Reboot $node? y/[n] " reboot
     if [ 0$reboot = 0y ]; then
 	ssh $node shutdown -r now
 	wait_for_reboot $node
@@ -70,7 +68,7 @@ if [ $# != 2 ]; then
     usage
 fi
 node=$1
-if ! echo $node | fgrep '.'; then
+if ! echo $node | fgrep -q '.'; then
     printf "$0: Please use an FQDN (complete hostname).\n" >> /dev/stderr
     exit 1
 fi
@@ -100,7 +98,7 @@ FreeBSD)
     while [ 0$install != 0y ] && [ 0$install != 0n ]; do
 	read -p "Proceed with install on $node? y/n " install
     done
-    if [ $install != y ]; then
+    if [ $install = n ]; then
 	exit 1
     fi
     ssh -t $node freebsd-update install
@@ -126,7 +124,7 @@ EOM
 	    read -p "Resume $node? y/n " resume
 	done
 	if [ $resume = y ]; then
-	    scontrol update nodename=$node state=resume
+	    spcm nodes up $node
 	fi
     fi
     
