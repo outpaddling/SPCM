@@ -168,8 +168,9 @@ for node in $selected_nodes; do
 	    sleep $delay
 	fi
 	
-	if ! auto-ipmi-remote-power $node-mgmt on; then
-	    printf "Unable to power on $node.  Retrying...\n"
+	short_host=$(echo $node | cut -d . -f 1)
+	if ! auto-ipmi-remote-power $short_host-mgmt on; then
+	    printf "Unable to power on $short_host-mgmt.  Retrying...\n"
 	    tries=$(($tries + 1))
 	    exit_status=1
 	else
