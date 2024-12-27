@@ -40,6 +40,11 @@ fi
 
 node=$1
 shift
+# Convert 001 to compute-001.domain if possible
+temp="$(awk -v hostname=$node '$3 == "compute-" hostname { print $2 }' /etc/hosts)"
+if [ -n "$temp" ]; then
+    node=$temp
+fi
 if [ 0$(spcm-node-type compute-$node) = 0compute ]; then
     node=compute-$node
 fi

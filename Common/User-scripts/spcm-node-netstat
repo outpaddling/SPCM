@@ -31,6 +31,20 @@ EOM
 
 
 ##########################################################################
+#   Function description:
+#       Pause until user presses return
+##########################################################################
+
+pause()
+{
+    local junk
+    
+    printf "Press return to continue..."
+    read junk
+}
+
+
+##########################################################################
 #   Main
 ##########################################################################
 
@@ -40,6 +54,11 @@ fi
 
 node=$1
 shift
+# Convert 001 to compute-001.domain if possible
+temp="$(awk -v hostname=$node '$3 == "compute-" hostname { print $2 }' /etc/hosts)"
+if [ -n "$temp" ]; then
+    node=$temp
+fi
 if [ 0$(spcm-node-type compute-$node) = 0compute ]; then
     node=compute-$node
 fi
@@ -49,6 +68,9 @@ if ! (awk '{ print $2 }' /etc/hosts | fgrep -x $node || \
     printf "$0: $node not found in /etc/hosts.\n"
     exit 1
 fi
+
+printf "Press 'Ctrl+c' to quit.\n"
+pause
 
 case $(auto-ostype) in
 FreeBSD)
