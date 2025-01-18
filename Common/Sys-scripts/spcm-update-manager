@@ -245,7 +245,7 @@ EOM
 	;;
     
     2)
-	spcm-node-status
+	spcm-status
 	;;
     
     3)

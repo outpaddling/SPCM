@@ -19,11 +19,11 @@ If the compute-<argument> is a valid compute node host name, then compute-
 is automatically prepended.
 
 Example:
-    spcm-node-ps 002         # same as spcm-node-ps compute-002
-    spcm-node-ps compute-002
-    spcm-node-ps 256g-004
-    spcm-node-ps compute-256g-001
-    spcm-node-ps raid-01
+    spcm-ps 002         # same as spcm-ps compute-002
+    spcm-ps compute-002
+    spcm-ps 256g-004
+    spcm-ps compute-256g-001
+    spcm-ps raid-01
 
 EOM
     exit 1

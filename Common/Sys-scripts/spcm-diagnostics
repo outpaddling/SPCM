@@ -92,28 +92,28 @@ EOM
     clear
     case $selection in
     1)
-	spcm-node-status
+	spcm-status
 	;;
     
     2)
 	spcm-banner
 	printf "\nHost name or compute-node number? "
 	read node
-	spcm-node-top $node
+	spcm-top $node
 	;;
     
     3)
 	spcm-banner
 	printf "\nHost name or compute-node number? "
 	read node
-	spcm-node-netstat $node
+	spcm-netstat $node
 	;;
     
     4)
 	spcm-banner
 	printf "\nHostname or compute-node number? "
 	read node
-	spcm-node-iostat $node
+	spcm-iostat $node
 	;;
     
     5)

@@ -41,7 +41,7 @@ max_pw_age=$6
 shift; shift; shift; shift; shift; shift
 
 printf "Checking cluster integrity.  One moment please...\n"
-if ! spcm-node-status; then
+if ! spcm-status; then
     cat << EOM
 
 Nodes are currently down.  The useradd operation will not be able to complete.

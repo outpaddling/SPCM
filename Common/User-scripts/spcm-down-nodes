@@ -2,7 +2,7 @@
 
 cat << EOM
 
-"spcm-down-nodes" has been renamed to "spcm-node-status".
+"spcm-down-nodes" has been renamed to "spcm-status".
 
 This reminder will be removed after December 2021.
 
