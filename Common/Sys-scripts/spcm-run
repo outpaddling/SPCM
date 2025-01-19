@@ -3,7 +3,7 @@
 usage()
 {
     cat << EOM
-Usage: $0 [-p] [-c] [-n] 'command' head|io|compute|vis|all
+Usage: $0 [-p] [-c] [-n] [-f first-node] [-l last-node] 'command' head|io|compute|vis|all
     -c = continue running if there are errors.
     -p = run in parallel, redirecting output to files. (implies -c)
     -n = omit ssh -t flag to disable full terminal control.
@@ -37,10 +37,20 @@ while [ 0`printf '%s' "$1" | cut -c 1,1` = 0'-' ]; do
     elif [ $1 = '-f' ]; then
 	shift
 	first_node=$1
+	# Accept short hostname if in /etc/hosts
+	full_name=$(awk -v name=$first_node '$3 == name { print $2 }' /etc/hosts)
+	if [ -n "$full_name" ]; then
+	    first_node=$full_name
+	fi
 	shift
     elif [ $1 = '-l' ]; then
 	shift
 	last_node=$1
+	# Accept short hostname if in /etc/hosts
+	full_name=$(awk -v name=$last_node '$3 == name { print $2 }' /etc/hosts)
+	if [ -n "$full_name" ]; then
+	    last_node=$full_name
+	fi
 	shift
     else
 	usage $0
@@ -88,6 +98,7 @@ fi
 if [ -z $last_node ]; then
     last_node=`echo $nodes | awk '{ print $NF }'`
 fi
+
 if ! echo $nodes | fgrep -q $first_node; then
     printf "$first_node is not among the selected nodes.\n"
     exit 1
