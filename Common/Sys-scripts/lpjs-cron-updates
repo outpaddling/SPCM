@@ -43,15 +43,23 @@ fi
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin:/usr/local/bin:/usr/local/sbin
 export PATH
 
-printf '\n'
-date
-printf '\n'
+log_dir="/usr/local/var/log/lpjs"
+mkdir -p $log_dir
+cron_log=$log_dir/lpjs-cron-updates
+updates_log=$log_dir/lpjs-update-idle-nodes
+readonly lock_file="$log_dir/lockfile"
+printf '\n' >> $cron_log
+date >> $cron_log
+printf '\n' >> $cron_log
 
-updates_dir="/usr/local/var/log/lpjs"
-mkdir -p $updates_dir
-log=$updates_dir/lpjs-cron-updates
-lpjs-update-idle-nodes >> $log
+if [ -e "$lock_file" ]; then
+    printf "Another instance of $0 is currently running.\n" >> $cron_log
+    printf "Remove $lock_file to override.\n" >> $cron_log
+    exit
+fi
+printf "Running lpjs-update-idle-nodes...\n" >> $cron_log
+lpjs-update-idle-nodes >> $updates_log
 
 # Trim log
-tail -50000 $log > $log.tmp
-mv -f $log.tmp $log
+tail -50000 $updates_log > $updates_log.tmp
+mv -f $updates_log.tmp $updates_log
