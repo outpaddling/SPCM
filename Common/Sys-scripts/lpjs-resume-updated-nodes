@@ -26,13 +26,13 @@ fi
 
 log_dir="/usr/local/var/log/lpjs"
 
-updating_nodes=`lpjs nodes | awk 'NF == 8 && $2 == "updating" { print $1 }'`
+updated_nodes=`lpjs nodes | awk 'NF == 8 && $2 == "updated" { print $1 }'`
 
 status=0
-for node in $updating_nodes; do
+for node in $updated_nodes; do
     if fgrep -q $node "$log_dir/updated-nodes"; then
 	if ssh -o ConnectTimeout=2 $node ls > /dev/null 2>&1; then
-	    printf "Resuming $node, down for $reason...\n"
+	    printf "Resuming $node...\n"
 	    # Scontrol reports invalid node state with resume sometimes.  This
 	    # seems to fix it.
 	    lpjs nodes up $node

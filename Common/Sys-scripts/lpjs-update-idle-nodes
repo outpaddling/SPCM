@@ -66,7 +66,7 @@ chmod 750 `dirname "$updated_nodes_file"`
 if test -t 0; then
     cat << EOM
 
-All nodes will be places in "updating" state and will not accept new
+All nodes will be placed in "updating" state and will not accept new
 jobs until they have been updated.
 
 If there are jobs currently running, this script will need to be run
@@ -110,9 +110,12 @@ for node in $nodes; do
 	    ;;
 	
 	*)
+	    printf "Tagging $node for updates...\n"
 	    lpjs nodes updating $node
 	    ;;
 	esac
+    else
+	printf "$node already updated.\n"
     fi
 done
 
@@ -123,45 +126,56 @@ for node in $nodes; do
 	state=`lpjs nodes | awk -v node=$node '$1 == node { print $2 }'`
 	case $state in
 	'updating')
-	    printf "Updating $node...\n"
-	    # Why was this here?
-	    #scontrol update nodename=$node state=down \
-	    #    reason=lpjs-update-idle-nodes
-	    
-	    # Install all available binary updates and reboot
-	    # Don't stall updates on a node that's swallowing ssh
-	    # connections due to thrashing, NFS hangups, etc.
-	    if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
+	    used_procs=`lpjs nodes | awk -v node=$node '$1 == node { print $4 }'`
+	    if [ $used_procs = 0 ]; then
+		printf "Updating idle node $node...\n"
+		# Why was this here?
+		#scontrol update nodename=$node state=down \
+		#    reason=lpjs-update-idle-nodes
 		
-		# --binary+reboot always returns non-zero
-		# on RHEL 7, so reboot separately
-		ssh $node shutdown -r now || true
-		
-		# shutdown may take some time to disable sshd
-		# This will prevent lpjs-resume-updated-nodes from
-		# resuming the node before the reboot.
-		while ping -c 1 -q $node > /dev/null 2>&1; do
-		    printf "Waiting for shutdown of $node...\n"
-		    sleep 5
-		done
-		
-		# Checked by lpjs-resume-updated-nodes.  Node should
-		# be unresponsive to ssh before adding to
-		# updated_nodes_file as lpjs-resume-updated-nodes will
-		# resume it if it responds to ssh and is listed here.
-		printf "$node `date`\n" >> "$updated_nodes_file"
-		
-		# This should cause the node to get set to down state
-		# without changing "reason", assuming the node is unreachable
-		# when this is run.
-		# Not functioning as expected on Mortimer
-		# scontrol update nodename=$node state=resume
+		# Install all available binary updates and reboot
+		# Don't stall updates on a node that's swallowing ssh
+		# connections due to thrashing, NFS hangups, etc.
+		if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
+		    
+		    # --binary+reboot always returns non-zero
+		    # on RHEL 7, so reboot separately
+		    ssh $node shutdown -r now || true
+		    
+		    # shutdown may take some time to disable sshd
+		    # This will prevent lpjs-resume-updated-nodes from
+		    # resuming the node before the reboot.
+		    while ping -c 1 -q $node > /dev/null 2>&1; do
+			printf "Waiting for shutdown of $node...\n"
+			sleep 5
+		    done
+
+		    # Set this after reboot, so lpjs-resume-updated-nodes
+		    # doesn't resume before then
+		    # FIXME: May be redundant, since node state is set
+		    # to "up" when lpjs_compd starts anyway
+		    lpjs nodes updated $node
+		    
+		    # Checked by lpjs-resume-updated-nodes.  Node should
+		    # be unresponsive to ssh before adding to
+		    # updated_nodes_file as lpjs-resume-updated-nodes will
+		    # resume it if it responds to ssh and is listed here.
+		    printf "$node `date`\n" >> "$updated_nodes_file"
+		    
+		    # This should cause the node to get set to down state
+		    # without changing "reason", assuming the node is unreachable
+		    # when this is run.
+		    # Not functioning as expected on Mortimer
+		    # scontrol update nodename=$node state=resume
+		else
+		    printf "Update failed.\n"
+		fi
 	    else
-		printf "Update failed.\n"
+		printf "$node has jobs running.  Will try again later...\n"
 	    fi
 	    ;;
 
-	'down')
+	'down'|'pause')
 	    # Don't change state of down nodes!
 	    ;;
 	    
@@ -174,9 +188,10 @@ for node in $nodes; do
     
     # Resume all nodes that have been updated but are still marked down
     # or drained, but respond to ssh.
+    # FIXME: May be redundant, since node state is set
+    # to "up" when lpjs_compd starts anyway
     lpjs-resume-updated-nodes || true
 done
-lpjs-resume-all-updated-nodes
 wc -l $updated_nodes_file || true
 printf "Removing $lock_file...\n"
 rm -f "$lock_file"
