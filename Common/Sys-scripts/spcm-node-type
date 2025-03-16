@@ -21,7 +21,6 @@ usage()
 ##########################################################################
 
 LOCALBASE=$(spcm-localbase)
-hostname=$1
 
 case $# in
 0)
@@ -31,9 +30,22 @@ case $# in
     ;;
 
 1)
+    hostname=$1
+    # $1 is FQDN
+    if awk '{ print $1 }' $LOCALBASE/etc/spcm/node-types | fgrep -qx $hostname; then
+	fqdn=$hostname
+    else
+	# $1 is short hostname
+	fqdn=$(awk -v host=$hostname '$3 == host { print $2 }' /etc/hosts)
+	if [ -z $fqdn ]; then
+	    # $1 is just a number, as in 001 from compute-001
+	    hostname=compute-$hostname
+	    fqdn=$(awk -v host=$hostname '$3 == host { print $2 }' /etc/hosts)
+	fi
+    fi
     if [ -e $LOCALBASE/etc/spcm/node-types ]; then
 	# short_host=$(echo $1 | cut -d . -f 1)
-	awk -v hostname=$hostname '$1 == hostname { print $2 }' \
+	awk -v hostname=$fqdn '$1 == hostname { print $2 }' \
 	    $LOCALBASE/etc/spcm/node-types
     fi
     ;;
