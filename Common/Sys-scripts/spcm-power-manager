@@ -50,11 +50,11 @@ auto-ipmi-remote-access for the rest.
 
 1.. Power on file servers
 2.. Power on compute nodes
-3.. Power on vis nodes
+3.. Power on visualization nodes
 4.. Power on nodes by hostname
-5.. Shut down idle compute nodes
-6.. Power on drained compute nodes
-7.. Shut down cluster
+5.. Power on paused compute nodes
+6.. Pause and power off idle compute nodes
+7.. Power off entire cluster
 Q.. Quit
 
 EOM
@@ -87,11 +87,11 @@ EOM
 	;;
     
     5)
-	spcm-power-saver
+	spcm-power-waster
 	;;
     
     6)
-	spcm-power-waster
+	spcm-power-saver
 	;;
 
     7)
