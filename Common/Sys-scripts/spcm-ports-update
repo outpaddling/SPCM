@@ -8,14 +8,10 @@ FreeBSD)
     auto-check-ports-branch
     save_cwd=$(pwd)
     cd $PORTSDIR
-    printf "Stashing bsd.local.mk...\n"
-    git stash push Mk/bsd.local.mk
 
     printf "Pulling...\n"
     git pull
 
-    printf "Unstashing...\n"
-    git stash pop
     cd $save_cwd
     
     if [ -e $LOCALBASE/sbin/wip-update ]; then

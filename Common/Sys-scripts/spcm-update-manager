@@ -219,14 +219,22 @@ is necessary.
 
 EOM
 		auto-update-system --binary
+		
+		# Ask now, while the binary update output is still
+		# on the screen.  Otherwise, the user won't know if
+		# a reboot is necessary.
+		w
 		read -p "Reboot? [y]/n " reboot
+
+		# Now update the ports tree, which will push the binary
+		# update output out of view.
 		if [ `auto-ostype` = FreeBSD ]; then
 		    read -p "Update and sync ports tree to all nodes? [y]/n " ports_update
 		    if [ 0$ports_update != 0n ]; then
 			spcm-ports-update
 		    fi
 		fi
-		w
+		
 		if [ 0$reboot != 0n ]; then
 		    read -p "Minutes before reboot? [2] " minutes
 		    if [ 0$minutes = 0 ]; then
