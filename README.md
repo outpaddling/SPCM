@@ -1,7 +1,8 @@
-SPCM
-====
+# SPCM
 
-The SPCM cluster manager is a free, open source integrated tool set for
+## Overview
+
+SPCM (Simple, Portable Cluster Manager is a free), open source integrated tool set for
 managing a simple HPC (High Performance Computing) cluster.
 
 It is the only portable cluster management suite we are aware of and is
@@ -18,4 +19,3 @@ choice (Nagios, Munin, Prometheus, etc.)
 
 Developed by Jason W. Bacon and James F. Wagner
 
-http://acadix.biz/spcm.php
