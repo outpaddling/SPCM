@@ -29,6 +29,6 @@ for node in $(spcm-file-servers); do
     read update
     if [ 0$update = 0y ]; then
 	# RHEL 7 ssh always returns non-zero when rebooting
-	ssh -t $node auto-update-system --binary+reboot || true
+	ssh -t $node spcm-node-binary-updates+reboot || true
     fi
 done

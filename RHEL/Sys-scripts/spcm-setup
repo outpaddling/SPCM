@@ -892,7 +892,7 @@ auto-append-line "0-59/10 * * * * $(auto-localbase)/sbin/slurm-cron-updates" \
     /var/cron/tabs/root $0
 crontab -e
 
-auto-update-system --binary || true
+yum update -y || true
 touch $CONF_DIR/spcm-node-configured
 
 cat << EOM

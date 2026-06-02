@@ -192,7 +192,7 @@ FreeBSD)
     # auto-ssh-reverse-authorize $node
     
     printf "Installing updates...\n"
-    ssh $node auto-update-system --binary
+    ssh $node spcm-node-binary-updates
     ;;
 
 *)

@@ -30,7 +30,7 @@ for node in $(spcm-vis-nodes); do
     if [ 0$update = 0y ]; then
 	ssh $node "echo 'The visualization node may need to be rebooted shortly in order to complete installation of important security updates.  It should be available again within a few minutes.' | wall" || true
 	# RHEL 7 ssh always returns non-zero when rebooting
-	ssh -t $node auto-update-system --binary || true
+	ssh -t $node spcm-node-binary-updates || true
 	ssh -t $node w
 	read -p "Reboot? [y]/n " reboot
 	if [ 0$reboot != 0n ]; then

@@ -136,7 +136,7 @@ for node in $nodes; do
 		# Install all available binary updates and reboot
 		# Don't stall updates on a node that's swallowing ssh
 		# connections due to thrashing, NFS hangups, etc.
-		if ssh -t -o ConnectTimeout=10 $node auto-update-system --binary; then
+		if ssh -t -o ConnectTimeout=10 $node spcm-node-binary-updates; then
 		    
 		    # --binary+reboot always returns non-zero
 		    # on RHEL 7, so reboot separately

@@ -1,0 +1,58 @@
+#!/bin/sh -e
+
+##########################################################################
+#   Title:
+#       Optional, defaults to the name of the script sans extention
+#
+#   Section:
+#       Optional, defaults to 1
+#
+#   Synopsis:
+#       
+#   Description:
+#       
+#   Arguments:
+#       
+#   Returns:
+#       0 on success, non-zero error codes otherwise
+#
+#   Examples:
+#
+#   Files:
+#
+#   Environment:
+#
+#   See also:
+##########################################################################
+
+usage()
+{
+    printf "Usage: $0\n"
+    exit 64     # sysexits(3) EX_USAGE
+}
+
+
+##########################################################################
+#   Main
+##########################################################################
+
+if [ $# != 0 ]; then
+    usage
+fi
+
+auto-root-check $0 'Installs OS updates.'
+
+case $(auto-ostype) in
+FreeBSD)
+    pkg upgrade -y
+    if ! auto-using-pkgbase; then
+	freebsd-update fetch install
+    fi
+    ;;
+
+*)
+    printf "$0: Not supported on $remote_os.\n"
+    exit 1
+    ;;
+    
+esac

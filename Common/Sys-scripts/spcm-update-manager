@@ -218,7 +218,7 @@ important security updates.  An additional notice will follow if a reboot
 is necessary.
 
 EOM
-		auto-update-system --binary
+		spcm-node-binary-updates
 		
 		# Ask now, while the binary update output is still
 		# on the screen.  Otherwise, the user won't know if
