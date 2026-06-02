@@ -46,7 +46,7 @@ case $(auto-ostype) in
 FreeBSD)
     pkg upgrade -y
     if ! auto-using-pkgbase; then
-	freebsd-update fetch install
+	freebsd-update --not-running-from-cron fetch install
     fi
     ;;
 
