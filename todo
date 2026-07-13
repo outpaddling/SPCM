@@ -1,4 +1,6 @@
 
+Set node to updating state during OS base upgrade
+
 Make sure node-types contains FQDNs
 
 software manager: Add io and vis nodes
