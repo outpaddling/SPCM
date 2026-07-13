@@ -107,9 +107,8 @@ FreeBSD)
     
 First install phase complete.
 
-Press return when ready to reboot $node.
-    
 EOM
+    printf "Press return when ready to reboot $node..."
     read junk
     ssh $node shutdown -r now || true
     wait_for_reboot $node
