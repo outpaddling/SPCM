@@ -123,7 +123,7 @@ EOM
 	    read -p "Resume $node? y/n " resume
 	done
 	if [ $resume = y ]; then
-	    spcm nodes up $node
+	    lpjs nodes up $node
 	fi
     fi
     
